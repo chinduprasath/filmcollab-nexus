@@ -108,7 +108,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <AppLayout>
+    <AppLayout pageTitle="Dashboard">
       <div className="space-y-8">
         {/* Welcome Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

@@ -8,7 +8,10 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import Index from "./pages/Index";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
+import AdminSignIn from "./pages/auth/AdminSignIn";
+import AdminSignUp from "./pages/auth/AdminSignUp";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Jobs from "./pages/Jobs";
 import NotFound from "./pages/NotFound";
 
@@ -41,9 +44,36 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Admin Route Component
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, profile } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-destructive border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/admin-signin" replace />;
+  }
+
+  // Only allow ADMIN role for admin routes
+  if (profile && profile.role !== 'ADMIN') {
+    return <Navigate to="/admin-signin" replace />;
+  }
+  
+  return <>{children}</>;
+}
+
 // Public Route Component (redirect if already authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
   
   if (loading) {
     return (
@@ -56,8 +86,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     );
   }
   
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
+  if (user && profile) {
+    // Redirect based on role
+    if (profile.role === 'ADMIN') {
+      return <Navigate to="/admin-dashboard" replace />;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
   
   return <>{children}</>;
@@ -85,7 +120,25 @@ function AppRoutes() {
         }
       />
 
-      {/* Protected routes */}
+      {/* Admin routes */}
+      <Route
+        path="/admin-signin"
+        element={
+          <PublicRoute>
+            <AdminSignIn />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/admin-signup"
+        element={
+          <PublicRoute>
+            <AdminSignUp />
+          </PublicRoute>
+        }
+      />
+
+      {/* Protected user routes */}
       <Route
         path="/dashboard"
         element={
@@ -100,6 +153,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Jobs />
           </ProtectedRoute>
+        }
+      />
+
+      {/* Protected admin routes */}
+      <Route
+        path="/admin-dashboard"
+        element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
         }
       />
 

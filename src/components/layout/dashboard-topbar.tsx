@@ -1,0 +1,216 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { 
+  Film, 
+  Search, 
+  Bell, 
+  Settings, 
+  User, 
+  LogOut,
+  Menu,
+  X
+} from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+
+interface DashboardTopbarProps {
+  pageTitle?: string;
+  onMenuToggle?: () => void;
+  isMobileMenuOpen?: boolean;
+}
+
+export function DashboardTopbar({ 
+  pageTitle = "Dashboard", 
+  onMenuToggle,
+  isMobileMenuOpen = false 
+}: DashboardTopbarProps) {
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [searchValue, setSearchValue] = useState("");
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const mockNotifications = [
+    {
+      id: 1,
+      title: "New job posted",
+      description: "Senior Director position at Netflix Studios",
+      time: "5 minutes ago",
+      unread: true
+    },
+    {
+      id: 2,
+      title: "Connection request",
+      description: "John Smith wants to connect",
+      time: "1 hour ago",
+      unread: true
+    },
+    {
+      id: 3,
+      title: "Project update",
+      description: "Your project 'Indie Film' has a new comment",
+      time: "2 hours ago",
+      unread: false
+    }
+  ];
+
+  const unreadCount = mockNotifications.filter(n => n.unread).length;
+
+  return (
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+      <div className="flex h-16 items-center justify-between px-6">
+        <div className="flex items-center gap-4">
+          {/* Mobile menu toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden"
+            onClick={onMenuToggle}
+          >
+            {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
+
+          {/* Logo & Page Title */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <Film className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="hidden sm:block text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                FilmCollab
+              </span>
+            </div>
+            <div className="hidden md:block h-6 w-px bg-border" />
+            <h1 className="hidden md:block text-lg font-semibold text-foreground">
+              {pageTitle}
+            </h1>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* Search Bar */}
+          <div className="relative hidden lg:block">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+
+          {/* Notifications */}
+          <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="relative">
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center"
+                  >
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="end">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">Notifications</h3>
+                  <Button variant="ghost" size="sm" className="text-xs">
+                    Mark all read
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {mockNotifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors ${
+                        notification.unread ? 'bg-primary/5 border-primary/20' : 'bg-background'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">{notification.title}</p>
+                          <p className="text-xs text-muted-foreground">{notification.description}</p>
+                          <p className="text-xs text-muted-foreground">{notification.time}</p>
+                        </div>
+                        {notification.unread && (
+                          <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Button variant="outline" className="w-full" size="sm">
+                  View all notifications
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* User Profile Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="" alt={profile?.full_name || 'User'} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
+                    {profile?.first_name?.[0] || profile?.full_name?.[0] || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {profile?.full_name || 'User'}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {profile?.role || 'USER'}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/settings")}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sign out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </header>
+  );
+}

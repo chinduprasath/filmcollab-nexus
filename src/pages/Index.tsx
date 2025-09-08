@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Film, Users, Briefcase, Globe, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { LandingTopbar } from "@/components/layout/landing-topbar";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -31,8 +32,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10">
+      <LandingTopbar />
+      
       {/* Hero Section */}
-      <div className="container mx-auto px-6 pt-20 pb-16">
+      <div className="container mx-auto px-6 pt-32 pb-16">{/* Added pt-32 for topbar spacing */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">

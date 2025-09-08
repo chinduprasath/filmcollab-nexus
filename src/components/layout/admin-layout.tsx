@@ -1,16 +1,13 @@
 import { ReactNode, useState } from "react";
-import { Sidebar } from "./sidebar";
-import { DashboardTopbar } from "./dashboard-topbar";
-import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { AdminSidebar } from "./admin-sidebar";
+import { AdminTopbar } from "./admin-topbar";
 
-interface AppLayoutProps {
+interface AdminLayoutProps {
   children: ReactNode;
   pageTitle?: string;
 }
 
-export function AppLayout({ children, pageTitle }: AppLayoutProps) {
+export function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -18,7 +15,7 @@ export function AppLayout({ children, pageTitle }: AppLayoutProps) {
     <div className="flex h-screen bg-background">
       {/* Sidebar - Desktop */}
       <div className="hidden md:flex">
-        <Sidebar isCollapsed={sidebarCollapsed} />
+        <AdminSidebar isCollapsed={sidebarCollapsed} />
       </div>
 
       {/* Sidebar - Mobile */}
@@ -26,15 +23,15 @@ export function AppLayout({ children, pageTitle }: AppLayoutProps) {
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
           <div className="relative">
-            <Sidebar />
+            <AdminSidebar />
           </div>
         </div>
       )}
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Dashboard Topbar */}
-        <DashboardTopbar 
+        {/* Admin Topbar */}
+        <AdminTopbar 
           pageTitle={pageTitle}
           onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
           isMobileMenuOpen={mobileMenuOpen}
