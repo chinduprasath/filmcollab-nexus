@@ -1,148 +1,152 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Shield,
+  BarChart3,
   Users,
   FileText,
-  BarChart3,
+  FolderOpen,
+  Briefcase,
+  Image,
+  User,
   Settings,
-  LogOut,
+  ChevronLeft,
+  ChevronRight,
   Moon,
-  Sun
+  Sun,
+  Monitor
 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "next-themes";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface AdminSidebarProps {
   className?: string;
   isCollapsed?: boolean;
+  onToggle?: () => void;
 }
 
 const adminNavigationItems = [
-  {
-    section: "MANAGEMENT",
-    items: [
-      { name: "Users", icon: Users, href: "/admin-dashboard/users" },
-      { name: "Reports", icon: BarChart3, href: "/admin-dashboard/reports" },
-      { name: "Settings", icon: Settings, href: "/admin-dashboard/settings" }
-    ]
-  },
-  {
-    section: "CONTENT",
-    items: [
-      { name: "Posts Management", icon: FileText, href: "/admin-dashboard/posts" },
-      { name: "Jobs Management", icon: FileText, href: "/admin-dashboard/jobs" }
-    ]
-  }
+  { name: "Overview", icon: BarChart3, href: "/admin-dashboard" },
+  { name: "Analytics", icon: BarChart3, href: "/admin-dashboard/analytics" },
+  { name: "Users", icon: Users, href: "/admin-dashboard/users" },
+  { name: "Posts", icon: FileText, href: "/admin-dashboard/posts" },
+  { name: "Projects", icon: FolderOpen, href: "/admin-dashboard/projects" },
+  { name: "Jobs", icon: Briefcase, href: "/admin-dashboard/jobs" },
+  { name: "Directory", icon: Image, href: "/admin-dashboard/directory" },
+  { name: "Profile", icon: User, href: "/admin-dashboard/profile" },
+  { name: "Settings", icon: Settings, href: "/admin-dashboard/settings" }
 ];
 
-export function AdminSidebar({ className, isCollapsed = false }: AdminSidebarProps) {
-  const { signOut, profile } = useAuth();
+export function AdminSidebar({ className, isCollapsed = false, onToggle }: AdminSidebarProps) {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleNavigation = (href: string) => {
     navigate(href);
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
+  const isActive = (href: string) => {
+    return location.pathname === href;
   };
 
   return (
-    <div className={cn("flex h-full w-64 flex-col bg-destructive/5 border-r border-destructive/20", isCollapsed && "w-16", className)}>
+    <div className={cn("flex h-full w-64 flex-col bg-white border-r border-gray-200", isCollapsed && "w-16", className)}>
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-destructive/20 px-6">
+      <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-destructive to-orange-500 flex items-center justify-center">
-            <Shield className="h-4 w-4 text-primary-foreground" />
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+            <Shield className="h-4 w-4 text-white" />
           </div>
           {!isCollapsed && (
-            <span className="text-xl font-bold bg-gradient-to-r from-destructive to-orange-500 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               Admin Portal
             </span>
           )}
         </div>
+        {onToggle && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggle}
+            className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
-        <div className="space-y-6">
-          {adminNavigationItems.map((section) => (
-            <div key={section.section}>
-              {!isCollapsed && (
-                <h3 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-destructive/80">
-                  {section.section}
-                </h3>
+        <div className="space-y-1">
+          {adminNavigationItems.map((item) => (
+            <Button
+              key={item.name}
+              variant="ghost"
+              className={cn(
+                "w-full justify-start h-10 px-3 text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors",
+                isActive(item.href) && "bg-purple-600 text-white hover:bg-purple-600",
+                isCollapsed && "justify-center px-2"
               )}
-              <div className="space-y-1">
-                {section.items.map((item) => (
-                  <Button
-                    key={item.name}
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start h-10 px-3 text-foreground hover:bg-destructive/10 hover:text-destructive",
-                      isCollapsed && "justify-center px-2"
-                    )}
-                    onClick={() => handleNavigation(item.href)}
-                  >
-                    <item.icon className={cn("h-4 w-4", !isCollapsed && "mr-3")} />
-                    {!isCollapsed && <span>{item.name}</span>}
-                  </Button>
-                ))}
-              </div>
-              {!isCollapsed && <Separator className="my-4 bg-destructive/20" />}
-            </div>
+              onClick={() => handleNavigation(item.href)}
+            >
+              <item.icon className={cn("h-4 w-4", !isCollapsed && "mr-3")} />
+              {!isCollapsed && <span>{item.name}</span>}
+            </Button>
           ))}
         </div>
       </ScrollArea>
 
-      {/* Admin section */}
-      <div className="border-t border-destructive/20 p-3">
+      {/* Theme Settings */}
+      <div className="border-t border-gray-200 p-4">
         <div className="space-y-2">
-          {/* Admin info */}
-          {!isCollapsed && profile && (
-            <div className="px-3 py-2">
-              <p className="text-sm font-medium text-foreground">{profile.full_name || 'Admin'}</p>
-              <p className="text-xs text-destructive font-semibold">{profile.role}</p>
-            </div>
+          {!isCollapsed && (
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+              Theme
+            </p>
           )}
-          
-          {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "w-full justify-start text-foreground hover:bg-destructive/10",
-              isCollapsed && "justify-center px-2"
-            )}
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-          >
-            {theme === "light" ? (
-              <Moon className={cn("h-4 w-4", !isCollapsed && "mr-3")} />
-            ) : (
-              <Sun className={cn("h-4 w-4", !isCollapsed && "mr-3")} />
-            )}
-            {!isCollapsed && <span>Toggle theme</span>}
-          </Button>
-
-          {/* Sign out */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "w-full justify-start text-foreground hover:bg-destructive/10",
-              isCollapsed && "justify-center px-2"
-            )}
-            onClick={handleSignOut}
-          >
-            <LogOut className={cn("h-4 w-4", !isCollapsed && "mr-3")} />
-            {!isCollapsed && <span>Sign out</span>}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100",
+                theme === "light" && "bg-gray-100 text-gray-700"
+              )}
+              onClick={() => setTheme("light")}
+            >
+              <Sun className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100",
+                theme === "dark" && "bg-gray-100 text-gray-700"
+              )}
+              onClick={() => setTheme("dark")}
+            >
+              <Moon className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100",
+                theme === "system" && "bg-gray-100 text-gray-700"
+              )}
+              onClick={() => setTheme("system")}
+            >
+              <Monitor className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

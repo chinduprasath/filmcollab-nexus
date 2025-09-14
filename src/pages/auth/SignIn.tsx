@@ -156,6 +156,16 @@ export default function SignIn() {
                   Sign up
                 </Button>
               </div>
+
+              <div className="pt-2 border-t border-border/50">
+                <Button
+                  variant="link"
+                  className="text-sm text-muted-foreground hover:text-primary"
+                  onClick={() => navigate("/admin-signin")}
+                >
+                  Admin Sign In
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

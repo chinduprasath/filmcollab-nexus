@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { 
   Briefcase, 
   MapPin, 
@@ -69,6 +70,8 @@ export default function Jobs() {
   const [filterType, setFilterType] = useState("all");
   const [filterLocation, setFilterLocation] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(9);
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
@@ -188,6 +191,18 @@ export default function Jobs() {
     
     return matchesSearch && matchesType && matchesLocation;
   });
+
+  // Pagination logic
+  const totalJobs = filteredJobs.length;
+  const totalPages = Math.ceil(totalJobs / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterType, filterLocation, activeTab]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -476,6 +491,15 @@ export default function Jobs() {
               </div>
             </div>
 
+            {/* Job Count */}
+            {!loading && filteredJobs.length > 0 && (
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1}-{Math.min(endIndex, totalJobs)} of {totalJobs} jobs
+                </p>
+              </div>
+            )}
+
             {/* Jobs Grid */}
             {loading ? (
               <div className="flex justify-center py-12">
@@ -496,7 +520,7 @@ export default function Jobs() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredJobs.map((job) => (
+                {paginatedJobs.map((job) => (
                   <Card key={job.id} className="hover:shadow-soft transition-shadow">
                     <CardHeader className="pb-4">
                       <div className="flex justify-between items-start gap-2">
@@ -573,6 +597,41 @@ export default function Jobs() {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {!loading && totalPages > 1 && (
+              <div className="flex justify-center mt-8">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
           </TabsContent>

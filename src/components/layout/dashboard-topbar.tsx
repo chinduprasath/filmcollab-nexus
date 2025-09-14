@@ -23,7 +23,8 @@ import {
   User, 
   LogOut,
   Menu,
-  X
+  X,
+  ChevronDown
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
@@ -90,21 +91,6 @@ export function DashboardTopbar({
             {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
 
-          {/* Logo & Page Title */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Film className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="hidden sm:block text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                FilmCollab
-              </span>
-            </div>
-            <div className="hidden md:block h-6 w-px bg-border" />
-            <h1 className="hidden md:block text-lg font-semibold text-foreground">
-              {pageTitle}
-            </h1>
-          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -173,13 +159,22 @@ export function DashboardTopbar({
           {/* User Profile Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Button variant="ghost" className="flex items-center gap-3 h-auto p-2 hover:bg-accent/50">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="" alt={profile?.full_name || 'User'} />
                   <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
                     {profile?.first_name?.[0] || profile?.full_name?.[0] || 'U'}
                   </AvatarFallback>
                 </Avatar>
+                <div className="hidden md:flex flex-col items-start">
+                  <span className="text-sm font-medium text-foreground">
+                    {profile?.full_name || 'User'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {profile?.role || 'USER'}
+                  </span>
+                </div>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>

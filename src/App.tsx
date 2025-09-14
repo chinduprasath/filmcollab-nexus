@@ -13,6 +13,24 @@ import AdminSignUp from "./pages/auth/AdminSignUp";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Jobs from "./pages/Jobs";
+import IndustryHub from "./pages/industry-hub/page";
+import Projects from "./pages/projects/page";
+import Posts from "./pages/posts/page";
+import Directory from "./pages/directory/page";
+import Community from "./pages/community/page";
+import Discover from "./pages/discover/page";
+import Messages from "./pages/messages/page";
+import Connections from "./pages/connections/page";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminUsers from "./pages/AdminUsers";
+import AdminPosts from "./pages/AdminPosts";
+import AdminProjects from "./pages/AdminProjects";
+import AdminJobs from "./pages/AdminJobs";
+import AdminDirectory from "./pages/AdminDirectory";
+import AdminProfile from "./pages/AdminProfile";
+import AdminSettings from "./pages/AdminSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -155,6 +173,86 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/industry-hub"
+        element={
+          <ProtectedRoute>
+            <IndustryHub />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects"
+        element={
+          <ProtectedRoute>
+            <Projects />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/posts"
+        element={
+          <ProtectedRoute>
+            <Posts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/directory"
+        element={
+          <ProtectedRoute>
+            <Directory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/community"
+        element={
+          <ProtectedRoute>
+            <Community />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/discover"
+        element={
+          <ProtectedRoute>
+            <Discover />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute>
+            <Messages />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/connections"
+        element={
+          <ProtectedRoute>
+            <Connections />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Protected admin routes */}
       <Route
@@ -162,6 +260,70 @@ function AppRoutes() {
         element={
           <AdminRoute>
             <AdminDashboard />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard/analytics"
+        element={
+          <AdminRoute>
+            <AdminAnalytics />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard/users"
+        element={
+          <AdminRoute>
+            <AdminUsers />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard/posts"
+        element={
+          <AdminRoute>
+            <AdminPosts />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard/projects"
+        element={
+          <AdminRoute>
+            <AdminProjects />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard/jobs"
+        element={
+          <AdminRoute>
+            <AdminJobs />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard/directory"
+        element={
+          <AdminRoute>
+            <AdminDirectory />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard/profile"
+        element={
+          <AdminRoute>
+            <AdminProfile />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard/settings"
+        element={
+          <AdminRoute>
+            <AdminSettings />
           </AdminRoute>
         }
       />

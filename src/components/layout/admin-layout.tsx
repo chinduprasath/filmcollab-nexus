@@ -15,7 +15,7 @@ export function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
     <div className="flex h-screen bg-background">
       {/* Sidebar - Desktop */}
       <div className="hidden md:flex">
-        <AdminSidebar isCollapsed={sidebarCollapsed} />
+        <AdminSidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       </div>
 
       {/* Sidebar - Mobile */}

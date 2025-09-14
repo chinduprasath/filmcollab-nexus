@@ -18,7 +18,7 @@ export function AppLayout({ children, pageTitle }: AppLayoutProps) {
     <div className="flex h-screen bg-background">
       {/* Sidebar - Desktop */}
       <div className="hidden md:flex">
-        <Sidebar isCollapsed={sidebarCollapsed} />
+        <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       </div>
 
       {/* Sidebar - Mobile */}

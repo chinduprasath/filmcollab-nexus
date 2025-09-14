@@ -248,34 +248,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* System Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-green-600" />
-              System Status
-            </CardTitle>
-            <CardDescription>
-              Current system health and performance metrics
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600 mb-1">99.9%</div>
-                <div className="text-sm text-muted-foreground">Uptime</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600 mb-1">124ms</div>
-                <div className="text-sm text-muted-foreground">Response Time</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600 mb-1">1,247</div>
-                <div className="text-sm text-muted-foreground">Active Users</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </AdminLayout>
   );

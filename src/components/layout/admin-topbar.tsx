@@ -23,7 +23,8 @@ import {
   User, 
   LogOut,
   Menu,
-  X
+  X,
+  ChevronDown
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
@@ -93,21 +94,6 @@ export function AdminTopbar({
             {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
 
-          {/* Logo & Page Title */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-destructive to-orange-500 flex items-center justify-center">
-                <Shield className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="hidden sm:block text-lg font-bold bg-gradient-to-r from-destructive to-orange-500 bg-clip-text text-transparent">
-                Admin Portal
-              </span>
-            </div>
-            <div className="hidden md:block h-6 w-px bg-destructive/20" />
-            <h1 className="hidden md:block text-lg font-semibold text-foreground">
-              {pageTitle}
-            </h1>
-          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -176,13 +162,22 @@ export function AdminTopbar({
           {/* Admin Profile Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Button variant="ghost" className="flex items-center gap-3 h-auto p-2 hover:bg-accent/50">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="" alt={profile?.full_name || 'Admin'} />
                   <AvatarFallback className="bg-gradient-to-br from-destructive to-orange-500 text-primary-foreground">
                     {profile?.first_name?.[0] || profile?.full_name?.[0] || 'A'}
                   </AvatarFallback>
                 </Avatar>
+                <div className="hidden md:flex flex-col items-start">
+                  <span className="text-sm font-medium text-foreground">
+                    {profile?.full_name || 'Admin User'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {profile?.email || 'admin@filmcollab.com'}
+                  </span>
+                </div>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>

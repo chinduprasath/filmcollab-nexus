@@ -12,8 +12,8 @@ export function LandingTopbar({ className }: LandingTopbarProps) {
   const navigationItems = [
     { name: "Home", href: "/" },
     { name: "Features", href: "/#features" },
-    { name: "Pricing", href: "/#pricing" },
-    { name: "Contact", href: "/#contact" }
+    { name: "How It Works", href: "/#how-it-works" },
+    { name: "Community", href: "/#community" }
   ];
 
   return (
@@ -49,15 +49,15 @@ export function LandingTopbar({ className }: LandingTopbarProps) {
           {/* Auth Buttons */}
           <div className="flex items-center gap-3">
             <Button 
-              variant="ghost" 
+              variant="outline" 
               onClick={() => navigate("/auth/signin")}
-              className="hidden sm:inline-flex"
+              className="hidden sm:inline-flex border-primary/20 hover:bg-primary/5"
             >
               Sign In
             </Button>
             <Button 
               onClick={() => navigate("/auth/signup")}
-              className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90"
+              className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 shadow-lg"
             >
               Get Started
             </Button>
