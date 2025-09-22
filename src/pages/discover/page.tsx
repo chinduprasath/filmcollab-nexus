@@ -208,68 +208,35 @@ export default function DiscoverPage() {
   // Fetch users from database
   useEffect(() => {
     fetchUsers();
-  }, []); // Run once on mount
+  }, []);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       
-      // Fetch all profiles
-      const { data: profiles, error: profilesError } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          user_id,
-          full_name,
-          first_name,
-          last_name,
-          role,
-          category,
-          bio,
-          location,
-          website,
-          skills,
-          experience_level,
-          industry,
-          portfolio_url,
-          linkedin_url,
-          github_url,
-          is_verified,
-          followers_count,
-          projects_count,
-          posts_count,
-          likes_count,
-          created_at,
-          updated_at
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
+      if (error) {
+        console.error('Error fetching profiles:', error);
+        throw error;
       }
-
 
       if (!profiles || profiles.length === 0) {
         setUsers([]);
         return;
       }
 
-      // Filter out admin users (include both real users and sample profiles)
-      const filteredProfiles = profiles.filter(profile => {
-        // Must have a first name
-        if (!profile.first_name) return false;
-        
-        // Filter out admin users by name
-        if (profile.first_name.toLowerCase().includes('admin')) return false;
-        
-        // Filter out admin users by role
-        if (profile.role && profile.role.toLowerCase().includes('admin')) return false;
-        
-        return true;
-      });
+      // Filter out admin users and ensure proper data
+      const filteredProfiles = profiles.filter(profile => 
+        profile.first_name && 
+        !profile.first_name.toLowerCase().includes('admin') &&
+        (!profile.role || !profile.role.toLowerCase().includes('admin'))
+      );
 
-      // Get current user's likes and saves if authenticated
+      // Get current user's interactions if authenticated
       let likedUserIds = new Set();
       let savedUserIds = new Set();
       
@@ -278,18 +245,12 @@ export default function DiscoverPage() {
           .from('profiles')
           .select('id')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (currentProfile) {
           const [likesResult, savesResult] = await Promise.all([
-            supabase
-              .from('user_likes')
-              .select('liked_user_id')
-              .eq('user_id', currentProfile.id),
-            supabase
-              .from('user_saves')
-              .select('saved_user_id')
-              .eq('user_id', currentProfile.id)
+            supabase.from('user_likes').select('liked_user_id').eq('user_id', currentProfile.id),
+            supabase.from('user_saves').select('saved_user_id').eq('user_id', currentProfile.id)
           ]);
 
           likedUserIds = new Set(likesResult.data?.map(like => like.liked_user_id) || []);
@@ -297,40 +258,32 @@ export default function DiscoverPage() {
         }
       }
 
-      // Transform data
-      const usersWithInteractions: User[] = filteredProfiles.map(profile => {
-        // Create full_name from first_name and last_name
-        const fullName = profile.first_name && profile.last_name 
-          ? `${profile.first_name} ${profile.last_name}`
-          : profile.first_name || 'Unknown User';
-          
-        return {
-          id: profile.id,
-          full_name: fullName,
-          email: '',
-          avatar_url: undefined,
-          role: profile.role,
-          bio: profile.bio,
-          location: profile.location,
-          website: profile.website,
-          skills: profile.skills || [],
-          experience_level: profile.experience_level,
-          industry: profile.industry,
-          portfolio_url: profile.portfolio_url,
-          linkedin_url: profile.linkedin_url,
-          github_url: profile.github_url,
-          created_at: profile.created_at || new Date().toISOString(),
-          is_verified: profile.is_verified || false,
-          followers_count: profile.followers_count || 0,
-          projects_count: profile.projects_count || 0,
-          posts_count: profile.posts_count || 0,
-          likes_count: profile.likes_count || 0,
-          is_liked: likedUserIds.has(profile.id),
-          is_saved: savedUserIds.has(profile.id),
-        };
-      });
+      // Transform profiles to users
+      const transformedUsers: User[] = filteredProfiles.map(profile => ({
+        id: profile.id,
+        full_name: profile.full_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+        email: '',
+        role: profile.role || 'User',
+        bio: profile.bio || 'Film industry professional',
+        location: profile.location || '',
+        website: profile.website || '',
+        skills: profile.skills || [],
+        experience_level: profile.experience_level || 'Mid',
+        industry: profile.industry || 'film',
+        portfolio_url: profile.portfolio_url || '',
+        linkedin_url: profile.linkedin_url || '',
+        github_url: profile.github_url || '',
+        created_at: profile.created_at || new Date().toISOString(),
+        is_verified: profile.is_verified || false,
+        followers_count: profile.followers_count || 0,
+        projects_count: profile.projects_count || 0,
+        posts_count: profile.posts_count || 0,
+        likes_count: profile.likes_count || 0,
+        is_liked: likedUserIds.has(profile.id),
+        is_saved: savedUserIds.has(profile.id),
+      }));
 
-      setUsers(usersWithInteractions);
+      setUsers(transformedUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       setUsers([]);
