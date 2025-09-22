@@ -291,7 +291,7 @@ const AdminSettings = () => {
                     <Label htmlFor="timezone">Timezone</Label>
                     <Select disabled={!isEditing}>
                       <SelectTrigger className={!isEditing ? "bg-gray-50" : ""}>
-                        <SelectValue value={settingsData.general.timezone} />
+                        <SelectValue placeholder={settingsData.general.timezone} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
@@ -305,7 +305,7 @@ const AdminSettings = () => {
                     <Label htmlFor="language">Language</Label>
                     <Select disabled={!isEditing}>
                       <SelectTrigger className={!isEditing ? "bg-gray-50" : ""}>
-                        <SelectValue value={settingsData.general.language} />
+                        <SelectValue placeholder={settingsData.general.language} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="en-US">English (US)</SelectItem>
@@ -319,7 +319,7 @@ const AdminSettings = () => {
                     <Label htmlFor="dateFormat">Date Format</Label>
                     <Select disabled={!isEditing}>
                       <SelectTrigger className={!isEditing ? "bg-gray-50" : ""}>
-                        <SelectValue value={settingsData.general.dateFormat} />
+                        <SelectValue placeholder={settingsData.general.dateFormat} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
@@ -627,7 +627,7 @@ const AdminSettings = () => {
                     <Label htmlFor="backupFrequency">Backup Frequency</Label>
                     <Select disabled={!isEditing}>
                       <SelectTrigger className={!isEditing ? "bg-gray-50" : ""}>
-                        <SelectValue value={settingsData.content.backupFrequency} />
+                        <SelectValue placeholder={settingsData.content.backupFrequency} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="hourly">Hourly</SelectItem>
@@ -723,7 +723,7 @@ const AdminSettings = () => {
                     <Label htmlFor="defaultUserRole">Default Role</Label>
                     <Select disabled={!isEditing}>
                       <SelectTrigger className={!isEditing ? "bg-gray-50" : ""}>
-                        <SelectValue value={settingsData.users.defaultUserRole} />
+                        <SelectValue placeholder={settingsData.users.defaultUserRole} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="USER">User</SelectItem>
@@ -808,7 +808,7 @@ const AdminSettings = () => {
                     <Label htmlFor="logLevel">Log Level</Label>
                     <Select disabled={!isEditing}>
                       <SelectTrigger className={!isEditing ? "bg-gray-50" : ""}>
-                        <SelectValue value={settingsData.system.logLevel} />
+                        <SelectValue placeholder={settingsData.system.logLevel} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="DEBUG">Debug</SelectItem>
@@ -867,7 +867,7 @@ const AdminSettings = () => {
                   {recentLogs.map((log) => (
                     <div key={log.id} className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg">
                       <div className="flex-shrink-0 mt-1">
-                        {getStatusIcon(log.level.toLowerCase())}
+                        <Activity className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">

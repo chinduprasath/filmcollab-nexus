@@ -174,7 +174,7 @@ export function AdminTopbar({
                     {profile?.full_name || 'Admin User'}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {profile?.email || 'admin@filmcollab.com'}
+                    admin@filmcollab.com
                   </span>
                 </div>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />

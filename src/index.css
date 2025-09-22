@@ -140,6 +140,14 @@ All colors MUST be HSL.
     animation: glow 2s ease-in-out infinite alternate;
   }
 
+  .animate-spin-slow {
+    animation: spin-slow 20s linear infinite;
+  }
+
+  .animate-spin-slow-reverse {
+    animation: spin-slow-reverse 25s linear infinite;
+  }
+
   .animate-float {
     animation: float 3s ease-in-out infinite;
   }
@@ -309,4 +317,14 @@ All colors MUST be HSL.
   100% {
     background-position: 0% 50%;
   }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-slow-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
 }
