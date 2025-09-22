@@ -1,0 +1,203 @@
+-- Script to populate the discover page with sample users
+-- Run this in your Supabase SQL Editor
+
+-- First, let's see what users currently exist
+SELECT 
+    id,
+    user_id,
+    full_name,
+    role,
+    created_at
+FROM public.profiles 
+ORDER BY created_at DESC;
+
+-- Insert sample users for discover page (without user_id to avoid foreign key constraint)
+INSERT INTO public.profiles (
+    first_name,
+    last_name,
+    role,
+    bio,
+    location,
+    website,
+    skills,
+    experience_level,
+    industry,
+    portfolio_url,
+    linkedin_url,
+    github_url,
+    is_verified,
+    followers_count,
+    projects_count,
+    posts_count,
+    likes_count
+) VALUES 
+(
+    'John',
+    'Smith',
+    'Cinematographer',
+    'Professional cinematographer with 10+ years of experience in film and commercial production. Passionate about visual storytelling and creative lighting.',
+    'Los Angeles, CA',
+    'https://johnsmith.com',
+    '["Cinematography", "Lighting", "Color Grading", "Film Production", "Camera Operation"]'::jsonb,
+    'Senior',
+    'film',
+    'https://johnsmith.portfolio.com',
+    'https://linkedin.com/in/johnsmith',
+    'https://github.com/johnsmith',
+    true,
+    1250,
+    45,
+    23,
+    89
+),
+(
+    'Sarah',
+    'Johnson',
+    'Film Director',
+    'Award-winning film director specializing in independent films and documentaries. Bringing authentic stories to life.',
+    'New York, NY',
+    'https://sarahjohnson.com',
+    '["Directing", "Producing", "Screenwriting", "Post-Production", "Storytelling"]'::jsonb,
+    'Senior',
+    'film',
+    'https://sarahjohnson.portfolio.com',
+    'https://linkedin.com/in/sarahjohnson',
+    'https://github.com/sarahjohnson',
+    true,
+    890,
+    28,
+    15,
+    45
+),
+(
+    'Mike',
+    'Chen',
+    'VFX Artist',
+    'Creative VFX artist bringing stories to life through cutting-edge visual effects. Specializing in 3D animation and motion graphics.',
+    'San Francisco, CA',
+    'https://mikechen.com',
+    '["VFX", "Motion Graphics", "3D Animation", "Creative Direction", "After Effects"]'::jsonb,
+    'Mid',
+    'animation',
+    'https://mikechen.portfolio.com',
+    'https://linkedin.com/in/mikechen',
+    'https://github.com/mikechen',
+    false,
+    650,
+    34,
+    18,
+    67
+),
+(
+    'Emma',
+    'Rodriguez',
+    'Sound Designer',
+    'Sound designer and audio engineer with expertise in film and game audio. Creating immersive audio experiences.',
+    'Austin, TX',
+    'https://emmarodriguez.com',
+    '["Sound Design", "Audio Engineering", "Music Production", "Foley", "Pro Tools"]'::jsonb,
+    'Senior',
+    'music',
+    'https://emmarodriguez.portfolio.com',
+    'https://linkedin.com/in/emmarodriguez',
+    'https://github.com/emmarodriguez',
+    true,
+    780,
+    42,
+    31,
+    124
+),
+(
+    'David',
+    'Kim',
+    'Photographer',
+    'Professional photographer capturing moments that tell powerful stories. Specializing in portrait and documentary photography.',
+    'Seattle, WA',
+    'https://davidkim.com',
+    '["Photography", "Photo Editing", "Visual Storytelling", "Portrait Photography", "Adobe Lightroom"]'::jsonb,
+    'Mid',
+    'photography',
+    'https://davidkim.portfolio.com',
+    'https://linkedin.com/in/davidkim',
+    'https://github.com/davidkim',
+    false,
+    420,
+    28,
+    19,
+    56
+),
+(
+    'Lisa',
+    'Martinez',
+    'Film Editor',
+    'Film editor and post-production specialist. Crafting compelling narratives through precise editing and creative storytelling.',
+    'Miami, FL',
+    'https://lisamartinez.com',
+    '["Video Editing", "Post-Production", "Color Correction", "Motion Graphics", "Adobe Premiere"]'::jsonb,
+    'Senior',
+    'television',
+    'https://lisamartinez.portfolio.com',
+    'https://linkedin.com/in/lisamartinez',
+    'https://github.com/lisamartinez',
+    true,
+    920,
+    38,
+    27,
+    98
+),
+(
+    'Alex',
+    'Thompson',
+    'Documentary Filmmaker',
+    'Documentary filmmaker and producer telling important stories that matter. Focused on social justice and environmental issues.',
+    'Portland, OR',
+    'https://alexthompson.com',
+    '["Documentary", "Producing", "Research", "Interviewing", "Cinematography"]'::jsonb,
+    'Mid',
+    'documentary',
+    'https://alexthompson.portfolio.com',
+    'https://linkedin.com/in/alexthompson',
+    'https://github.com/alexthompson',
+    false,
+    340,
+    15,
+    12,
+    43
+),
+(
+    'Maria',
+    'Garcia',
+    'Creative Director',
+    'Creative director and brand strategist helping brands tell their stories through visual media and innovative campaigns.',
+    'Chicago, IL',
+    'https://mariagarcia.com',
+    '["Creative Direction", "Brand Strategy", "Visual Design", "Project Management", "Adobe Creative Suite"]'::jsonb,
+    'Senior',
+    'advertising',
+    'https://mariagarcia.portfolio.com',
+    'https://linkedin.com/in/mariagarcia',
+    'https://github.com/mariagarcia',
+    true,
+    1100,
+    52,
+    35,
+    156
+);
+
+-- Verify the inserted users
+SELECT 
+    id,
+    user_id,
+    first_name,
+    last_name,
+    CONCAT(first_name, ' ', last_name) as full_name,
+    role,
+    location,
+    is_verified,
+    followers_count,
+    created_at
+FROM public.profiles 
+WHERE first_name IS NOT NULL
+  AND first_name NOT ILIKE '%admin%'
+  AND (role IS NULL OR role NOT ILIKE '%admin%')
+ORDER BY created_at DESC;

@@ -29,6 +29,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardTopbarProps {
   pageTitle?: string;
@@ -41,14 +42,83 @@ export function DashboardTopbar({
   onMenuToggle,
   isMobileMenuOpen = false 
 }: DashboardTopbarProps) {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, linkProfile, user } = useAuth();
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [showProfileSelector, setShowProfileSelector] = useState(false);
+
+
+
+  // Show profile selector if profile is generic
+  const shouldShowProfileSelector = profile && (!profile.full_name || profile.full_name === 'User' || profile.role === 'USER');
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
+    try {
+      await signOut();
+      navigate("/");
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
+  };
+
+  const handleLinkVFXProfile = async () => {
+    // Try to find the VFX profile and link it
+    try {
+      console.log('Starting VFX profile linking...');
+      
+      // First, let's see all profiles
+      const { data: allProfiles, error: allError } = await supabase
+        .from('profiles')
+        .select('*');
+      
+      console.log('All profiles:', allProfiles);
+      
+      // Look for VFX profile specifically
+      const { data: vfxProfiles, error: vfxError } = await supabase
+        .from('profiles')
+        .select('*')
+        .or('full_name.ilike.%VFX%,first_name.ilike.%VFX%');
+      
+      console.log('VFX profiles found:', vfxProfiles);
+      
+      if (vfxProfiles && vfxProfiles.length > 0) {
+        const vfxProfile = vfxProfiles[0];
+        console.log('Linking to VFX profile:', vfxProfile);
+        
+        const result = await linkProfile(vfxProfile.id);
+        if (!result.error) {
+          console.log('Successfully linked VFX profile');
+          // Force a page refresh to update the display
+          window.location.reload();
+        } else {
+          console.error('Error linking profile:', result.error);
+        }
+      } else {
+        console.log('No VFX profile found');
+        // Let's try to create one
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: user.id,
+              full_name: 'VFX',
+              first_name: 'VFX',
+              role: 'VFX Artist'
+            })
+            .select()
+            .single();
+          
+          if (newProfile && !createError) {
+            console.log('Created new VFX profile:', newProfile);
+            window.location.reload();
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error linking VFX profile:', err);
+    }
   };
 
   const mockNotifications = [
@@ -94,6 +164,50 @@ export function DashboardTopbar({
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Temporary VFX Profile Link Button */}
+          {shouldShowProfileSelector && (
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleLinkVFXProfile}
+                className="text-xs"
+              >
+                Link VFX Profile
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={async () => {
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                      // Directly update the current user's profile
+                      const { error } = await supabase
+                        .from('profiles')
+                        .upsert({
+                          user_id: user.id,
+                          full_name: 'VFX',
+                          first_name: 'VFX',
+                          role: 'VFX Artist'
+                        });
+                      
+                      if (!error) {
+                        console.log('Profile updated successfully');
+                        window.location.reload();
+                      }
+                    }
+                  } catch (err) {
+                    console.error('Error updating profile:', err);
+                  }
+                }}
+                className="text-xs"
+              >
+                Set as VFX
+              </Button>
+            </div>
+          )}
+
           {/* Search Bar */}
           <div className="relative hidden lg:block">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -168,7 +282,9 @@ export function DashboardTopbar({
                 </Avatar>
                 <div className="hidden md:flex flex-col items-start">
                   <span className="text-sm font-medium text-foreground">
-                    {profile?.full_name || 'User'}
+                    {profile?.full_name || 
+                     (profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : profile?.first_name) || 
+                     'User'}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {profile?.role || 'USER'}
@@ -181,7 +297,9 @@ export function DashboardTopbar({
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
-                    {profile?.full_name || 'User'}
+                    {profile?.full_name || 
+                     (profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : profile?.first_name) || 
+                     'User'}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {profile?.role || 'USER'}

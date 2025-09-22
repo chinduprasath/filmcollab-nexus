@@ -1,710 +1,1558 @@
-"use client";
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { AppLayout } from "@/components/layout/app-layout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
-  Search, Filter, MapPin, Calendar, Clock, Users, Heart, Share2, Plus, Eye, UserPlus, 
-  ExternalLink, ChevronDown, ChevronUp, X, Film, Video, Music, Camera, Mic, Palette, 
-  Scissors, Building2, Star, TrendingUp, CheckCircle, Play, Pause, Award, Target, Zap, Bookmark, Edit
+  Search, 
+  Filter, 
+  Plus, 
+  Heart, 
+  Share2, 
+  Eye, 
+  Users, 
+  Clock, 
+  MapPin, 
+  Film, 
+  Tv, 
+  Star, 
+  TrendingUp,
+  UserPlus,
+  Bookmark,
+  X
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
+// Project interface
 interface Project {
-  id: number;
+  id: string;
   title: string;
-  industry: string;
-  type: string;
-  status: "Ongoing" | "Completed" | "Planning" | "Post-Production";
-  location: string;
-  createdDate: string;
-  description: string;
-  tagline: string;
-  teamMembers: { id: number; name: string; role: string; avatar: string; }[];
-  rolesRequired: { role: string; description: string; isOpen: boolean; }[];
-  budget: string;
-  duration: string;
-  genre: string;
+  description: string | null;
+  project_type: string;
+  category: string;
+  status: string;
+  location: string | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  budget_currency: string;
+  duration_minutes: number | null;
+  episodes: number | null;
+  team_size: number;
+  tags: string[] | null;
+  skills_required: string[] | null;
+  created_by: string;
   featured: boolean;
   popular: boolean;
+  created_at: string;
+  updated_at: string;
+  likes_count?: number;
+  is_liked?: boolean;
+  is_member?: boolean;
 }
+
+// Form schema
+const projectSchema = z.object({
+  title: z.string().min(2, "Title must be at least 2 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  project_type: z.string().min(1, "Please select a project type"),
+  category: z.string().min(1, "Please select a category"),
+  status: z.string().min(1, "Please select a status"),
+  location: z.string().min(2, "Location must be at least 2 characters"),
+  budget_min: z.number().optional(),
+  budget_max: z.number().optional(),
+  duration_minutes: z.number().optional(),
+  episodes: z.number().optional(),
+  skills_required: z.string().optional(),
+});
+
+type ProjectFormData = z.infer<typeof projectSchema>;
 
 export default function ProjectsPage() {
   const [activeTab, setActiveTab] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedIndustry, setSelectedIndustry] = useState("all");
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
-  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [likedProjects, setLikedProjects] = useState<string[]>([]);
+  const [savedProjects, setSavedProjects] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [savedProjects, setSavedProjects] = useState<number[]>([]);
-  const [joinedProjects, setJoinedProjects] = useState<number[]>([1]); // Sample joined project
-  const [createdProjects, setCreatedProjects] = useState<number[]>([2]); // Sample created project
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetails, setShowProjectDetails] = useState(false);
-  const [showCreateProject, setShowCreateProject] = useState(false);
+  const [projectDetailsTab, setProjectDetailsTab] = useState("details");
+  const [applicants, setApplicants] = useState<any[]>([]);
+  const [filters, setFilters] = useState({
+    projectType: "all",
+    category: "all",
+    status: "all",
+    location: "all",
+    budgetRange: "all"
+  });
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const allProjects: Project[] = [
-    {
-      id: 1,
-      title: "The Silent Echo",
-      industry: "Film",
-      type: "Feature Film",
-      status: "Ongoing",
-      location: "Los Angeles, CA",
-      createdDate: "2024-12-10",
-      description: "A psychological thriller about a detective who discovers that the victims of a serial killer are all connected to a mysterious radio frequency that only he can hear.",
-      tagline: "Some voices should never be heard",
-      teamMembers: [
-        { id: 1, name: "Sarah Johnson", role: "Director", avatar: "SJ" },
-        { id: 2, name: "Michael Chen", role: "Cinematographer", avatar: "MC" }
-      ],
-      rolesRequired: [
-        { role: "Lead Actor", description: "Male, 35-45, intense dramatic presence", isOpen: true },
-        { role: "Sound Designer", description: "Experience with psychological thrillers", isOpen: true }
-      ],
-      budget: "₹2.5Cr - ₹3.5Cr",
-      duration: "120 minutes",
-      genre: "Thriller",
-      featured: true,
-      popular: true
+  const form = useForm<ProjectFormData>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      project_type: "",
+      category: "",
+      status: "planning",
+      location: "",
+      budget_min: 0,
+      budget_max: 0,
+      duration_minutes: 0,
+      episodes: 0,
+      skills_required: "",
     },
-    {
-      id: 2,
-      title: "Urban Dreams",
-      industry: "Television",
-      type: "Web Series",
-      status: "Planning",
-      location: "New York, NY",
-      createdDate: "2024-12-08",
-      description: "A coming-of-age story following four friends navigating life, love, and career aspirations in the bustling city of New York.",
-      tagline: "Dreams don't sleep in the city that never sleeps",
-      teamMembers: [
-        { id: 4, name: "David Kim", role: "Showrunner", avatar: "DK" }
-      ],
-      rolesRequired: [
-        { role: "Casting Director", description: "Experience with young adult casting", isOpen: true }
-      ],
-      budget: "₹1.8Cr - ₹2.5Cr",
-      duration: "8 episodes",
-      genre: "Drama",
-      featured: false,
-      popular: true
-    }
-  ];
-
-  const industries = ["all", "Film", "Television", "Music", "Documentary", "Animation", "Theater"];
-  const projectTypes = ["all", "Feature Film", "Short Film", "Web Series", "Music Video", "Documentary"];
-  const statuses = ["all", "Planning", "Ongoing", "Post-Production", "Completed"];
-  const locations = ["all", "Los Angeles, CA", "New York, NY", "Miami, FL", "San Francisco, CA"];
-  const sortOptions = [
-    { value: "newest", label: "Newest First" },
-    { value: "oldest", label: "Oldest First" },
-    { value: "popular", label: "Most Popular" },
-    { value: "featured", label: "Featured" }
-  ];
-
-  const getProjectsByTab = () => {
-    switch (activeTab) {
-      case "joined":
-        return allProjects.filter(project => joinedProjects.includes(project.id));
-      case "created":
-        return allProjects.filter(project => createdProjects.includes(project.id));
-      default:
-        return allProjects;
-    }
-  };
-
-  const filteredProjects = getProjectsByTab().filter(project => {
-    const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesIndustry = selectedIndustry === "all" || project.industry === selectedIndustry;
-    const matchesType = selectedType === "all" || project.type === selectedType;
-    const matchesStatus = selectedStatus === "all" || project.status === selectedStatus;
-    const matchesLocation = selectedLocation === "all" || project.location === selectedLocation;
-    
-    return matchesSearch && matchesIndustry && matchesType && matchesStatus && matchesLocation;
-  }).sort((a, b) => {
-    switch (sortBy) {
-      case "newest": return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime();
-      case "oldest": return new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime();
-      case "popular": return (b.popular ? 1 : 0) - (a.popular ? 1 : 0);
-      case "featured": return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
-      default: return 0;
-    }
   });
 
-  const toggleSavedProject = (projectId: number) => {
-    setSavedProjects(prev => 
-      prev.includes(projectId) 
-        ? prev.filter(id => id !== projectId)
-        : [...prev, projectId]
-    );
+  useEffect(() => {
+    fetchProjects();
+    fetchLikedProjects();
+    fetchSavedProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching projects:', error);
+        return;
+      }
+
+      // Fetch likes and members separately for each project
+      const projectsWithDetails = await Promise.all(
+        (data || []).map(async (project) => {
+          // Get likes count
+          const { count: likesCount } = await supabase
+            .from('project_likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('project_id', project.id);
+
+          // Check if user liked this project
+          const { data: userLike } = await supabase
+            .from('project_likes')
+            .select('id')
+            .eq('project_id', project.id)
+            .eq('user_id', user?.id || '')
+            .single();
+
+          // Check if user is a member
+          const { data: userMember } = await supabase
+            .from('project_members')
+            .select('id')
+            .eq('project_id', project.id)
+            .eq('user_id', user?.id || '')
+            .single();
+
+          return {
+            ...project,
+            likes_count: likesCount || 0,
+            is_liked: !!userLike,
+            is_member: !!userMember,
+          };
+        })
+      );
+
+      setProjects(projectsWithDetails);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getDaysAgo = (dateString: string) => {
-    const days = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / (1000 * 60 * 60 * 24));
-    if (days === 0) return "Today";
-    if (days === 1) return "1 day ago";
-    return `${days} days ago`;
+  const fetchLikedProjects = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('project_likes')
+        .select('project_id')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching liked projects:', error);
+        return;
+      }
+
+      setLikedProjects(data?.map(like => like.project_id) || []);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const fetchSavedProjects = async () => {
+    if (!user) return;
+    
+    try {
+      // For now, we'll use the same table as likes for saved projects
+      // In a real app, you might want a separate saved_projects table
+      const { data, error } = await supabase
+        .from('project_likes')
+        .select('project_id')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching saved projects:', error);
+        return;
+      }
+
+      setSavedProjects(data?.map(like => like.project_id) || []);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const onSubmit = async (data: ProjectFormData) => {
+    if (!user) return;
+
+    try {
+      const skillsArray = data.skills_required 
+        ? data.skills_required.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0)
+        : [];
+
+      const { error } = await supabase
+        .from('projects')
+        .insert({
+          title: data.title,
+          description: data.description,
+          project_type: data.project_type,
+          category: data.category,
+          status: data.status,
+          location: data.location,
+          budget_min: data.budget_min && data.budget_min > 0 ? data.budget_min : null,
+          budget_max: data.budget_max && data.budget_max > 0 ? data.budget_max : null,
+          duration_minutes: data.duration_minutes && data.duration_minutes > 0 ? data.duration_minutes : null,
+          episodes: data.episodes && data.episodes > 0 ? data.episodes : null,
+          skills_required: skillsArray,
+          created_by: user.id,
+        });
+
+      if (error) {
+        console.error('Error creating project:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to create project"
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Project created successfully"
+        });
+        form.reset();
+        setIsCreateDialogOpen(false);
+        fetchProjects();
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred"
+      });
+    }
+  };
+
+  const handleSaveProject = async (projectId: string) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Sign In Required",
+        description: "Please sign in to save projects"
+      });
+      return;
+    }
+
+    try {
+      const isSaved = savedProjects.includes(projectId);
+
+      if (isSaved) {
+        // Unsave project
+        const { error } = await supabase
+          .from('project_likes')
+          .delete()
+          .eq('project_id', projectId)
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error unsaving project:', error);
+          return;
+        }
+
+        setSavedProjects(prev => prev.filter(id => id !== projectId));
+        toast({
+          title: "Project Unsaved",
+          description: "Project has been removed from your saved list"
+        });
+      } else {
+        // Save project
+        const { error } = await supabase
+          .from('project_likes')
+          .insert({
+            project_id: projectId,
+            user_id: user.id,
+          });
+
+        if (error) {
+          console.error('Error saving project:', error);
+          return;
+        }
+
+        setSavedProjects(prev => [...prev, projectId]);
+        toast({
+          title: "Project Saved",
+          description: "Project has been added to your saved list"
+        });
+      }
+
+      // Refresh projects to update counts
+      fetchProjects();
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handleLikeProject = async (projectId: string) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Sign In Required",
+        description: "Please sign in to like projects"
+      });
+      return;
+    }
+
+    try {
+      const isLiked = likedProjects.includes(projectId);
+
+      if (isLiked) {
+        // Unlike project
+        const { error } = await supabase
+          .from('project_likes')
+          .delete()
+          .eq('project_id', projectId)
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error unliking project:', error);
+          return;
+        }
+
+        setLikedProjects(prev => prev.filter(id => id !== projectId));
+      } else {
+        // Like project
+        const { error } = await supabase
+          .from('project_likes')
+          .insert({
+            project_id: projectId,
+            user_id: user.id,
+          });
+
+        if (error) {
+          console.error('Error liking project:', error);
+          return;
+        }
+
+        setLikedProjects(prev => [...prev, projectId]);
+      }
+
+      // Refresh projects to update like counts
+      fetchProjects();
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handleJoinProject = async (projectId: string) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Sign In Required",
+        description: "Please sign in to join projects"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('project_members')
+        .insert({
+          project_id: projectId,
+          user_id: user.id,
+        });
+
+      if (error) {
+        console.error('Error joining project:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to join project"
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Successfully joined the project"
+        });
+        fetchProjects();
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred"
+      });
+    }
+  };
+
+  const handleShareProject = async (project: Project) => {
+    const projectUrl = `${window.location.origin}/projects/${project.id}`;
+    const shareText = `Check out this project: ${project.title}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: project.title,
+          text: shareText,
+          url: projectUrl,
+        });
+      } catch (error) {
+        console.log('Share cancelled or failed');
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${projectUrl}`);
+        toast({
+          title: "Link Copied",
+          description: "Project link has been copied to clipboard"
+        });
+      } catch (error) {
+        alert(`${shareText}\n${projectUrl}`);
+      }
+    }
+  };
+
+  const handleViewProjectDetails = (project: Project) => {
+    setSelectedProject(project);
+    setProjectDetailsTab("details");
+    setShowProjectDetails(true);
+    
+    // If it's the user's own project, fetch applicants
+    if (project.created_by === user?.id) {
+      fetchApplicants(project.id);
+    }
+  };
+
+  const fetchApplicants = async (projectId: string) => {
+    try {
+      // Mock applicants data - in a real app, you'd fetch from your database
+      const mockApplicants = [
+        {
+          id: "1",
+          name: "John Smith",
+          email: "john.smith@email.com",
+          avatar: "JS",
+          appliedDate: "2025-01-08",
+          status: "pending",
+          experience: "5 years",
+          skills: ["Director", "Producer", "Editor"],
+          role: "Director"
+        },
+        {
+          id: "2", 
+          name: "Sarah Johnson",
+          email: "sarah.j@email.com",
+          avatar: "SJ",
+          appliedDate: "2025-01-07",
+          status: "reviewed",
+          experience: "3 years",
+          skills: ["Cinematographer", "Photographer"],
+          role: "Cinematographer"
+        },
+        {
+          id: "3",
+          name: "Mike Chen",
+          email: "mike.chen@email.com", 
+          avatar: "MC",
+          appliedDate: "2025-01-06",
+          status: "shortlisted",
+          experience: "7 years",
+          skills: ["Actor", "Voice Artist"],
+          role: "Lead Actor"
+        }
+      ];
+      setApplicants(mockApplicants);
+    } catch (error) {
+      console.error('Error fetching applicants:', error);
+      setApplicants([]);
+    }
+  };
+
+  const getFilteredProjects = () => {
+    let filtered = projects;
+
+    // Filter by tab
+    if (activeTab === "joined") {
+      filtered = filtered.filter(project => project.is_member);
+    } else if (activeTab === "created") {
+      filtered = filtered.filter(project => project.created_by === user?.id);
+    } else if (activeTab === "saved") {
+      filtered = filtered.filter(project => savedProjects.includes(project.id));
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(project =>
+        project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.project_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.skills_required?.some(skill => 
+          skill.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    }
+
+    // Apply additional filters
+    if (filters.projectType !== "all") {
+      filtered = filtered.filter(project => project.project_type === filters.projectType);
+    }
+    if (filters.category !== "all") {
+      filtered = filtered.filter(project => project.category === filters.category);
+    }
+    if (filters.status !== "all") {
+      filtered = filtered.filter(project => project.status === filters.status);
+    }
+    if (filters.location !== "all") {
+      filtered = filtered.filter(project => project.location === filters.location);
+    }
+    if (filters.budgetRange !== "all") {
+      filtered = filtered.filter(project => {
+        const budget = project.budget_max || 0;
+        switch (filters.budgetRange) {
+          case "low": return budget < 1000000;
+          case "medium": return budget >= 1000000 && budget < 5000000;
+          case "high": return budget >= 5000000;
+          default: return true;
+        }
+      });
+    }
+
+    // Sort projects
+    switch (sortBy) {
+      case "newest":
+        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+      case "oldest":
+        filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        break;
+      case "popular":
+        filtered.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
+        break;
+      case "budget":
+        filtered.sort((a, b) => (b.budget_max || 0) - (a.budget_max || 0));
+        break;
+    }
+
+    return filtered;
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Ongoing": return "bg-blue-500";
-      case "Completed": return "bg-green-500";
-      case "Planning": return "bg-yellow-500";
-      case "Post-Production": return "bg-purple-500";
+      case "ongoing": return "bg-blue-500";
+      case "planning": return "bg-yellow-500";
+      case "completed": return "bg-green-500";
       default: return "bg-gray-500";
     }
   };
 
-  const clearFilters = () => {
-    setSelectedIndustry("all");
-    setSelectedType("all");
-    setSelectedStatus("all");
-    setSelectedLocation("all");
-    setSortBy("newest");
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case "Film": return <Film className="h-4 w-4" />;
+      case "Television": return <Tv className="h-4 w-4" />;
+      default: return <Film className="h-4 w-4" />;
+    }
   };
 
-  const openProjectDetails = (project: Project) => {
-    setSelectedProject(project);
-    setShowProjectDetails(true);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return `${diffDays} days ago`;
   };
+
+  const formatBudget = (min: number | null, max: number | null, currency: string) => {
+    if (!min && !max) return "Budget not specified";
+    if (min && max) return `${currency}${(min / 10000000).toFixed(1)}Cr - ${currency}${(max / 10000000).toFixed(1)}Cr`;
+    if (min) return `${currency}${(min / 10000000).toFixed(1)}Cr+`;
+    return `${currency}${(max! / 10000000).toFixed(1)}Cr`;
+  };
+
+  const filteredProjects = getFilteredProjects();
 
   return (
-    <AppLayout>
-      <div className="space-y-4 bg-gray-50 min-h-screen p-4 -m-4">
+    <AppLayout pageTitle="Projects">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="bg-white p-4 rounded-lg shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Projects</h1>
-              <p className="text-gray-600 text-sm">
-                Discover and collaborate on film and entertainment projects
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowCreateProject(true)}
-                className="h-9 px-3 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Create Project
-              </Button>
-            </div>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Projects</h1>
+            <p className="text-muted-foreground mt-1">
+              Discover and collaborate on film and entertainment projects
+            </p>
           </div>
+          <Button 
+            className="bg-gradient-to-r from-primary to-accent text-primary-foreground"
+            onClick={() => setIsCreateDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Project
+          </Button>
         </div>
 
-        {/* Search and Filter Row */}
-        <div className="bg-white p-4 rounded-lg shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Search projects, titles, or keywords..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-purple-500 text-sm"
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-1 h-9 px-3 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm"
-            >
-              <Filter className="w-4 h-4" />
+        {/* Search and Filters */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search projects, titles, or keywords..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+              <Filter className="h-4 w-4 mr-2" />
               Filters
-              {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </Button>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-700">Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-2 py-1 border border-gray-300 rounded-lg text-xs bg-white focus:border-purple-500 focus:ring-purple-500 h-8"
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+                <SelectItem value="popular">Most Popular</SelectItem>
+                <SelectItem value="budget">Highest Budget</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="flex border-b border-gray-200 px-4">
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors flex items-center text-sm ${
-                activeTab === "all"
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              All Projects
-              <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">
-                {allProjects.length}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab("joined")}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors flex items-center text-sm ${
-                activeTab === "joined"
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Joined
-              <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">
-                {joinedProjects.length}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab("created")}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors flex items-center text-sm ${
-                activeTab === "created"
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Created
-              <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">
-                {createdProjects.length}
-              </span>
-            </button>
-          </div>
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="all">All Projects ({projects.length})</TabsTrigger>
+            <TabsTrigger value="joined">Joined ({projects.filter(p => p.is_member).length})</TabsTrigger>
+            <TabsTrigger value="created">Created ({projects.filter(p => p.created_by === user?.id).length})</TabsTrigger>
+            <TabsTrigger value="saved">Saved ({savedProjects.length})</TabsTrigger>
+          </TabsList>
 
-        {/* Results Count */}
-        <div className="bg-white p-3 rounded-lg shadow-sm">
-          <p className="text-xs text-gray-600">
-            Showing {filteredProjects.length} of {getProjectsByTab().length} projects
-          </p>
-        </div>
+          <TabsContent value={activeTab} className="space-y-4">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">
+                Showing {filteredProjects.length} of {projects.length} projects
+              </p>
+            </div>
 
-        <div className="flex gap-4">
-          {/* Projects Grid */}
-          <div className="flex-1">
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredProjects.map((project) => (
-                <Card key={project.id} className={`hover:shadow-lg transition-shadow border-gray-200 rounded-lg ${project.featured ? 'ring-2 ring-purple-200' : ''}`}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CardTitle className="text-base font-semibold text-gray-900 hover:text-purple-600 cursor-pointer line-clamp-1">
-                            {project.title}
-                          </CardTitle>
+            {/* Projects Display */}
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+              </div>
+            ) : filteredProjects.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Film className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No projects found</h3>
+                  <p className="text-muted-foreground">
+                    {activeTab === 'created' 
+                      ? "You haven't created any projects yet. Click 'Create Project' to get started."
+                      : activeTab === 'saved'
+                      ? "You haven't saved any projects yet. Click the save icon on projects to add them here."
+                      : "Try adjusting your search criteria or check back later for new projects."
+                    }
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (activeTab === "joined" || activeTab === "created" || activeTab === "saved") ? (
+              // Table format for joined, created, and saved tabs
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Project Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Budget</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProjects.map((project) => (
+                      <TableRow key={project.id}>
+                        <TableCell className="font-medium">
+                          <div className="space-y-1">
+                            <div 
+                              className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => {
+                                if (activeTab === "created" || activeTab === "joined") {
+                                  navigate(`/projects/${project.id}`);
+                                } else {
+                                  handleViewProjectDetails(project);
+                                }
+                              }}
+                            >
+                              {project.title}
+                            </div>
+                            <div className="text-xs text-muted-foreground line-clamp-1">
+                              {project.description}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getTypeIcon(project.project_type)}
+                            <span className="text-sm">{project.project_type}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`}></div>
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {project.status}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{project.location}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium text-green-600">
+                            {formatBudget(project.budget_min, project.budget_max, project.budget_currency)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{formatDate(project.created_at)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {activeTab === "created" ? (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleViewProjectDetails(project)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleShareProject(project)}
+                                >
+                                  <Share2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleViewProjectDetails(project)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleSaveProject(project.id)}
+                                  className={savedProjects.includes(project.id) ? "text-primary" : ""}
+                                >
+                                  <Bookmark className={`h-4 w-4 ${savedProjects.includes(project.id) ? "fill-current" : ""}`} />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleShareProject(project)}
+                                >
+                                  <Share2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              // Card format for "All Projects" tab
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProjects.map((project) => (
+                  <Card key={project.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg line-clamp-1">{project.title}</CardTitle>
+                          <div className="flex items-center gap-2 mt-1">
+                            {getTypeIcon(project.project_type)}
+                            <span className="text-sm text-muted-foreground">
+                              {project.project_type} • {project.category}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
                           {project.featured && (
-                            <Badge variant="default" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
-                              <Star className="w-3 h-3 mr-1" />
+                            <Badge variant="outline" className="text-xs border-primary text-primary">
+                              <Star className="h-3 w-3 mr-1" />
                               Featured
                             </Badge>
                           )}
                           {project.popular && (
-                            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700 border-gray-200">
-                              <TrendingUp className="w-3 h-3 mr-1" />
+                            <Badge variant="outline" className="text-xs border-primary text-primary">
+                              <TrendingUp className="h-3 w-3 mr-1" />
                               Popular
                             </Badge>
                           )}
                         </div>
-                        
-                        <div className="flex items-center gap-2 mb-2">
-                          <Film className="w-3 h-3 text-gray-500" />
-                          <span className="text-xs text-gray-600">{project.industry}</span>
-                          <span className="text-gray-400">•</span>
-                          <span className="text-xs text-gray-600">{project.type}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2 mb-2">
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`}></div>
-                          <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                            {project.status}
-                          </Badge>
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <MapPin className="w-3 h-3" />
-                            <span>{project.location}</span>
+                          <span className="text-sm text-muted-foreground capitalize">{project.status}</span>
+                          <span className="text-sm text-muted-foreground">•</span>
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            <span className="text-sm text-muted-foreground">{project.location}</span>
                           </div>
                         </div>
-
-                        <CardDescription className="text-xs text-gray-600 line-clamp-2">
-                          {project.tagline}
-                        </CardDescription>
-                      </div>
-
-                      <div className="flex flex-col gap-1 ml-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleSavedProject(project.id)}
-                          className={`h-7 w-7 p-0 ${savedProjects.includes(project.id) ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
-                        >
-                          <Heart className={`w-3 h-3 ${savedProjects.includes(project.id) ? 'fill-current' : ''}`} />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600">
-                          <Share2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Users className="w-3 h-3" />
-                          <span>{project.teamMembers.length} team members</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          <span>{getDaysAgo(project.createdDate)}</span>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleSaveProject(project.id)}
+                            className={savedProjects.includes(project.id) ? "text-primary" : ""}
+                          >
+                            <Bookmark className={`h-4 w-4 ${savedProjects.includes(project.id) ? "fill-current" : ""}`} />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleShareProject(project)}
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-
-                      <div className="flex items-center justify-between text-xs text-gray-600">
-                        <span>Budget: {project.budget}</span>
-                        <span>{project.duration}</span>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-4">
+                      <CardDescription className="line-clamp-2">
+                        {project.description}
+                      </CardDescription>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span>{project.team_size} team members</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span>{formatDate(project.created_at)}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="font-medium">Budget: {formatBudget(project.budget_min, project.budget_max, project.budget_currency)}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">
+                            {project.duration_minutes ? `${project.duration_minutes} minutes` : 
+                             project.episodes ? `${project.episodes} episodes` : 'Duration not specified'}
+                          </span>
+                        </div>
                       </div>
-
-                      <div className="flex gap-2 pt-1">
+                      
+                      <div className="flex gap-2 pt-2">
                         <Button 
                           size="sm" 
-                          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs h-8" 
-                          onClick={() => openProjectDetails(project)}
+                          className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                          onClick={() => handleViewProjectDetails(project)}
                         >
-                          <Eye className="w-3 h-3 mr-1" />
+                          <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </Button>
-                        {activeTab === "all" && !joinedProjects.includes(project.id) && (
+                        {!project.is_member && project.created_by !== user?.id && (
                           <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                            onClick={() => setJoinedProjects(prev => [...prev, project.id])}
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleJoinProject(project.id)}
                           >
-                            <UserPlus className="w-3 h-3" />
-                          </Button>
-                        )}
-                        {activeTab === "joined" && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                            onClick={() => setJoinedProjects(prev => prev.filter(id => id !== project.id))}
-                          >
-                            Leave Project
-                          </Button>
-                        )}
-                        {activeTab === "created" && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                          >
-                            <Edit className="w-3 h-3" />
+                            <UserPlus className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
-              {/* No Results */}
-              {filteredProjects.length === 0 && (
-                <div className="text-center py-12">
-                  <Film className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900">No projects found</h3>
-                  <p className="text-gray-600 mb-4">
-                    Start by creating or joining one
-                  </p>
-                  <Button 
-                    size="sm" 
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() => {
-                      setSearchQuery("");
-                      clearFilters();
-                    }}
-                  >
-                    Clear All Filters
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Side Filter Panel */}
-          {showFilters && (
-            <div className="w-80 bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Filters</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={clearFilters}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  Clear All
-                </Button>
-              </div>
-
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Industry</label>
-                  <select
-                    value={selectedIndustry}
-                    onChange={(e) => setSelectedIndustry(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:border-purple-500 focus:ring-purple-500"
-                  >
-                    {industries.map((industry) => (
-                      <option key={industry} value={industry}>
-                        {industry === "all" ? "All Industries" : industry}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Project Type</label>
-                  <select
-                    value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:border-purple-500 focus:ring-purple-500"
-                  >
-                    {projectTypes.map((type) => (
-                      <option key={type} value={type}>
-                        {type === "all" ? "All Types" : type}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Status</label>
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:border-purple-500 focus:ring-purple-500"
-                  >
-                    {statuses.map((status) => (
-                      <option key={status} value={status}>
-                        {status === "all" ? "All Statuses" : status}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Location</label>
-                  <select
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:border-purple-500 focus:ring-purple-500"
-                  >
-                    {locations.map((location) => (
-                      <option key={location} value={location}>
-                        {location === "all" ? "All Locations" : location}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Project Details Popup */}
-      {showProjectDetails && selectedProject && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg max-w-3xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold">{selectedProject.title}</h2>
-                <Button variant="ghost" size="sm" onClick={() => setShowProjectDetails(false)}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-
-              <div className="space-y-6">
+        {/* Create Project Dialog */}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create New Project</DialogTitle>
+              <DialogDescription>
+                Share your creative vision and find collaborators
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{selectedProject.industry}</Badge>
-                      <Badge variant="outline">{selectedProject.type}</Badge>
-                      <div className={`w-3 h-3 rounded-full ${getStatusColor(selectedProject.status)}`}></div>
-                      <Badge variant="outline">{selectedProject.status}</Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      <span>{selectedProject.location}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Budget: {selectedProject.budget}</span>
-                      <span>Duration: {selectedProject.duration}</span>
-                      <span>Genre: {selectedProject.genre}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold mb-2">Tagline</h3>
-                  <p className="text-lg italic text-muted-foreground">"{selectedProject.tagline}"</p>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold mb-2">Description</h3>
-                  <p className="text-muted-foreground">{selectedProject.description}</p>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold mb-3">Team Members</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {selectedProject.teamMembers.map((member) => (
-                      <div key={member.id} className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                        <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold">
-                          {member.avatar}
-                        </div>
-                        <div>
-                          <p className="font-medium">{member.name}</p>
-                          <p className="text-sm text-muted-foreground">{member.role}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold mb-3">Roles Required</h3>
-                  <div className="space-y-3">
-                    {selectedProject.rolesRequired.map((role, index) => (
-                      <div key={index} className={`p-4 border rounded-lg ${role.isOpen ? 'border-green-200 bg-green-50 dark:bg-green-950/20' : 'border-gray-200 bg-gray-50 dark:bg-gray-950/20'}`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium">{role.role}</h4>
-                          <Badge variant={role.isOpen ? "default" : "secondary"}>
-                            {role.isOpen ? "Open" : "Filled"}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{role.description}</p>
-                        {role.isOpen && (
-                          <Button size="sm" className="mt-2">
-                            <UserPlus className="w-3 h-3 mr-1" />
-                            Apply for Role
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button className="flex-1">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Join Project
-                  </Button>
-                  <Button variant="outline">
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Share Project
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create Project Popup */}
-      {showCreateProject && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg max-w-xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold">Create New Project</h2>
-                <Button variant="ghost" size="sm" onClick={() => setShowCreateProject(false)}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium">Project Title *</label>
-                    <Input placeholder="e.g., The Silent Echo" className="h-8 text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium">Industry *</label>
-                    <select className="w-full px-2 py-1 border border-border rounded-md text-xs bg-background h-8">
-                      <option>Select Industry</option>
-                      {industries.slice(1).map((industry) => (
-                        <option key={industry} value={industry}>{industry}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium">Project Type *</label>
-                    <select className="w-full px-2 py-1 border border-border rounded-md text-xs bg-background h-8">
-                      <option>Select Project Type</option>
-                      {projectTypes.slice(1).map((type) => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium">Status *</label>
-                    <select className="w-full px-2 py-1 border border-border rounded-md text-xs bg-background h-8">
-                      <option>Select Status</option>
-                      {statuses.slice(1).map((status) => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium">Location *</label>
-                    <Input placeholder="e.g., Los Angeles, CA" className="h-8 text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium">Budget Range</label>
-                    <Input placeholder="e.g., ₹2.5Cr - ₹3.5Cr" className="h-8 text-sm" />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium">Tagline *</label>
-                  <Input placeholder="A compelling one-line description" className="h-8 text-sm" />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium">Project Description *</label>
-                  <textarea 
-                    className="w-full px-2 py-1 border border-border rounded-md text-xs bg-background min-h-[80px]"
-                    placeholder="Describe your project, its vision, and what you're looking for..."
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. The Silent..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="project_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Film">Film</SelectItem>
+                            <SelectItem value="Television">Television</SelectItem>
+                            <SelectItem value="Web Series">Web Series</SelectItem>
+                            <SelectItem value="Documentary">Documentary</SelectItem>
+                            <SelectItem value="Short Film">Short Film</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
 
-                <div className="flex gap-2 pt-2">
-                  <Button className="flex-1 h-8 text-xs">
-                    <Plus className="w-3 h-3 mr-1" />
-                    Create Project
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowCreateProject(false)} className="h-8 text-xs">
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe your project, its vision, and what you're looking for in collaborators..."
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Feature Film">Feature Film</SelectItem>
+                            <SelectItem value="Short Film">Short Film</SelectItem>
+                            <SelectItem value="Web Series">Web Series</SelectItem>
+                            <SelectItem value="TV Series">TV Series</SelectItem>
+                            <SelectItem value="Documentary">Documentary</SelectItem>
+                            <SelectItem value="Music Video">Music Video</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="planning">Planning</SelectItem>
+                            <SelectItem value="pre-production">Pre-Production</SelectItem>
+                            <SelectItem value="production">Production</SelectItem>
+                            <SelectItem value="post-production">Post-Production</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Los Angeles, CA" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="budget_min"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Budget Min (₹)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 1000000"
+                            value={field.value === 0 ? "" : field.value || ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? 0 : parseInt(value) || 0);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="budget_max"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Budget Max (₹)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 5000000"
+                            value={field.value === 0 ? "" : field.value || ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? 0 : parseInt(value) || 0);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="duration_minutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Duration (minutes)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 120"
+                            value={field.value === 0 ? "" : field.value || ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? 0 : parseInt(value) || 0);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="episodes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Episodes (for series)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 8"
+                            value={field.value === 0 ? "" : field.value || ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? 0 : parseInt(value) || 0);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="skills_required"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Skills Required (comma-separated)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Director, Cinematographer, Editor" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end gap-4 pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsCreateDialogOpen(false)}
+                  >
                     Cancel
                   </Button>
+                  <Button 
+                    type="submit" 
+                    className="bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                  >
+                    Create Project
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Filter Panel */}
+        {showFilters && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
+            <div className="w-80 bg-background h-full shadow-lg overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold">Filters</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowFilters(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Project Type</label>
+                    <Select value={filters.projectType} onValueChange={(value) => setFilters(prev => ({ ...prev, projectType: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="Film">Film</SelectItem>
+                        <SelectItem value="Television">Television</SelectItem>
+                        <SelectItem value="Web Series">Web Series</SelectItem>
+                        <SelectItem value="Documentary">Documentary</SelectItem>
+                        <SelectItem value="Short Film">Short Film</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Category</label>
+                    <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        <SelectItem value="Feature Film">Feature Film</SelectItem>
+                        <SelectItem value="Short Film">Short Film</SelectItem>
+                        <SelectItem value="Web Series">Web Series</SelectItem>
+                        <SelectItem value="TV Series">TV Series</SelectItem>
+                        <SelectItem value="Documentary">Documentary</SelectItem>
+                        <SelectItem value="Music Video">Music Video</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Status</label>
+                    <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="planning">Planning</SelectItem>
+                        <SelectItem value="pre-production">Pre-Production</SelectItem>
+                        <SelectItem value="production">Production</SelectItem>
+                        <SelectItem value="post-production">Post-Production</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Location</label>
+                    <Select value={filters.location} onValueChange={(value) => setFilters(prev => ({ ...prev, location: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Locations" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Locations</SelectItem>
+                        <SelectItem value="Los Angeles, CA">Los Angeles, CA</SelectItem>
+                        <SelectItem value="New York, NY">New York, NY</SelectItem>
+                        <SelectItem value="Mumbai, India">Mumbai, India</SelectItem>
+                        <SelectItem value="London, UK">London, UK</SelectItem>
+                        <SelectItem value="Remote">Remote</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Budget Range</label>
+                    <Select value={filters.budgetRange} onValueChange={(value) => setFilters(prev => ({ ...prev, budgetRange: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Budgets" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Budgets</SelectItem>
+                        <SelectItem value="low">Under ₹10L</SelectItem>
+                        <SelectItem value="medium">₹10L - ₹50L</SelectItem>
+                        <SelectItem value="high">Above ₹50L</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => setFilters({
+                        projectType: "all",
+                        category: "all",
+                        status: "all",
+                        location: "all",
+                        budgetRange: "all"
+                      })}
+                    >
+                      Clear All Filters
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Project Details Dialog */}
+        <Dialog open={showProjectDetails} onOpenChange={setShowProjectDetails}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedProject?.title}</DialogTitle>
+              <DialogDescription>
+                {selectedProject?.description}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedProject && (
+              <div className="space-y-6">
+                {/* Tabs for created projects */}
+                {selectedProject.created_by === user?.id ? (
+                  <Tabs value={projectDetailsTab} onValueChange={setProjectDetailsTab}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="details">Project Details</TabsTrigger>
+                      <TabsTrigger value="applicants">
+                        Applicants ({applicants.length})
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="details" className="space-y-6">
+                      {/* Project Details Content */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="font-semibold mb-2">Project Information</h3>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Type:</span>
+                                <span>{selectedProject.project_type}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Category:</span>
+                                <span>{selectedProject.category}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Status:</span>
+                                <Badge variant="outline" className="capitalize">{selectedProject.status}</Badge>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Location:</span>
+                                <span>{selectedProject.location}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 className="font-semibold mb-2">Budget & Duration</h3>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Budget:</span>
+                                <span className="font-medium text-green-600">
+                                  {formatBudget(selectedProject.budget_min, selectedProject.budget_max, selectedProject.budget_currency)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Duration:</span>
+                                <span>
+                                  {selectedProject.duration_minutes ? `${selectedProject.duration_minutes} minutes` : 
+                                   selectedProject.episodes ? `${selectedProject.episodes} episodes` : 'Not specified'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Team Size:</span>
+                                <span>{selectedProject.team_size} members</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="font-semibold mb-2">Skills Required</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedProject.skills_required?.map((skill, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {skill}
+                                </Badge>
+                              )) || <span className="text-muted-foreground text-sm">No skills specified</span>}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 className="font-semibold mb-2">Project Details</h3>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Created:</span>
+                                <span>{formatDate(selectedProject.created_at)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Last Updated:</span>
+                                <span>{formatDate(selectedProject.updated_at)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="applicants" className="space-y-6">
+                      {/* Applicants Content */}
+                      <div>
+                        <h3 className="font-semibold text-lg mb-4">Project Applicants</h3>
+                        {applicants.length === 0 ? (
+                          <div className="text-center py-8">
+                            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground">No applicants yet</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {applicants.map((applicant) => (
+                              <Card key={applicant.id} className="p-4">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                                      <span className="text-white font-semibold text-sm">
+                                        {applicant.avatar}
+                                      </span>
+                                    </div>
+                                    <div className="flex-1">
+                                      <h4 className="font-semibold text-lg">{applicant.name}</h4>
+                                      <p className="text-muted-foreground text-sm">{applicant.email}</p>
+                                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                        <span>Applied: {formatDate(applicant.appliedDate)}</span>
+                                        <span>Experience: {applicant.experience}</span>
+                                        <span>Role: {applicant.role}</span>
+                                      </div>
+                                      <div className="flex flex-wrap gap-2 mt-3">
+                                        {applicant.skills.map((skill: string, index: number) => (
+                                          <Badge key={index} variant="outline" className="text-xs">
+                                            {skill}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-2">
+                                    <Badge 
+                                      variant={
+                                        applicant.status === "shortlisted" ? "default" :
+                                        applicant.status === "reviewed" ? "secondary" : "outline"
+                                      }
+                                    >
+                                      {applicant.status}
+                                    </Badge>
+                                    <div className="flex gap-2">
+                                      <Button size="sm" variant="outline">
+                                        View Profile
+                                      </Button>
+                                      <Button size="sm" variant="outline">
+                                        Contact
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                ) : (
+                  // Regular project details for non-creators
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="font-semibold mb-2">Project Information</h3>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Type:</span>
+                              <span>{selectedProject.project_type}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Category:</span>
+                              <span>{selectedProject.category}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Status:</span>
+                              <Badge variant="outline" className="capitalize">{selectedProject.status}</Badge>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Location:</span>
+                              <span>{selectedProject.location}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="font-semibold mb-2">Budget & Duration</h3>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Budget:</span>
+                              <span className="font-medium text-green-600">
+                                {formatBudget(selectedProject.budget_min, selectedProject.budget_max, selectedProject.budget_currency)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Duration:</span>
+                              <span>
+                                {selectedProject.duration_minutes ? `${selectedProject.duration_minutes} minutes` : 
+                                 selectedProject.episodes ? `${selectedProject.episodes} episodes` : 'Not specified'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-4">
+                      <Button 
+                        className="flex-1"
+                        onClick={() => handleJoinProject(selectedProject.id)}
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Join Project
+                      </Button>
+                      <Button variant="outline" onClick={() => handleShareProject(selectedProject)}>
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Share Project
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
     </AppLayout>
   );
 }

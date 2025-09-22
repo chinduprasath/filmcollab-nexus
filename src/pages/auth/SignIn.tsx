@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,8 +21,19 @@ type SignInFormData = z.infer<typeof signInSchema>;
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Debug: Log auth state changes and handle navigation
+  useEffect(() => {
+    console.log('SignIn component - auth state changed:', { user: user?.id, profile: profile?.role, authLoading });
+    
+    // If user is authenticated and not loading, navigate to dashboard
+    if (user && !authLoading) {
+      console.log('SignIn component - user authenticated, navigating to dashboard');
+      navigate("/dashboard");
+    }
+  }, [user, profile, authLoading, navigate]);
 
   const form = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
@@ -35,9 +46,22 @@ export default function SignIn() {
   const onSubmit = async (data: SignInFormData) => {
     setLoading(true);
     try {
+      console.log('SignIn form submission for:', data.email);
       const { error } = await signIn(data.email, data.password);
+      console.log('SignIn form result:', { error });
+      
       if (!error) {
-        navigate("/dashboard");
+        console.log('SignIn successful, waiting for auth state change...');
+        
+        // Add a timeout to force navigation if auth state doesn't change
+        setTimeout(() => {
+          if (user && !authLoading) {
+            console.log('Timeout: Force navigating to dashboard');
+            navigate("/dashboard");
+          }
+        }, 2000);
+      } else {
+        console.error('SignIn failed:', error);
       }
     } catch (error) {
       console.error("Sign in error:", error);

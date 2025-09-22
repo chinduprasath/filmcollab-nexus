@@ -28,6 +28,8 @@ export type Database = {
           location: string
           posted_date: string | null
           salary_range: string | null
+          salary_min: number | null
+          salary_max: number | null
           skills_required: string[] | null
           status: string | null
           updated_at: string | null
@@ -46,6 +48,8 @@ export type Database = {
           location: string
           posted_date?: string | null
           salary_range?: string | null
+          salary_min?: number | null
+          salary_max?: number | null
           skills_required?: string[] | null
           status?: string | null
           updated_at?: string | null
@@ -64,10 +68,126 @@ export type Database = {
           location?: string
           posted_date?: string | null
           salary_range?: string | null
+          salary_min?: number | null
+          salary_max?: number | null
           skills_required?: string[] | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          project_type: string
+          category: string
+          status: string
+          location: string | null
+          budget_min: number | null
+          budget_max: number | null
+          budget_currency: string
+          duration_minutes: number | null
+          episodes: number | null
+          team_size: number
+          tags: string[] | null
+          skills_required: string[] | null
+          created_by: string
+          featured: boolean
+          popular: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          project_type: string
+          category: string
+          status?: string
+          location?: string | null
+          budget_min?: number | null
+          budget_max?: number | null
+          budget_currency?: string
+          duration_minutes?: number | null
+          episodes?: number | null
+          team_size?: number
+          tags?: string[] | null
+          skills_required?: string[] | null
+          created_by: string
+          featured?: boolean
+          popular?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          project_type?: string
+          category?: string
+          status?: string
+          location?: string | null
+          budget_min?: number | null
+          budget_max?: number | null
+          budget_currency?: string
+          duration_minutes?: number | null
+          episodes?: number | null
+          team_size?: number
+          tags?: string[] | null
+          skills_required?: string[] | null
+          created_by?: string
+          featured?: boolean
+          popular?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_members: {
+        Row: {
+          id: string
+          project_id: string
+          user_id: string
+          role: string | null
+          joined_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          user_id: string
+          role?: string | null
+          joined_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          user_id?: string
+          role?: string | null
+          joined_at?: string
+        }
+        Relationships: []
+      }
+      project_likes: {
+        Row: {
+          id: string
+          project_id: string
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          user_id?: string
+          created_at?: string
         }
         Relationships: []
       }
@@ -81,6 +201,21 @@ export type Database = {
           role: string | null
           updated_at: string | null
           user_id: string | null
+          bio: string | null
+          location: string | null
+          website: string | null
+          skills: string[] | null
+          experience_level: string | null
+          industry: string | null
+          portfolio_url: string | null
+          linkedin_url: string | null
+          github_url: string | null
+          is_verified: boolean | null
+          followers_count: number | null
+          projects_count: number | null
+          posts_count: number | null
+          likes_count: number | null
+          category: string | null
         }
         Insert: {
           created_at?: string | null
@@ -91,6 +226,21 @@ export type Database = {
           role?: string | null
           updated_at?: string | null
           user_id?: string | null
+          bio?: string | null
+          location?: string | null
+          website?: string | null
+          skills?: string[] | null
+          experience_level?: string | null
+          industry?: string | null
+          portfolio_url?: string | null
+          linkedin_url?: string | null
+          github_url?: string | null
+          is_verified?: boolean | null
+          followers_count?: number | null
+          projects_count?: number | null
+          posts_count?: number | null
+          likes_count?: number | null
+          category?: string | null
         }
         Update: {
           created_at?: string | null
@@ -101,8 +251,320 @@ export type Database = {
           role?: string | null
           updated_at?: string | null
           user_id?: string | null
+          bio?: string | null
+          location?: string | null
+          website?: string | null
+          skills?: string[] | null
+          experience_level?: string | null
+          industry?: string | null
+          portfolio_url?: string | null
+          linkedin_url?: string | null
+          github_url?: string | null
+          is_verified?: boolean | null
+          followers_count?: number | null
+          projects_count?: number | null
+          posts_count?: number | null
+          likes_count?: number | null
+          category?: string | null
         }
         Relationships: []
+      }
+      posts: {
+        Row: {
+          author_id: string
+          comments_count: number
+          content: string
+          created_at: string
+          hashtags: string[] | null
+          id: string
+          is_featured: boolean
+          is_published: boolean
+          likes_count: number
+          media_types: string[] | null
+          media_urls: string[] | null
+          shares_count: number
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          comments_count?: number
+          content: string
+          created_at?: string
+          hashtags?: string[] | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          likes_count?: number
+          media_types?: string[] | null
+          media_urls?: string[] | null
+          shares_count?: number
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          comments_count?: number
+          content?: string
+          created_at?: string
+          hashtags?: string[] | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          likes_count?: number
+          media_types?: string[] | null
+          media_urls?: string[] | null
+          shares_count?: number
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          parent_id: string | null
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      post_saves: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_saves_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_saves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_likes: {
+        Row: {
+          id: string
+          user_id: string
+          liked_user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          liked_user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          liked_user_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_likes_liked_user_id_fkey"
+            columns: ["liked_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_saves: {
+        Row: {
+          id: string
+          user_id: string
+          saved_user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          saved_user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          saved_user_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_saves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_saves_saved_user_id_fkey"
+            columns: ["saved_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      connections: {
+        Row: {
+          id: string
+          user_id: string
+          connected_user_id: string
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          connected_user_id: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          connected_user_id?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connections_connected_user_id_fkey"
+            columns: ["connected_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

@@ -74,8 +74,12 @@ export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarPro
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
+    try {
+      await signOut();
+      navigate("/");
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
   };
 
   const isActive = (href: string) => {
