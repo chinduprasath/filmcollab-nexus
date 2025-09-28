@@ -15,8 +15,7 @@ const adminSignUpSchema = z.object({
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-  adminCode: z.string().min(1, "Admin access code is required")
+  confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"]
@@ -38,21 +37,13 @@ export default function AdminSignUp() {
       lastName: "",
       email: "",
       password: "",
-      confirmPassword: "",
-      adminCode: ""
+      confirmPassword: ""
     }
   });
 
   const onSubmit = async (data: AdminSignUpFormData) => {
     setLoading(true);
     try {
-      // In a real app, validate admin code on backend
-      if (data.adminCode !== "FILMCOLLAB_ADMIN_2024") {
-        form.setError("adminCode", { message: "Invalid admin access code" });
-        setLoading(false);
-        return;
-      }
-
       const { error } = await signUp(data.email, data.password, data.firstName, data.lastName, 'ADMIN');
       if (!error) {
         navigate("/admin-dashboard");
@@ -134,24 +125,6 @@ export default function AdminSignUp() {
                         <Input
                           type="email"
                           placeholder="admin@filmcollab.com"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="adminCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Admin Access Code</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Enter admin access code"
                           {...field}
                         />
                       </FormControl>

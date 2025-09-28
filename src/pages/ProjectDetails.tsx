@@ -1,39 +1,45 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/app-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
-  ArrowLeft,
+  ArrowLeft, 
   MapPin, 
   Clock, 
-  Building, 
+  DollarSign, 
   Users, 
-  Film, 
-  Tv, 
-  Star, 
-  TrendingUp,
+  Calendar,
+  Building,
+  Briefcase,
+  Star,
+  Share2,
+  Bookmark,
+  Film,
+  Tv,
   UserPlus,
+  Heart,
+  Eye,
   MessageCircle,
   CheckSquare,
-  User,
+  Plus,
   Send,
   MoreVertical,
   Edit,
-  Trash2
+  Trash2,
+  CheckCircle,
+  Circle,
+  AlertCircle
 } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-// Project interface
 interface Project {
   id: string;
   title: string;
@@ -48,405 +54,675 @@ interface Project {
   duration_minutes: number | null;
   episodes: number | null;
   team_size: number;
-  tags: string[] | null;
-  skills_required: string[] | null;
   created_by: string;
-  featured: boolean;
-  popular: boolean;
   created_at: string;
   updated_at: string;
+  featured: boolean;
+  popular: boolean;
+  likes_count: number;
+  is_member: boolean;
+  is_liked: boolean;
+  is_saved: boolean;
+  full_description?: string;
+  production_notes?: string;
+  target_audience?: string;
+  distribution_plan?: string;
+  timeline?: string;
+  requirements?: string;
+  benefits?: string;
+  contact_info?: string;
 }
 
-// Task interface
+interface ProjectMember {
+  id: string;
+  name: string;
+  role: string;
+  avatar: string;
+  joined_date: string;
+}
+
 interface Task {
   id: string;
   title: string;
   description: string;
-  status: 'pending' | 'in-progress' | 'completed';
   assigned_to: string;
+  assigned_by: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  priority: 'low' | 'medium' | 'high';
   due_date: string;
   created_at: string;
 }
 
-// Team member interface
-interface TeamMember {
-  id: string;
-  user_id: string;
-  name: string;
-  email: string;
-  role: string;
-  avatar: string;
-  joined_at: string;
-}
-
-// Applicant interface
-interface Applicant {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  appliedDate: string;
-  status: 'pending' | 'reviewed' | 'shortlisted' | 'rejected';
-  experience: string;
-  skills: string[];
-  role: string;
-  portfolio?: string;
-}
-
-// Chat message interface
 interface ChatMessage {
   id: string;
   user_id: string;
   user_name: string;
+  user_avatar: string;
   message: string;
   timestamp: string;
+}
+
+interface Applicant {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  experience: string;
+  skills: string[];
+  applied_date: string;
+  status: 'pending' | 'accepted' | 'rejected';
   avatar: string;
 }
 
 export default function ProjectDetails() {
-  const { id } = useParams<{ id: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("details");
+  const [isSaved, setIsSaved] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [sourceTab, setSourceTab] = useState<string>("");
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [newTask, setNewTask] = useState({ title: "", description: "", assigned_to: "", due_date: "" });
-  const [deleteMemberDialog, setDeleteMemberDialog] = useState<{ open: boolean; member: TeamMember | null }>({ open: false, member: null });
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [showCreateTask, setShowCreateTask] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    assigned_to: "",
+    priority: "medium" as const,
+    due_date: ""
+  });
 
-  useEffect(() => {
-    if (id) {
-      fetchProjectDetails();
-      fetchTasks();
-      fetchTeamMembers();
-      fetchApplicants();
-      fetchChatMessages();
+  // Hardcoded projects data
+  const hardcodedProjects: Project[] = [
+    {
+      id: "proj-1",
+      title: "Indie Film Production",
+      description: "An independent film exploring themes of identity and belonging in modern society.",
+      project_type: "Film",
+      category: "Drama",
+      status: "ongoing",
+      location: "Los Angeles, CA",
+      budget_min: 500000,
+      budget_max: 1000000,
+      budget_currency: "₹",
+      duration_minutes: 120,
+      episodes: null,
+      team_size: 8,
+      created_by: "user-1",
+      created_at: "2024-01-15T10:00:00Z",
+      updated_at: "2024-01-15T10:00:00Z",
+      featured: true,
+      popular: false,
+      likes_count: 45,
+      is_member: false,
+      is_liked: false,
+      is_saved: false,
+      full_description: "This independent film project explores the complex themes of identity, belonging, and self-discovery in contemporary society. Set against the backdrop of a bustling metropolis, the story follows the journey of a young artist who must navigate the challenges of pursuing their dreams while maintaining their authentic self. The film combines elements of drama and psychological thriller to create a compelling narrative that resonates with audiences of all ages.",
+      production_notes: "Production is scheduled to begin in March 2024 with principal photography expected to last 6 weeks. We are looking for experienced crew members who are passionate about independent cinema and willing to work collaboratively in a creative environment.",
+      target_audience: "Young adults aged 18-35, film festival audiences, independent cinema enthusiasts",
+      distribution_plan: "Film festival circuit, streaming platforms, limited theatrical release",
+      timeline: "Pre-production: Feb-Mar 2024, Production: Mar-Apr 2024, Post-production: May-Jul 2024, Release: Aug 2024",
+      requirements: "Experience in independent film production, strong communication skills, ability to work in fast-paced environment, creative problem-solving abilities",
+      benefits: "Creative freedom, networking opportunities, portfolio building, festival recognition potential, collaborative work environment",
+      contact_info: "Email: producer@indiefilm.com, Phone: +1 (555) 123-4567"
+    },
+    {
+      id: "proj-2",
+      title: "Web Series: Digital Nomads",
+      description: "A comedy web series following digital nomads as they work and travel around the world.",
+      project_type: "Television",
+      category: "Comedy",
+      status: "planning",
+      location: "Remote",
+      budget_min: 200000,
+      budget_max: 500000,
+      budget_currency: "₹",
+      duration_minutes: null,
+      episodes: 8,
+      team_size: 12,
+      created_by: "user-2",
+      created_at: "2024-01-14T09:00:00Z",
+      updated_at: "2024-01-14T09:00:00Z",
+      featured: false,
+      popular: true,
+      likes_count: 78,
+      is_member: true,
+      is_liked: true,
+      is_saved: true,
+      full_description: "Digital Nomads is a comedy web series that follows a group of remote workers as they navigate the challenges and adventures of working while traveling the world. Each episode explores different aspects of the digital nomad lifestyle, from finding reliable WiFi in exotic locations to dealing with time zone differences and cultural misunderstandings.",
+      production_notes: "The series will be shot in multiple international locations, requiring a flexible and adaptable crew. We're looking for team members who are comfortable with travel and can work in various cultural contexts.",
+      target_audience: "Digital nomads, remote workers, travel enthusiasts, comedy fans aged 25-45",
+      distribution_plan: "YouTube, streaming platforms, social media marketing",
+      timeline: "Pre-production: Jan-Feb 2024, Production: Mar-Jun 2024, Post-production: Jul-Sep 2024, Release: Oct 2024",
+      requirements: "Travel experience preferred, adaptability to different cultures, strong communication skills, experience with remote collaboration",
+      benefits: "Travel opportunities, international networking, diverse cultural experiences, flexible work schedule",
+      contact_info: "Email: casting@digitalnomads.com, Phone: +1 (555) 234-5678"
+    },
+    {
+      id: "proj-3",
+      title: "Documentary: Climate Change Impact",
+      description: "A documentary examining the real-world impact of climate change on coastal communities.",
+      project_type: "Film",
+      category: "Documentary",
+      status: "ongoing",
+      location: "Miami, FL",
+      budget_min: 300000,
+      budget_max: 600000,
+      budget_currency: "₹",
+      duration_minutes: 90,
+      episodes: null,
+      team_size: 6,
+      created_by: "user-3",
+      created_at: "2024-01-13T08:00:00Z",
+      updated_at: "2024-01-13T08:00:00Z",
+      featured: false,
+      popular: false,
+      likes_count: 32,
+      is_member: false,
+      is_liked: false,
+      is_saved: false,
+      full_description: "This documentary project aims to shed light on the real-world impact of climate change on coastal communities. Through intimate interviews and powerful visuals, we'll explore how rising sea levels, increased storm intensity, and environmental degradation are affecting the lives of people who call these areas home.",
+      production_notes: "Documentary filming requires sensitivity and respect for the communities we're documenting. We need crew members who understand the importance of ethical storytelling and can work with vulnerable populations.",
+      target_audience: "Environmental activists, documentary film enthusiasts, policy makers, general public interested in climate issues",
+      distribution_plan: "Film festivals, educational institutions, streaming platforms, environmental organizations",
+      timeline: "Research: Jan-Feb 2024, Production: Mar-May 2024, Post-production: Jun-Aug 2024, Release: Sep 2024",
+      requirements: "Documentary experience, environmental awareness, sensitivity to vulnerable communities, strong research skills",
+      benefits: "Meaningful impact, environmental advocacy, educational value, festival potential",
+      contact_info: "Email: director@climatefilm.com, Phone: +1 (555) 345-6789"
+    },
+    {
+      id: "proj-4",
+      title: "Music Video Production",
+      description: "High-energy music video for an upcoming pop artist's latest single.",
+      project_type: "Film",
+      category: "Music Video",
+      status: "planning",
+      location: "New York, NY",
+      budget_min: 100000,
+      budget_max: 250000,
+      budget_currency: "₹",
+      duration_minutes: 4,
+      episodes: null,
+      team_size: 15,
+      created_by: "user-4",
+      created_at: "2024-01-12T07:00:00Z",
+      updated_at: "2024-01-12T07:00:00Z",
+      featured: false,
+      popular: true,
+      likes_count: 89,
+      is_member: false,
+      is_liked: false,
+      is_saved: false,
+      full_description: "This music video project will showcase the artist's latest single with a high-energy, visually stunning production. The concept involves multiple locations, choreography, and special effects to create an engaging visual experience that complements the song's upbeat tempo and contemporary pop sound.",
+      production_notes: "Fast-paced production schedule with multiple location shoots. Looking for experienced crew who can work efficiently under tight deadlines while maintaining high production values.",
+      target_audience: "Pop music fans aged 16-35, music video enthusiasts, social media audiences",
+      distribution_plan: "YouTube, music streaming platforms, social media promotion, music television",
+      timeline: "Pre-production: Jan 2024, Production: Feb 2024, Post-production: Mar 2024, Release: Apr 2024",
+      requirements: "Music video experience, ability to work under tight deadlines, creative problem-solving, experience with special effects",
+      benefits: "High-profile project, portfolio enhancement, networking with music industry professionals, creative collaboration",
+      contact_info: "Email: producer@musicvideo.com, Phone: +1 (555) 456-7890"
+    },
+    {
+      id: "proj-5",
+      title: "Corporate Training Video",
+      description: "Professional training video series for corporate onboarding and skill development.",
+      project_type: "Television",
+      category: "Corporate",
+      status: "ongoing",
+      location: "Chicago, IL",
+      budget_min: 150000,
+      budget_max: 300000,
+      budget_currency: "₹",
+      duration_minutes: null,
+      episodes: 12,
+      team_size: 8,
+      created_by: "user-5",
+      created_at: "2024-01-11T06:00:00Z",
+      updated_at: "2024-01-11T06:00:00Z",
+      featured: false,
+      popular: false,
+      likes_count: 23,
+      is_member: true,
+      is_liked: false,
+      is_saved: true,
+      full_description: "This corporate training video series will provide comprehensive onboarding and skill development content for a Fortune 500 company. The series covers topics including company culture, technical skills, leadership development, and workplace safety protocols.",
+      production_notes: "Professional corporate environment requiring polished, high-quality production values. Content must be engaging while maintaining educational effectiveness and corporate brand standards.",
+      target_audience: "Corporate employees, HR professionals, training departments, new hires",
+      distribution_plan: "Internal corporate platform, learning management systems, HR departments",
+      timeline: "Pre-production: Jan-Feb 2024, Production: Mar-May 2024, Post-production: Jun-Jul 2024, Release: Aug 2024",
+      requirements: "Corporate video experience, understanding of adult learning principles, professional demeanor, experience with educational content",
+      benefits: "Stable corporate client, professional portfolio, consistent work schedule, competitive compensation",
+    },
+    {
+      id: "user-created-1",
+      title: "My Indie Film Project",
+      description: "A personal passion project about family relationships and cultural identity. Looking for talented actors and crew members to bring this story to life.",
+      project_type: "Film",
+      category: "Feature Film",
+      status: "pre-production",
+      location: "Mumbai, India",
+      budget_min: 3000000,
+      budget_max: 5000000,
+      budget_currency: "₹",
+      duration_minutes: 110,
+      episodes: null,
+      team_size: 6,
+      created_by: "current-user",
+      created_at: "2024-12-10T09:00:00Z",
+      updated_at: "2024-12-16T14:30:00Z",
+      featured: false,
+      popular: false,
+      likes_count: 15,
+      is_member: true,
+      is_liked: false,
+      is_saved: false,
+      full_description: "This is a deeply personal indie film project that explores the complex dynamics of family relationships and cultural identity in modern India. The story follows a young protagonist who must navigate between traditional family expectations and personal dreams, creating a narrative that resonates with audiences across different cultural backgrounds. We're looking for passionate actors and crew members who can bring authenticity and emotional depth to this meaningful story.",
+      production_notes: "This project is currently in pre-production phase. We're looking for experienced crew members who understand the nuances of indie filmmaking and can work within budget constraints while maintaining high production values. The project requires sensitivity to cultural themes and authentic storytelling.",
+      target_audience: "Young adults aged 18-35, film festival audiences, independent cinema enthusiasts, audiences interested in cultural identity themes",
+      distribution_plan: "Film festival circuit, independent cinema releases, streaming platforms, cultural events",
+      timeline: "Pre-production: Dec 2024 - Feb 2025, Production: Mar - Apr 2025, Post-production: May - Jul 2025, Release: Aug 2025",
+      requirements: "Experience in indie film production, understanding of cultural themes, ability to work with limited budgets, strong communication skills, passion for meaningful storytelling",
+      benefits: "Creative freedom, meaningful project, festival recognition potential, portfolio building, networking with indie filmmakers, cultural impact",
+      contact_info: "Email: indieproducer@filmcollab.com, Phone: +91 98765 43210"
+    },
+    {
+      id: "user-created-2",
+      title: "Tech Startup Documentary",
+      description: "Documenting the journey of young entrepreneurs building innovative tech solutions in India. Seeking experienced documentary filmmakers.",
+      project_type: "Documentary",
+      category: "Documentary",
+      status: "production",
+      location: "Bangalore, India",
+      budget_min: 1800000,
+      budget_max: 2800000,
+      budget_currency: "₹",
+      duration_minutes: 85,
+      episodes: null,
+      team_size: 4,
+      created_by: "current-user",
+      created_at: "2024-11-20T11:15:00Z",
+      updated_at: "2024-12-14T16:45:00Z",
+      featured: false,
+      popular: false,
+      likes_count: 22,
+      is_member: true,
+      is_liked: false,
+      is_saved: false,
+      full_description: "This documentary project chronicles the inspiring journey of young Indian entrepreneurs who are building innovative tech solutions to address real-world problems. The film follows multiple startup founders as they navigate the challenges of building companies, securing funding, and making a positive impact on society through technology.",
+      production_notes: "Currently in production phase. We need experienced documentary filmmakers who can capture authentic moments and tell compelling stories. The project involves filming in various tech hubs across India and requires understanding of startup culture and technology.",
+      target_audience: "Entrepreneurs, tech enthusiasts, startup community, investors, general audience interested in innovation and entrepreneurship",
+      distribution_plan: "Tech conferences, startup events, streaming platforms, educational institutions, business schools",
+      timeline: "Production: Nov 2024 - Mar 2025, Post-production: Apr - Jun 2025, Release: Jul 2025",
+      requirements: "Documentary filmmaking experience, understanding of startup ecosystem, ability to work with tech-savvy subjects, strong storytelling skills",
+      benefits: "Access to startup ecosystem, networking opportunities, portfolio enhancement, potential for follow-up projects, industry recognition",
+      contact_info: "Email: docproducer@filmcollab.com, Phone: +91 98765 43211"
+    },
+    {
+      id: "user-created-3",
+      title: "Short Film: The Last Letter",
+      description: "A touching short film about a grandfather writing letters to his grandchildren. Perfect for film festival submissions.",
+      project_type: "Short Film",
+      category: "Short Film",
+      status: "post-production",
+      location: "Delhi, India",
+      budget_min: 400000,
+      budget_max: 600000,
+      budget_currency: "₹",
+      duration_minutes: 12,
+      episodes: null,
+      team_size: 3,
+      created_by: "current-user",
+      created_at: "2024-10-15T08:30:00Z",
+      updated_at: "2024-12-12T10:20:00Z",
+      featured: false,
+      popular: false,
+      likes_count: 8,
+      is_member: true,
+      is_liked: false,
+      is_saved: false,
+      full_description: "The Last Letter is an emotionally resonant short film that tells the story of an elderly grandfather who writes heartfelt letters to his grandchildren, sharing life lessons and family memories. The film explores themes of family bonds, generational wisdom, and the power of written communication in our digital age.",
+      production_notes: "Currently in post-production phase. The film has been shot and is being edited. We're looking for skilled editors who can enhance the emotional impact of the story through careful pacing and visual storytelling.",
+      target_audience: "Film festival audiences, families, older adults, audiences interested in intergenerational stories",
+      distribution_plan: "Film festivals, family events, educational screenings, streaming platforms",
+      timeline: "Post-production: Oct 2024 - Jan 2025, Festival submissions: Feb - Mar 2025, Release: Apr 2025",
+      requirements: "Short film editing experience, understanding of emotional storytelling, ability to work with limited footage, festival submission knowledge",
+      benefits: "Festival recognition potential, emotional storytelling experience, portfolio enhancement, networking with indie filmmakers",
+      contact_info: "Email: shortfilm@filmcollab.com, Phone: +91 98765 43212"
+    },
+    {
+      id: "user-created-4",
+      title: "Web Series: Urban Tales",
+      description: "An anthology web series exploring modern urban life in Indian cities. Each episode focuses on different characters and their struggles.",
+      project_type: "Web Series",
+      category: "Web Series",
+      status: "planning",
+      location: "Mumbai, India",
+      budget_min: 2500000,
+      budget_max: 4000000,
+      budget_currency: "₹",
+      duration_minutes: null,
+      episodes: 6,
+      team_size: 10,
+      created_by: "current-user",
+      created_at: "2024-12-05T13:45:00Z",
+      updated_at: "2024-12-15T11:30:00Z",
+      featured: false,
+      popular: false,
+      likes_count: 18,
+      is_member: true,
+      is_liked: false,
+      is_saved: false,
+      full_description: "Urban Tales is an anthology web series that explores the diverse experiences of people living in modern Indian cities. Each episode focuses on different characters and their unique struggles, dreams, and relationships, creating a mosaic of urban life that reflects the complexity and vibrancy of contemporary India.",
+      production_notes: "Currently in planning phase. We're developing scripts and assembling the creative team. Looking for experienced writers, directors, and producers who understand urban storytelling and can work on episodic content.",
+      target_audience: "Young urban adults aged 20-40, streaming platform audiences, people interested in contemporary Indian culture and urban life",
+      distribution_plan: "Streaming platforms, web series festivals, social media promotion, urban cultural events",
+      timeline: "Planning: Dec 2024 - Feb 2025, Pre-production: Mar - Apr 2025, Production: May - Aug 2025, Post-production: Sep - Nov 2025, Release: Dec 2025",
+      requirements: "Web series experience, understanding of urban themes, episodic storytelling skills, ability to work with diverse characters and stories",
+      benefits: "Creative storytelling opportunities, streaming platform exposure, portfolio building, networking with web series creators",
+      contact_info: "Email: urbantales@filmcollab.com, Phone: +91 98765 43213"
     }
-  }, [id]);
+  ];
 
-  const fetchProjectDetails = async () => {
+  // Hardcoded data for tasks, chat, and applicants
+  const hardcodedTasks: Task[] = [
+    {
+      id: "task-1",
+      title: "Script Review and Finalization",
+      description: "Review the final draft of the script and make necessary revisions before production begins.",
+      assigned_to: "Sarah Johnson",
+      assigned_by: "Project Creator",
+      status: "in-progress",
+      priority: "high",
+      due_date: "2024-12-25",
+      created_at: "2024-12-15T10:00:00Z"
+    },
+    {
+      id: "task-2",
+      title: "Location Scouting",
+      description: "Find and secure filming locations for the Mumbai scenes.",
+      assigned_to: "Michael Chen",
+      assigned_by: "Project Creator",
+      status: "pending",
+      priority: "medium",
+      due_date: "2024-12-30",
+      created_at: "2024-12-16T09:00:00Z"
+    },
+    {
+      id: "task-3",
+      title: "Equipment Rental",
+      description: "Arrange rental of camera equipment and lighting for the shoot.",
+      assigned_to: "Emily Rodriguez",
+      assigned_by: "Project Creator",
+      status: "completed",
+      priority: "high",
+      due_date: "2024-12-20",
+      created_at: "2024-12-10T14:00:00Z"
+    }
+  ];
+
+  const hardcodedChatMessages: ChatMessage[] = [
+    {
+      id: "msg-1",
+      user_id: "user-1",
+      user_name: "Sarah Johnson",
+      user_avatar: "SJ",
+      message: "Hey team! Just finished reviewing the script. It looks great, but I have a few suggestions for the dialogue in scene 3.",
+      timestamp: "2024-12-16T10:30:00Z"
+    },
+    {
+      id: "msg-2",
+      user_id: "user-2",
+      user_name: "Michael Chen",
+      user_avatar: "MC",
+      message: "Thanks Sarah! I'll take a look at those suggestions. Also, I found some great locations in Bandra for the family scenes.",
+      timestamp: "2024-12-16T11:15:00Z"
+    },
+    {
+      id: "msg-3",
+      user_id: "user-3",
+      user_name: "Emily Rodriguez",
+      user_avatar: "ER",
+      message: "Perfect! I've secured the camera equipment. We'll have everything we need for the shoot next week.",
+      timestamp: "2024-12-16T12:00:00Z"
+    },
+    {
+      id: "msg-4",
+      user_id: "user-4",
+      user_name: "David Kim",
+      user_avatar: "DK",
+      message: "Great work everyone! The pre-production is coming together nicely. Let's schedule a team meeting for tomorrow to discuss the shooting schedule.",
+      timestamp: "2024-12-16T13:45:00Z"
+    }
+  ];
+
+  const hardcodedApplicants: Applicant[] = [
+    {
+      id: "app-1",
+      name: "Priya Sharma",
+      email: "priya.sharma@email.com",
+      role: "Actor",
+      experience: "5 years",
+      skills: ["Acting", "Dancing", "Voice Modulation"],
+      applied_date: "2024-12-14",
+      status: "pending",
+      avatar: "PS"
+    },
+    {
+      id: "app-2",
+      name: "Rajesh Kumar",
+      email: "rajesh.kumar@email.com",
+      role: "Cinematographer",
+      experience: "8 years",
+      skills: ["Cinematography", "Lighting", "Camera Operation"],
+      applied_date: "2024-12-13",
+      status: "accepted",
+      avatar: "RK"
+    },
+    {
+      id: "app-3",
+      name: "Anita Singh",
+      email: "anita.singh@email.com",
+      role: "Production Assistant",
+      experience: "2 years",
+      skills: ["Production Management", "Coordination", "Logistics"],
+      applied_date: "2024-12-12",
+      status: "pending",
+      avatar: "AS"
+    }
+  ];
+
+  const projectMembers: ProjectMember[] = [
+    {
+      id: "member-1",
+      name: "Sarah Johnson",
+      role: "Director",
+      avatar: "SJ",
+      joined_date: "2024-01-10"
+    },
+    {
+      id: "member-2",
+      name: "Michael Chen",
+      role: "Producer",
+      avatar: "MC",
+      joined_date: "2024-01-12"
+    },
+    {
+      id: "member-3",
+      name: "Emily Rodriguez",
+      role: "Cinematographer",
+      avatar: "ER",
+      joined_date: "2024-01-14"
+    },
+    {
+      id: "member-4",
+      name: "David Kim",
+      role: "Editor",
+      avatar: "DK",
+      joined_date: "2024-01-16"
+    }
+  ];
+
+  const handleJoinProject = () => {
+    setIsMember(true);
+    toast({
+      title: "Joined project",
+      description: "You have successfully joined this project."
+    });
+  };
+
+  const handleLeaveProject = () => {
+    setIsMember(false);
+    toast({
+      title: "Left project",
+      description: "You have left this project."
+    });
+  };
+
+  const handleLike = () => {
+    setIsLiked(!isLiked);
+    toast({
+      title: isLiked ? "Unliked" : "Liked",
+      description: isLiked ? "Project removed from liked projects." : "Project added to liked projects."
+    });
+  };
+
+  const handleSave = () => {
+    setIsSaved(!isSaved);
+    toast({
+      title: isSaved ? "Unsaved" : "Saved",
+      description: isSaved ? "Project removed from saved projects." : "Project added to saved projects."
+    });
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: project?.title || "Project",
+      text: `Check out this project: ${project?.title}`,
+      url: window.location.href
+    };
+
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching project:', error);
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
         toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch project details"
+          title: "Link copied",
+          description: "Project link has been copied to clipboard."
         });
-        navigate('/projects');
-        return;
       }
-
-      setProject(data);
     } catch (error) {
-      console.error('Error:', error);
-      navigate('/projects');
-    } finally {
-      setLoading(false);
+      console.error('Error sharing:', error);
     }
   };
 
-  const fetchTasks = async () => {
-    try {
-      // Mock tasks data - in a real app, you'd fetch from your database
-      const mockTasks: Task[] = [
-        {
-          id: "1",
-          title: "Script Writing",
-          description: "Complete the first draft of the script",
-          status: "in-progress",
-          assigned_to: "John Smith",
-          due_date: "2025-01-15",
-          created_at: "2025-01-08"
-        },
-        {
-          id: "2",
-          title: "Location Scouting",
-          description: "Find and secure filming locations",
-          status: "pending",
-          assigned_to: "Sarah Johnson",
-          due_date: "2025-01-20",
-          created_at: "2025-01-08"
-        },
-        {
-          id: "3",
-          title: "Casting",
-          description: "Hold auditions for main characters",
-          status: "completed",
-          assigned_to: "Mike Chen",
-          due_date: "2025-01-10",
-          created_at: "2025-01-08"
-        }
-      ];
-      setTasks(mockTasks);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-    }
-  };
-
-  const fetchTeamMembers = async () => {
-    try {
-      // Mock team members data - in a real app, you'd fetch from your database
-      const mockTeamMembers: TeamMember[] = [
-        {
-          id: "1",
-          user_id: "user1",
-          name: "John Smith",
-          email: "john.smith@email.com",
-          role: "Director",
-          avatar: "JS",
-          joined_at: "2025-01-01"
-        },
-        {
-          id: "2",
-          user_id: "user2",
-          name: "Sarah Johnson",
-          email: "sarah.j@email.com",
-          role: "Producer",
-          avatar: "SJ",
-          joined_at: "2025-01-02"
-        },
-        {
-          id: "3",
-          user_id: "user3",
-          name: "Mike Chen",
-          email: "mike.chen@email.com",
-          role: "Cinematographer",
-          avatar: "MC",
-          joined_at: "2025-01-03"
-        }
-      ];
-
-      // Add current user to team members if not already present
-      if (user?.id && !mockTeamMembers.some(member => member.user_id === user.id)) {
-        const currentUserMember: TeamMember = {
-          id: "current-user",
-          user_id: user.id,
-          name: user.user_metadata?.full_name || "Current User",
-          email: user.email || "user@email.com",
-          role: "Team Member",
-          avatar: (user.user_metadata?.full_name || "CU").split(' ').map(n => n[0]).join('').toUpperCase(),
-          joined_at: new Date().toISOString().split('T')[0]
-        };
-        mockTeamMembers.push(currentUserMember);
-      }
-
-      setTeamMembers(mockTeamMembers);
-    } catch (error) {
-      console.error('Error fetching team members:', error);
-    }
-  };
-
-  const fetchApplicants = async () => {
-    try {
-      // Mock applicants data - in a real app, you'd fetch from your database
-      const mockApplicants: Applicant[] = [
-        {
-          id: "1",
-          name: "Alice Brown",
-          email: "alice.brown@email.com",
-          avatar: "AB",
-          appliedDate: "2025-01-08",
-          status: "pending",
-          experience: "3 years",
-          skills: ["Actor", "Voice Artist"],
-          role: "Lead Actor",
-          portfolio: "alicebrown.com"
-        },
-        {
-          id: "2",
-          name: "David Wilson",
-          email: "david.w@email.com",
-          avatar: "DW",
-          appliedDate: "2025-01-07",
-          status: "reviewed",
-          experience: "5 years",
-          skills: ["Sound Designer", "Audio Engineer"],
-          role: "Sound Designer",
-          portfolio: "davidwilson.audio"
-        },
-        {
-          id: "3",
-          name: "Emma Davis",
-          email: "emma.d@email.com",
-          avatar: "ED",
-          appliedDate: "2025-01-06",
-          status: "shortlisted",
-          experience: "7 years",
-          skills: ["Editor", "Post-Production"],
-          role: "Video Editor",
-          portfolio: "emmadavis.film"
-        }
-      ];
-      setApplicants(mockApplicants);
-    } catch (error) {
-      console.error('Error fetching applicants:', error);
-    }
-  };
-
-  const fetchChatMessages = async () => {
-    try {
-      // Mock chat messages data - in a real app, you'd fetch from your database
-      const mockMessages: ChatMessage[] = [
-        {
-          id: "1",
-          user_id: "user1",
-          user_name: "John Smith",
-          message: "Welcome everyone to the project! Let's make this amazing.",
-          timestamp: "2025-01-08T10:00:00Z",
-          avatar: "JS"
-        },
-        {
-          id: "2",
-          user_id: "user2",
-          user_name: "Sarah Johnson",
-          message: "Thanks John! I'm excited to work with this team.",
-          timestamp: "2025-01-08T10:05:00Z",
-          avatar: "SJ"
-        },
-        {
-          id: "3",
-          user_id: "user3",
-          user_name: "Mike Chen",
-          message: "The script looks great. When do we start location scouting?",
-          timestamp: "2025-01-08T10:10:00Z",
-          avatar: "MC"
-        }
-      ];
-      setChatMessages(mockMessages);
-    } catch (error) {
-      console.error('Error fetching chat messages:', error);
-    }
-  };
-
-  const handleTaskStatusUpdate = async (taskId: string, newStatus: string) => {
-    try {
-      // In a real app, you'd update the database
-      setTasks(prev => prev.map(task => 
-        task.id === taskId ? { ...task, status: newStatus as any } : task
-      ));
-      
-      toast({
-        title: "Task Updated",
-        description: "Task status has been updated successfully"
-      });
-    } catch (error) {
-      console.error('Error updating task:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update task status"
-      });
-    }
-  };
-
-  const handleAddTask = async () => {
+  const handleCreateTask = () => {
     if (!newTask.title || !newTask.description) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please fill in all required fields"
+        description: "Please fill in all required fields."
       });
       return;
     }
 
-    try {
-      const task: Task = {
-        id: Date.now().toString(),
-        title: newTask.title,
-        description: newTask.description,
-        status: "pending",
-        assigned_to: newTask.assigned_to,
-        due_date: newTask.due_date,
-        created_at: new Date().toISOString()
-      };
+    const task: Task = {
+      id: `task-${Date.now()}`,
+      title: newTask.title,
+      description: newTask.description,
+      assigned_to: newTask.assigned_to,
+      assigned_by: "Current User",
+      status: "pending",
+      priority: newTask.priority,
+      due_date: newTask.due_date,
+      created_at: new Date().toISOString()
+    };
 
-      setTasks(prev => [...prev, task]);
-      setNewTask({ title: "", description: "", assigned_to: "", due_date: "" });
-      
-      toast({
-        title: "Task Added",
-        description: "New task has been added successfully"
-      });
-    } catch (error) {
-      console.error('Error adding task:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to add task"
-      });
-    }
+    setTasks(prev => [...prev, task]);
+    setNewTask({
+      title: "",
+      description: "",
+      assigned_to: "",
+      priority: "medium",
+      due_date: ""
+    });
+    setShowCreateTask(false);
+    
+    toast({
+      title: "Task created",
+      description: "New task has been created successfully."
+    });
   };
 
-  const handleSendMessage = async () => {
+  const handleUpdateTaskStatus = (taskId: string, status: Task['status']) => {
+    setTasks(prev => prev.map(task => 
+      task.id === taskId ? { ...task, status } : task
+    ));
+    
+    toast({
+      title: "Task updated",
+      description: `Task status updated to ${status}.`
+    });
+  };
+
+  const handleSendMessage = () => {
     if (!newMessage.trim()) return;
 
-    try {
-      const message: ChatMessage = {
-        id: Date.now().toString(),
-        user_id: user?.id || "",
-        user_name: user?.email?.split('@')[0] || "User",
-        message: newMessage,
-        timestamp: new Date().toISOString(),
-        avatar: user?.email?.charAt(0).toUpperCase() || "U"
-      };
+    const message: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      user_id: "current-user",
+      user_name: "Alex Rodriguez",
+      user_avatar: "AR",
+      message: newMessage,
+      timestamp: new Date().toISOString()
+    };
 
-      setChatMessages(prev => [...prev, message]);
-      setNewMessage("");
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
+    setChatMessages(prev => [...prev, message]);
+    setNewMessage("");
   };
 
-  const handleApplicantStatusUpdate = async (applicantId: string, newStatus: string) => {
-    try {
-      setApplicants(prev => prev.map(applicant => 
-        applicant.id === applicantId ? { ...applicant, status: newStatus as any } : applicant
-      ));
-      
-      toast({
-        title: "Status Updated",
-        description: "Applicant status has been updated successfully"
-      });
-    } catch (error) {
-      console.error('Error updating applicant status:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update applicant status"
-      });
-    }
+  const handleAcceptApplicant = (applicantId: string) => {
+    setApplicants(prev => prev.map(applicant => 
+      applicant.id === applicantId ? { ...applicant, status: "accepted" } : applicant
+    ));
+    
+    toast({
+      title: "Applicant accepted",
+      description: "The applicant has been accepted to the project."
+    });
   };
 
-  const handleDeleteTeamMember = async (member: TeamMember) => {
-    try {
-      setTeamMembers(prev => prev.filter(m => m.id !== member.id));
-      setDeleteMemberDialog({ open: false, member: null });
-      
-      toast({
-        title: "Member Removed",
-        description: `${member.name} has been removed from the team`
-      });
-    } catch (error) {
-      console.error('Error removing team member:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to remove team member"
-      });
-    }
+  const handleRejectApplicant = (applicantId: string) => {
+    setApplicants(prev => prev.map(applicant => 
+      applicant.id === applicantId ? { ...applicant, status: "rejected" } : applicant
+    ));
+    
+    toast({
+      title: "Applicant rejected",
+      description: "The applicant has been rejected."
+    });
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatBudget = (min: number | null, max: number | null, currency: string) => {
+    if (!min && !max) return "Budget not specified";
+    if (min && max) return `${currency}${(min / 100000).toFixed(1)}L - ${currency}${(max / 100000).toFixed(1)}L`;
+    if (min) return `${currency}${(min / 100000).toFixed(1)}L+`;
+    return `${currency}${(max! / 100000).toFixed(1)}L`;
   };
 
   const getStatusColor = (status: string) => {
@@ -454,11 +730,6 @@ export default function ProjectDetails() {
       case "ongoing": return "bg-blue-500";
       case "planning": return "bg-yellow-500";
       case "completed": return "bg-green-500";
-      case "in-progress": return "bg-blue-500";
-      case "pending": return "bg-yellow-500";
-      case "reviewed": return "bg-purple-500";
-      case "shortlisted": return "bg-green-500";
-      case "rejected": return "bg-red-500";
       default: return "bg-gray-500";
     }
   };
@@ -471,28 +742,49 @@ export default function ProjectDetails() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
+  useEffect(() => {
+    const fetchProjectDetails = () => {
+      // Get the source tab from URL parameters
+      const tabParam = searchParams.get('tab');
+      setSourceTab(tabParam || '');
+      
+      if (!projectId) {
+        setLoading(false);
+        return;
+      }
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+      const foundProject = hardcodedProjects.find(project => project.id === projectId);
+      
+      if (foundProject) {
+        setProject(foundProject);
+        setIsSaved(foundProject.is_saved);
+        setIsLiked(foundProject.is_liked);
+        setIsMember(foundProject.is_member);
+        setTasks(hardcodedTasks);
+        setChatMessages(hardcodedChatMessages);
+        setApplicants(hardcodedApplicants);
+        setLoading(false);
+      } else {
+        setLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Project not found",
+          description: "The requested project could not be found."
+        });
+      }
+    };
 
-  const formatBudget = (min: number | null, max: number | null, currency: string) => {
-    if (!min && !max) return "Budget not specified";
-    if (min && max) return `${currency}${(min / 10000000).toFixed(1)}Cr - ${currency}${(max / 10000000).toFixed(1)}Cr`;
-    if (min) return `${currency}${(min / 10000000).toFixed(1)}Cr+`;
-    return `${currency}${(max! / 10000000).toFixed(1)}Cr`;
-  };
+    fetchProjectDetails();
+  }, [projectId, searchParams, toast]);
 
   if (loading) {
     return (
-      <AppLayout pageTitle="Loading...">
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <AppLayout pageTitle="Project Details">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading project details...</p>
+          </div>
         </div>
       </AppLayout>
     );
@@ -501,195 +793,301 @@ export default function ProjectDetails() {
   if (!project) {
     return (
       <AppLayout pageTitle="Project Not Found">
-        <div className="text-center py-12">
-          <Film className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">Project Not Found</h3>
-          <p className="text-muted-foreground">The project you are looking for does not exist or has been removed.</p>
-          <Button onClick={() => navigate('/projects')} className="mt-4">Back to Projects</Button>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-foreground mb-4">Project Not Found</h1>
+            <p className="text-muted-foreground mb-6">The requested project could not be found.</p>
+            <Button onClick={() => navigate("/projects")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Projects
+            </Button>
+          </div>
         </div>
       </AppLayout>
     );
   }
 
   return (
-    <AppLayout pageTitle={project.title}>
-      <div className="max-w-6xl mx-auto py-2 px-2 sm:px-4 lg:px-6">
-        {/* Back Button */}
-        <Button variant="ghost" onClick={() => navigate('/projects')} className="mb-2 flex items-center gap-2 text-muted-foreground">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Projects
-        </Button>
+    <AppLayout pageTitle={`${project.title} - Project Details`}>
+      <div className="w-full space-y-6">
+        {/* Header with Back Button */}
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/projects")}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Projects
+          </Button>
+        </div>
 
         {/* Project Header */}
-        <Card className="mb-2">
-          <CardHeader className="pb-2">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-              <div className="flex-1">
-                <CardTitle className="text-xl font-bold text-foreground">{project.title}</CardTitle>
-                <CardDescription className="text-sm text-muted-foreground mt-1">
-                  {project.description}
-                </CardDescription>
-                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    {getTypeIcon(project.project_type)}
-                    <span>{project.project_type} • {project.category}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`}></div>
-                    <span className="capitalize">{project.status}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>{project.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    <span>Created {formatDate(project.created_at)}</span>
-                  </div>
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-2xl font-bold text-foreground">
+                    {project.title}
+                  </CardTitle>
+                  {project.featured && (
+                    <Badge variant="outline" className="border-primary text-primary">
+                      <Star className="h-3 w-3 mr-1" />
+                      Featured
+                    </Badge>
+                  )}
+                  {project.popular && (
+                    <Badge variant="outline" className="border-primary text-primary">
+                      <Star className="h-3 w-3 mr-1" />
+                      Popular
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  {getTypeIcon(project.project_type)}
+                  <span className="font-medium">{project.project_type} • {project.category}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  <span>{project.location}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`}></div>
+                  <span className="text-sm text-muted-foreground capitalize">{project.status}</span>
                 </div>
               </div>
               <div className="flex gap-2">
-                {project.featured && (
-                  <Badge variant="outline" className="border-primary text-primary">
-                    <Star className="h-3 w-3 mr-1" />
-                    Featured
-                  </Badge>
-                )}
-                {project.popular && (
-                  <Badge variant="outline" className="border-primary text-primary">
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    Popular
-                  </Badge>
-                )}
+                <Button variant="outline" onClick={handleLike}>
+                  <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current text-red-500' : ''}`} />
+                  {isLiked ? 'Liked' : 'Like'}
+                </Button>
+                <Button variant="outline" onClick={handleSave}>
+                  <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                  {isSaved ? 'Saved' : 'Save'}
+                </Button>
+                <Button variant="outline" onClick={handleShare}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
               </div>
             </div>
           </CardHeader>
         </Card>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className={`grid w-full ${project.created_by === user?.id ? 'grid-cols-5' : 'grid-cols-3'} bg-muted`}>
-            <TabsTrigger 
-              value="details" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
-            >
-              Details
-            </TabsTrigger>
-            <TabsTrigger 
-              value="tasks" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
-            >
-              Tasks ({tasks.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="chats" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
-            >
-              Chats
-            </TabsTrigger>
-            {project.created_by === user?.id && (
-              <>
-                <TabsTrigger 
-                  value="team" 
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
-                >
-                  Team ({teamMembers.length})
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="applicants" 
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
-                >
-                  Applicants ({applicants.length})
-                </TabsTrigger>
-              </>
+        {/* Project Details with Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className={`grid w-full ${sourceTab === 'created' ? 'grid-cols-5' : 'grid-cols-4'}`}>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="tasks">Tasks</TabsTrigger>
+            <TabsTrigger value="chat">Chat</TabsTrigger>
+            <TabsTrigger value="team">Team Members</TabsTrigger>
+            {sourceTab === 'created' && (
+              <TabsTrigger value="applicants">Applicants</TabsTrigger>
             )}
           </TabsList>
 
-          {/* Details Tab */}
-          <TabsContent value="details" className="space-y-2">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-              {/* Main Content */}
-              <div className="lg:col-span-2 space-y-2">
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                {/* Project Description */}
                 <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Project Overview</CardTitle>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Briefcase className="h-5 w-5" />
+                      Project Description
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-2">
-                    <div className="prose prose-sm max-w-none">
-                      <p className="whitespace-pre-wrap text-sm">{project.description}</p>
-                    </div>
+                  <CardContent>
+                    <p className="text-muted-foreground whitespace-pre-wrap">
+                      {project?.full_description || project?.description}
+                    </p>
                   </CardContent>
                 </Card>
 
-                {/* Required Skills */}
-                {project.skills_required && project.skills_required.length > 0 && (
+                {/* Production Notes */}
+                {project?.production_notes && (
                   <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Required Skills</CardTitle>
+                    <CardHeader>
+                      <CardTitle>Production Notes</CardTitle>
                     </CardHeader>
-                    <CardContent className="pt-2">
-                      <div className="flex flex-wrap gap-1">
-                        {project.skills_required.map((skill, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
+                    <CardContent>
+                      <p className="text-muted-foreground whitespace-pre-wrap">
+                        {project.production_notes}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Target Audience */}
+                {project?.target_audience && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Target Audience</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground whitespace-pre-wrap">
+                        {project.target_audience}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Distribution Plan */}
+                {project?.distribution_plan && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Distribution Plan</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground whitespace-pre-wrap">
+                        {project.distribution_plan}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Timeline */}
+                {project?.timeline && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Timeline</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground whitespace-pre-wrap">
+                        {project.timeline}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Requirements */}
+                {project?.requirements && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Requirements</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground whitespace-pre-wrap">
+                        {project.requirements}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Benefits */}
+                {project?.benefits && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Benefits</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground whitespace-pre-wrap">
+                        {project.benefits}
+                      </p>
                     </CardContent>
                   </Card>
                 )}
               </div>
 
-              {/* Sidebar */}
-              <div className="space-y-2">
+              <div className="space-y-6">
+                {/* Project Info */}
                 <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Project Details</CardTitle>
+                  <CardHeader>
+                    <CardTitle>Project Information</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2 pt-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Project Type:</span>
-                      <Badge variant="secondary" className="text-xs">{project.project_type}</Badge>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Category:</span>
-                      <Badge variant="outline" className="text-xs">{project.category}</Badge>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Status:</span>
-                      <Badge variant="outline" className="capitalize text-xs">{project.status}</Badge>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Location:</span>
-                      <span className="text-xs">{project.location}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Team Size:</span>
-                      <span className="text-xs">{project.team_size} members</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Created:</span>
-                      <span className="text-xs">{formatDate(project.created_at)}</span>
-                    </div>
-                    {project.budget_min && project.budget_max && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Budget:</span>
-                        <span className="font-medium text-green-600 text-xs">
-                          {formatBudget(project.budget_min, project.budget_max, project.budget_currency)}
-                        </span>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Budget Range</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatBudget(project?.budget_min, project?.budget_max, project?.budget_currency || "₹")}
+                        </p>
                       </div>
-                    )}
-                    {project.duration_minutes && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Duration:</span>
-                        <span className="text-xs">{project.duration_minutes} minutes</span>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Duration</p>
+                        <p className="text-sm text-muted-foreground">
+                          {project?.duration_minutes ? `${project.duration_minutes} minutes` : 
+                           project?.episodes ? `${project.episodes} episodes` : 'Not specified'}
+                        </p>
                       </div>
-                    )}
-                    {project.episodes && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Episodes:</span>
-                        <span className="text-xs">{project.episodes} episodes</span>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center gap-3">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Team Size</p>
+                        <p className="text-sm text-muted-foreground">{project?.team_size} members</p>
                       </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Created Date</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(project?.created_at || "")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center gap-3">
+                      <Heart className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Likes</p>
+                        <p className="text-sm text-muted-foreground">{project?.likes_count}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Contact Information */}
+                {project?.contact_info && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Contact Information</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {project.contact_info}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Action Buttons */}
+                <Card>
+                  <CardContent className="pt-6">
+                    {isMember ? (
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        onClick={handleLeaveProject}
+                      >
+                        Leave Project
+                      </Button>
+                    ) : (
+                      <Button 
+                        className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground" 
+                        onClick={handleJoinProject}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Join Project
+                      </Button>
                     )}
                   </CardContent>
                 </Card>
@@ -698,100 +1096,133 @@ export default function ProjectDetails() {
           </TabsContent>
 
           {/* Tasks Tab */}
-          <TabsContent value="tasks" className="space-y-2">
+          <TabsContent value="tasks" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-base font-semibold">Project Tasks</h3>
-              {project.created_by === user?.id && (
-                <Button onClick={() => setActiveTab("tasks")} size="sm">
-                  <CheckSquare className="h-4 w-4 mr-2" />
-                  Add Task
-                </Button>
-              )}
+              <h3 className="text-lg font-semibold">Project Tasks</h3>
+              <Dialog open={showCreateTask} onOpenChange={setShowCreateTask}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Task
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Task</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Task Title</label>
+                      <Input
+                        value={newTask.title}
+                        onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Enter task title"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Description</label>
+                      <Textarea
+                        value={newTask.description}
+                        onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Enter task description"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Assign To</label>
+                      <Select value={newTask.assigned_to} onValueChange={(value) => setNewTask(prev => ({ ...prev, assigned_to: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select team member" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projectMembers.map((member) => (
+                            <SelectItem key={member.id} value={member.name}>
+                              {member.name} - {member.role}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Priority</label>
+                      <Select value={newTask.priority} onValueChange={(value: any) => setNewTask(prev => ({ ...prev, priority: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Due Date</label>
+                      <Input
+                        type="date"
+                        value={newTask.due_date}
+                        onChange={(e) => setNewTask(prev => ({ ...prev, due_date: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setShowCreateTask(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateTask}>
+                        Create Task
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
-            {/* Add Task Form - Only for project creators */}
-            {project.created_by === user?.id && (
-              <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Add New Task</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Input
-                    placeholder="Task title"
-                    value={newTask.title}
-                    onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
-                  />
-                  <Select
-                    value={newTask.assigned_to}
-                    onValueChange={(value) => setNewTask(prev => ({ ...prev, assigned_to: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Assign to team member" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teamMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.name}>
-                          {member.name} ({member.role})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Textarea
-                  placeholder="Task description"
-                  value={newTask.description}
-                  onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
-                />
-                <div className="flex gap-3">
-                  <Input
-                    type="date"
-                    value={newTask.due_date}
-                    onChange={(e) => setNewTask(prev => ({ ...prev, due_date: e.target.value }))}
-                  />
-                  <Button onClick={handleAddTask}>
-                    Add Task
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            )}
-
-            {/* Tasks List */}
-            <div className="space-y-2">
+            <div className="space-y-4">
               {tasks.map((task) => (
                 <Card key={task.id}>
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-lg">{task.title}</h4>
-                        <p className="text-muted-foreground text-sm mt-1">{task.description}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold">{task.title}</h4>
+                          <Badge variant={
+                            task.priority === 'high' ? 'destructive' :
+                            task.priority === 'medium' ? 'default' : 'secondary'
+                          }>
+                            {task.priority}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
                           <span>Assigned to: {task.assigned_to}</span>
                           <span>Due: {formatDate(task.due_date)}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {project.created_by === user?.id ? (
-                          <Select
-                            value={task.status}
-                            onValueChange={(value) => handleTaskStatusUpdate(task.id, value)}
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="in-progress">In Progress</SelectItem>
-                              <SelectItem value="completed">Completed</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Badge variant="outline" className="capitalize">
-                            {task.status}
-                          </Badge>
-                        )}
-                        <div className={`w-3 h-3 rounded-full ${getStatusColor(task.status)}`}></div>
+                        <Select value={task.status} onValueChange={(value: any) => handleUpdateTaskStatus(task.id, value)}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">
+                              <div className="flex items-center gap-2">
+                                <Circle className="h-3 w-3" />
+                                Pending
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="in-progress">
+                              <div className="flex items-center gap-2">
+                                <AlertCircle className="h-3 w-3" />
+                                In Progress
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="completed">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-3 w-3" />
+                                Completed
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </CardContent>
@@ -800,30 +1231,29 @@ export default function ProjectDetails() {
             </div>
           </TabsContent>
 
-          {/* Chats Tab */}
-          <TabsContent value="chats" className="space-y-2">
-            <Card className="h-[400px] flex flex-col">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <MessageCircle className="h-4 w-4" />
+          {/* Chat Tab */}
+          <TabsContent value="chat" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
                   Team Chat
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col pt-2">
-                {/* Chat Messages */}
-                <div className="flex-1 overflow-y-auto space-y-2 mb-2">
+              <CardContent>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
                   {chatMessages.map((message) => (
-                    <div key={message.id} className="flex items-start gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs">
-                          {message.avatar}
-                        </AvatarFallback>
-                      </Avatar>
+                    <div key={message.id} className="flex gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold text-xs">
+                          {message.user_avatar}
+                        </span>
+                      </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium text-sm">{message.user_name}</span>
                           <span className="text-xs text-muted-foreground">
-                            {formatTime(message.timestamp)}
+                            {formatDate(message.timestamp)}
                           </span>
                         </div>
                         <p className="text-sm">{message.message}</p>
@@ -831,13 +1261,11 @@ export default function ProjectDetails() {
                     </div>
                   ))}
                 </div>
-
-                {/* Message Input - Available for all users */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-4">
                   <Input
-                    placeholder="Type your message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   />
                   <Button onClick={handleSendMessage}>
@@ -848,136 +1276,101 @@ export default function ProjectDetails() {
             </Card>
           </TabsContent>
 
-          {/* Team Members Tab - Only for project creators */}
-          {project.created_by === user?.id && (
-            <TabsContent value="team" className="space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-              {teamMembers.map((member) => (
-                <Card key={member.id}>
-                  <CardContent className="p-2">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="text-sm">
+          {/* Team Members Tab */}
+          <TabsContent value="team" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Team Members
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {projectMembers.map((member) => (
+                    <div key={member.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                      <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold">
                           {member.avatar}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-sm">{member.name}</h4>
-                        <p className="text-xs text-muted-foreground">{member.role}</p>
-                        <div className="flex justify-between items-center mt-1">
-                          <p className="text-xs text-muted-foreground">{member.email}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Joined {formatDate(member.joined_at)}
-                          </p>
-                        </div>
+                        </span>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteMemberDialog({ open: true, member })}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{member.name}</h4>
+                        <p className="text-sm text-muted-foreground">{member.role}</p>
+                        <p className="text-xs text-muted-foreground">Joined: {formatDate(member.joined_date)}</p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Message
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
-          )}
 
-          {/* Applicants Tab - Only for project creators */}
-          {project.created_by === user?.id && (
-            <TabsContent value="applicants" className="space-y-2">
-            <div className="space-y-2">
-              {applicants.map((applicant) => (
-                <Card key={applicant.id}>
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <Avatar className="h-12 w-12">
-                          <AvatarFallback>
+          {/* Applicants Tab (Only for created projects) */}
+          {sourceTab === 'created' && (
+            <TabsContent value="applicants" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserPlus className="h-5 w-5" />
+                    Project Applicants
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {applicants.map((applicant) => (
+                      <div key={applicant.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                          <span className="text-white font-semibold">
                             {applicant.avatar}
-                          </AvatarFallback>
-                        </Avatar>
+                          </span>
+                        </div>
                         <div className="flex-1">
-                          <h4 className="font-semibold text-lg">{applicant.name}</h4>
-                          <p className="text-muted-foreground text-sm">{applicant.email}</p>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                            <span>Applied: {formatDate(applicant.appliedDate)}</span>
-                            <span>Experience: {applicant.experience}</span>
+                          <h4 className="font-semibold">{applicant.name}</h4>
+                          <p className="text-sm text-muted-foreground">{applicant.email}</p>
+                          <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                             <span>Role: {applicant.role}</span>
+                            <span>Experience: {applicant.experience}</span>
+                            <span>Applied: {formatDate(applicant.applied_date)}</span>
                           </div>
-                          <div className="flex flex-wrap gap-2 mt-3">
+                          <div className="flex flex-wrap gap-2 mt-2">
                             {applicant.skills.map((skill, index) => (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {skill}
                               </Badge>
                             ))}
                           </div>
-                          {applicant.portfolio && (
-                            <p className="text-sm text-blue-600 mt-2">
-                              Portfolio: <a href={applicant.portfolio} target="_blank" rel="noopener noreferrer" className="underline">{applicant.portfolio}</a>
-                            </p>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Badge variant={
+                            applicant.status === "accepted" ? "default" :
+                            applicant.status === "rejected" ? "destructive" : "secondary"
+                          }>
+                            {applicant.status}
+                          </Badge>
+                          {applicant.status === "pending" && (
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleAcceptApplicant(applicant.id)}>
+                                Accept
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleRejectApplicant(applicant.id)}>
+                                Reject
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <Select
-                          value={applicant.status}
-                          onValueChange={(value) => handleApplicantStatusUpdate(applicant.id, value)}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="reviewed">Reviewed</SelectItem>
-                            <SelectItem value="shortlisted">Shortlisted</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
-                            View Profile
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            Contact
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           )}
         </Tabs>
-
-        {/* Delete Team Member Confirmation Dialog - Only for project creators */}
-        {project.created_by === user?.id && (
-          <AlertDialog open={deleteMemberDialog.open} onOpenChange={(open) => setDeleteMemberDialog({ open, member: null })}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to remove {deleteMemberDialog.member?.name} from the team? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => deleteMemberDialog.member && handleDeleteTeamMember(deleteMemberDialog.member)}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Remove Member
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        )}
       </div>
     </AppLayout>
   );

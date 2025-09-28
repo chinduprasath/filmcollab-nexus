@@ -28,10 +28,14 @@ export default function SignIn() {
   useEffect(() => {
     console.log('SignIn component - auth state changed:', { user: user?.id, profile: profile?.role, authLoading });
     
-    // If user is authenticated and not loading, navigate to dashboard
-    if (user && !authLoading) {
-      console.log('SignIn component - user authenticated, navigating to dashboard');
-      navigate("/dashboard");
+    // If user is authenticated and not loading, navigate based on role
+    if (user && profile && !authLoading) {
+      console.log('SignIn component - user authenticated, navigating based on role:', profile.role);
+      if (profile.role === 'ADMIN') {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     }
   }, [user, profile, authLoading, navigate]);
 
@@ -52,14 +56,7 @@ export default function SignIn() {
       
       if (!error) {
         console.log('SignIn successful, waiting for auth state change...');
-        
-        // Add a timeout to force navigation if auth state doesn't change
-        setTimeout(() => {
-          if (user && !authLoading) {
-            console.log('Timeout: Force navigating to dashboard');
-            navigate("/dashboard");
-          }
-        }, 2000);
+        // Navigation will be handled by the useEffect above based on user role
       } else {
         console.error('SignIn failed:', error);
       }

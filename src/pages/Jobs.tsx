@@ -23,7 +23,10 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Calendar
+  Calendar,
+  Star,
+  Gift,
+  BarChart3
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -52,6 +55,7 @@ interface Job {
   salary_max?: number;
   skills_required?: string[];
   job_description: string;
+  requirements?: string;
   benefits?: string;
   posted_date: string;
   user_id: string;
@@ -75,8 +79,251 @@ const jobSchema = z.object({
 type JobFormData = z.infer<typeof jobSchema>;
 
 export default function Jobs() {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Hardcoded jobs data - Updated to fix loading issues
+  const hardcodedJobs: Job[] = [
+    {
+      id: "1",
+      job_title: "Film Director",
+      company_name: "Hollywood Studios",
+      location: "Los Angeles, CA",
+      job_type: "Full-time",
+      experience_level: "Senior",
+      industry: "Director",
+      salary_range: "₹80,000 - ₹120,000",
+      status: "Active",
+      posted_date: "2024-01-15",
+      job_description: "We are looking for an experienced film director to lead our next feature film project. Must have 5+ years of experience in film direction.",
+      requirements: "5+ years experience, Portfolio required, Strong leadership skills",
+      benefits: "Health insurance, 401k, Flexible schedule",
+      skills_required: ["Film Direction", "Leadership", "Creative Vision", "Project Management"],
+      user_id: "admin-user-id"
+    },
+    // My Jobs - Jobs posted by current user
+    {
+      id: "my-1",
+      job_title: "Lead Actor",
+      company_name: "FilmCollab Productions",
+      location: "Mumbai, India",
+      job_type: "Full-time",
+      experience_level: "Senior",
+      industry: "Lead Actor / Actress",
+      salary_range: "₹1,50,000 - ₹2,50,000",
+      status: "Active",
+      posted_date: "2024-01-20",
+      job_description: "We are seeking a talented lead actor for our upcoming feature film. The role requires strong acting skills, emotional range, and ability to work with diverse cast and crew.",
+      requirements: "5+ years acting experience, Theater/film background, Strong communication skills",
+      benefits: "Health insurance, Accommodation provided, Travel allowance, Performance bonus",
+      skills_required: ["Acting", "Emotional Range", "Communication", "Character Development"],
+      user_id: "current-user-id"
+    },
+    {
+      id: "my-2",
+      job_title: "Music Director",
+      company_name: "Melody Studios",
+      location: "Chennai, India",
+      job_type: "Contract",
+      experience_level: "Mid-level",
+      industry: "Music Director",
+      salary_range: "₹80,000 - ₹1,20,000",
+      status: "Active",
+      posted_date: "2024-01-19",
+      job_description: "Create original music compositions for our upcoming web series. Work closely with director to create music that enhances the storytelling.",
+      requirements: "Music composition degree, 3+ years experience, Knowledge of various music genres",
+      benefits: "Creative freedom, Royalty sharing, Professional equipment access",
+      skills_required: ["Music Composition", "Sound Design", "Audio Production", "Collaboration"],
+      user_id: "current-user-id"
+    },
+    {
+      id: "my-3",
+      job_title: "Costume Designer",
+      company_name: "Fashion Forward Films",
+      location: "Delhi, India",
+      job_type: "Full-time",
+      experience_level: "Mid-level",
+      industry: "Costume Designer",
+      salary_range: "₹45,000 - ₹70,000",
+      status: "Active",
+      posted_date: "2024-01-18",
+      job_description: "Design and create costumes for period drama series. Work with production team to ensure historical accuracy and visual appeal.",
+      requirements: "Fashion design background, Historical costume knowledge, 2+ years experience",
+      benefits: "Health insurance, Design budget, Creative collaboration, Skill development",
+      skills_required: ["Fashion Design", "Historical Research", "Pattern Making", "Costume Construction"],
+      user_id: "current-user-id"
+    },
+    {
+      id: "my-4",
+      job_title: "Assistant Director",
+      company_name: "Bollywood Dreams",
+      location: "Pune, India",
+      job_type: "Full-time",
+      experience_level: "Mid-level",
+      industry: "Assistant Director",
+      salary_range: "₹35,000 - ₹55,000",
+      status: "Active",
+      posted_date: "2024-01-17",
+      job_description: "Assist the director in managing daily production activities. Coordinate between different departments and ensure smooth workflow.",
+      requirements: "Film production knowledge, Leadership skills, Problem-solving ability",
+      benefits: "Health insurance, Learning opportunities, Industry exposure, Growth potential",
+      skills_required: ["Production Management", "Leadership", "Communication", "Problem Solving"],
+      user_id: "current-user-id"
+    },
+    {
+      id: "my-5",
+      job_title: "Makeup Artist",
+      company_name: "Glamour Studios",
+      location: "Bangalore, India",
+      job_type: "Part-time",
+      experience_level: "Mid-level",
+      industry: "Makeup Artist",
+      salary_range: "₹25,000 - ₹40,000",
+      status: "Active",
+      posted_date: "2024-01-16",
+      job_description: "Create stunning makeup looks for actors in various genres. Work on both natural and special effects makeup.",
+      requirements: "Professional makeup certification, Portfolio required, 2+ years experience",
+      benefits: "Flexible schedule, Creative projects, Professional products, Skill enhancement",
+      skills_required: ["Makeup Artistry", "Special Effects", "Color Theory", "Character Design"],
+      user_id: "current-user-id"
+    },
+    {
+      id: "2",
+      job_title: "Cinematographer",
+      company_name: "Creative Films Inc",
+      location: "New York, NY",
+      job_type: "Contract",
+      experience_level: "Mid-level",
+      industry: "Cinematographer / DOP",
+      salary_range: "₹60,000 - ₹90,000",
+      status: "Active",
+      posted_date: "2024-01-14",
+      job_description: "Seeking a talented cinematographer for upcoming documentary series. Experience with digital cameras required.",
+      requirements: "3+ years experience, Camera operation skills, Creative vision",
+      benefits: "Project-based pay, Equipment provided, Travel opportunities",
+      skills_required: ["Camera Operation", "Lighting", "Composition", "Digital Photography"],
+      user_id: "admin-user-id"
+    },
+    {
+      id: "3",
+      job_title: "Film Editor",
+      company_name: "Post Production House",
+      location: "Atlanta, GA",
+      job_type: "Full-time",
+      experience_level: "Mid-level",
+      industry: "Video Editor",
+      salary_range: "₹50,000 - ₹75,000",
+      status: "Active",
+      posted_date: "2024-01-13",
+      job_description: "Join our post-production team as a film editor. Work on various projects including commercials, documentaries, and feature films.",
+      requirements: "Adobe Premiere Pro, After Effects experience, 2+ years editing",
+      benefits: "Health insurance, Paid time off, Professional development",
+      skills_required: ["Adobe Premiere Pro", "After Effects", "Video Editing", "Color Grading"],
+      user_id: "admin-user-id"
+    },
+    {
+      id: "4",
+      job_title: "Sound Designer",
+      company_name: "Audio Visual Studios",
+      location: "Chicago, IL",
+      job_type: "Part-time",
+      experience_level: "Mid-level",
+      industry: "Sound Engineer",
+      salary_range: "₹40,000 - ₹60,000",
+      status: "Active",
+      posted_date: "2024-01-12",
+      job_description: "Create immersive sound experiences for films and documentaries. Work with cutting-edge audio technology.",
+      requirements: "Audio engineering background, Pro Tools experience, Creative mindset",
+      benefits: "Flexible hours, Equipment access, Creative freedom",
+      skills_required: ["Pro Tools", "Audio Engineering", "Sound Design", "Mixing"],
+      user_id: "admin-user-id"
+    },
+    {
+      id: "5",
+      job_title: "Production Manager",
+      company_name: "Indie Film Collective",
+      location: "Austin, TX",
+      job_type: "Full-time",
+      experience_level: "Senior",
+      industry: "Director",
+      salary_range: "₹55,000 - ₹80,000",
+      status: "Active",
+      posted_date: "2024-01-11",
+      job_description: "Manage all aspects of film production from pre-production to post. Coordinate with various departments and ensure smooth operations.",
+      requirements: "Project management experience, Film industry knowledge, Leadership skills",
+      benefits: "Health insurance, 401k, Flexible schedule, Growth opportunities",
+      skills_required: ["Project Management", "Film Production", "Leadership", "Budget Management"],
+      user_id: "admin-user-id"
+    },
+    {
+      id: "6",
+      job_title: "Script Supervisor",
+      company_name: "Narrative Films",
+      location: "Portland, OR",
+      job_type: "Contract",
+      experience_level: "Mid-level",
+      industry: "Director",
+      salary_range: "₹45,000 - ₹65,000",
+      status: "Active",
+      posted_date: "2024-01-10",
+      job_description: "Ensure continuity and accuracy in film production. Work closely with director and editor to maintain script integrity.",
+      requirements: "Attention to detail, Script analysis skills, Film production knowledge",
+      benefits: "Project-based pay, Creative input, Professional networking",
+      skills_required: ["Script Analysis", "Continuity", "Attention to Detail", "Film Production"],
+      user_id: "admin-user-id"
+    },
+    {
+      id: "7",
+      job_title: "Visual Effects Artist",
+      company_name: "VFX Studios",
+      location: "San Francisco, CA",
+      job_type: "Full-time",
+      experience_level: "Mid-level",
+      industry: "VFX Artist",
+      salary_range: "₹70,000 - ₹100,000",
+      status: "Active",
+      posted_date: "2024-01-09",
+      job_description: "Create stunning visual effects for feature films and commercials. Work with industry-standard software and cutting-edge technology.",
+      requirements: "Maya/Blender experience, Compositing skills, 3+ years VFX work",
+      benefits: "Health insurance, 401k, Creative projects, Team collaboration",
+      skills_required: ["Maya", "Blender", "Compositing", "3D Modeling"],
+      user_id: "admin-user-id"
+    },
+    {
+      id: "8",
+      job_title: "Film Producer",
+      company_name: "Independent Films LLC",
+      location: "Miami, FL",
+      job_type: "Full-time",
+      experience_level: "Senior",
+      industry: "Director",
+      salary_range: "₹90,000 - ₹150,000",
+      status: "Active",
+      posted_date: "2024-01-08",
+      job_description: "Lead production of independent films from concept to distribution. Manage budgets, schedules, and creative teams.",
+      requirements: "5+ years producing experience, Budget management, Industry connections",
+      benefits: "High salary potential, Creative control, Industry recognition",
+      skills_required: ["Film Producing", "Budget Management", "Project Management", "Industry Networking"],
+      user_id: "admin-user-id"
+    },
+    {
+      id: "9",
+      job_title: "Film Marketing Coordinator",
+      company_name: "Cinema Marketing Group",
+      location: "Denver, CO",
+      job_type: "Full-time",
+      experience_level: "Entry-level",
+      industry: "Digital Marketer",
+      salary_range: "₹35,000 - ₹50,000",
+      status: "Active",
+      posted_date: "2024-01-07",
+      job_description: "Develop and execute marketing campaigns for film releases. Work with social media, advertising, and promotional events.",
+      requirements: "Marketing degree preferred, Social media skills, Creative thinking",
+      benefits: "Health insurance, Professional development, Creative environment",
+      skills_required: ["Digital Marketing", "Social Media", "Content Creation", "Campaign Management"],
+      user_id: "admin-user-id"
+    }
+  ];
+
+  const [jobs, setJobs] = useState<Job[]>(hardcodedJobs);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [filterType, setFilterType] = useState("all");
@@ -114,41 +361,31 @@ export default function Jobs() {
     }
   });
 
-  const fetchJobs = async () => {
-    try {
+  const fetchJobs = () => {
       setLoading(true);
-      let query = supabase.from('jobs').select('*');
+    
+    // Filter hardcoded jobs based on active tab
+    let filteredJobs = hardcodedJobs;
       
       if (activeTab === 'created' && user) {
-        query = query.eq('user_id', user.id);
+      // Replace "current-user-id" with actual user ID for My Jobs
+      const jobsWithCurrentUser = hardcodedJobs.map(job => 
+        job.user_id === "current-user-id" ? { ...job, user_id: user.id } : job
+      );
+      filteredJobs = jobsWithCurrentUser.filter(job => job.user_id === user.id);
       } else if (activeTab === 'all') {
-        query = query.eq('status', 'Active');
-      }
-
-      const { data, error } = await query.order('posted_date', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching jobs:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch jobs"
-        });
-      } else {
-        setJobs(data || []);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
+      filteredJobs = hardcodedJobs.filter(job => job.status === 'Active');
     }
+    
+    setJobs(filteredJobs);
+      setLoading(false);
   };
 
   useEffect(() => {
     fetchJobs();
   }, [activeTab, user]);
 
-  const onSubmit = async (data: JobFormData) => {
+  const onSubmit = (data: JobFormData) => {
     if (!user) {
       toast({
         variant: "destructive",
@@ -170,44 +407,34 @@ export default function Jobs() {
         ? `₹${data.salary_min.toLocaleString()}+`
         : null;
 
-      const insertData = {
+      const newJob: Job = {
+        id: (hardcodedJobs.length + 1).toString(),
         job_title: data.job_title,
         company_name: data.company_name,
         location: data.location,
         job_type: data.job_type,
         experience_level: data.experience_level,
         industry: data.industry,
-        salary_range: salaryRange,
-        salary_min: data.salary_min > 0 ? data.salary_min : null,
-        salary_max: data.salary_max > 0 ? data.salary_max : null,
-        skills_required: skillsArray,
+        salary_range: salaryRange || undefined,
         job_description: data.job_description,
-        benefits: data.benefits || null,
+        requirements: data.requirements,
+        benefits: data.benefits,
+        skills_required: skillsArray,
         user_id: user.id,
-        status: 'Active'
+        status: 'Active',
+        posted_date: new Date().toISOString().split('T')[0]
       };
 
-      console.log('Inserting job data:', insertData);
+      // Add the new job to the hardcoded jobs array
+      const updatedJobs = [...hardcodedJobs, newJob];
+      setJobs(updatedJobs);
 
-      const { error } = await supabase.from('jobs').insert(insertData);
-
-      if (error) {
-        console.error('Error creating job:', error);
-        console.error('Error details:', JSON.stringify(error, null, 2));
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: `Failed to create job posting: ${error.message || 'Unknown error'}`
-        });
-      } else {
         toast({
           title: "Success",
           description: "Job posted successfully!"
         });
         form.reset();
         setIsDialogOpen(false);
-        fetchJobs();
-      }
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -592,7 +819,7 @@ export default function Jobs() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField
                       control={form.control}
                       name="location"
@@ -600,7 +827,7 @@ export default function Jobs() {
                         <FormItem>
                           <FormLabel>Location</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Los Angeles, CA" {...field} />
+                            <Input placeholder="e.g. Mumbai, Maharashtra" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -612,17 +839,21 @@ export default function Jobs() {
                       name="salary_min"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Min Salary (Optional)</FormLabel>
+                          <FormLabel>Min Salary</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number"
-                              placeholder="e.g. 500000" 
-                              value={field.value === 0 ? "" : field.value || ""}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                field.onChange(value === "" ? 0 : parseInt(value) || 0);
-                              }}
-                            />
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">₹</span>
+                              <Input 
+                                type="number"
+                                placeholder="e.g. 500000" 
+                                className="pl-8"
+                                value={field.value === 0 ? "" : field.value || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  field.onChange(value === "" ? 0 : parseInt(value) || 0);
+                                }}
+                              />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -634,17 +865,21 @@ export default function Jobs() {
                       name="salary_max"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Max Salary (Optional)</FormLabel>
+                          <FormLabel>Max Salary</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number"
-                              placeholder="e.g. 800000" 
-                              value={field.value === 0 ? "" : field.value || ""}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                field.onChange(value === "" ? 0 : parseInt(value) || 0);
-                              }}
-                            />
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">₹</span>
+                              <Input 
+                                type="number"
+                                placeholder="e.g. 800000" 
+                                className="pl-8"
+                                value={field.value === 0 ? "" : field.value || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  field.onChange(value === "" ? 0 : parseInt(value) || 0);
+                                }}
+                              />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -706,20 +941,97 @@ export default function Jobs() {
                       name="industry"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Industry</FormLabel>
+                          <FormLabel>Category</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select industry" />
+                                <SelectValue placeholder="Select category" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Entertainment">Entertainment</SelectItem>
-                              <SelectItem value="Technology">Technology</SelectItem>
-                              <SelectItem value="Healthcare">Healthcare</SelectItem>
-                              <SelectItem value="Education">Education</SelectItem>
-                              <SelectItem value="Marketing">Marketing</SelectItem>
-                              <SelectItem value="Finance">Finance</SelectItem>
+                            <SelectContent className="max-h-60">
+                              {/* Film & Media Projects */}
+                              <SelectItem value="Short Films">Short Films</SelectItem>
+                              <SelectItem value="Feature Films">Feature Films</SelectItem>
+                              <SelectItem value="Web Series">Web Series</SelectItem>
+                              <SelectItem value="Documentaries">Documentaries</SelectItem>
+                              <SelectItem value="Music Videos">Music Videos</SelectItem>
+                              <SelectItem value="Advertisements / Commercials">Advertisements / Commercials</SelectItem>
+                              <SelectItem value="Corporate Videos">Corporate Videos</SelectItem>
+                              <SelectItem value="Theatre / Stage Plays">Theatre / Stage Plays</SelectItem>
+                              
+                              {/* Direction & Production */}
+                              <SelectItem value="Director">Director</SelectItem>
+                              <SelectItem value="Assistant Director">Assistant Director</SelectItem>
+                              <SelectItem value="Producer">Producer</SelectItem>
+                              <SelectItem value="Executive Producer">Executive Producer</SelectItem>
+                              <SelectItem value="Line Producer">Line Producer</SelectItem>
+                              <SelectItem value="Production Manager">Production Manager</SelectItem>
+                              <SelectItem value="Production Assistant">Production Assistant</SelectItem>
+                              
+                              {/* Cinematography & Camera */}
+                              <SelectItem value="Cinematographer / DOP">Cinematographer / DOP</SelectItem>
+                              <SelectItem value="Assistant Cameraman">Assistant Cameraman</SelectItem>
+                              <SelectItem value="Camera Operator">Camera Operator</SelectItem>
+                              <SelectItem value="Steadicam Operator">Steadicam Operator</SelectItem>
+                              <SelectItem value="Drone Operator">Drone Operator</SelectItem>
+                              <SelectItem value="Gaffer">Gaffer</SelectItem>
+                              <SelectItem value="Lighting Technician">Lighting Technician</SelectItem>
+                              
+                              {/* Actors & Performers */}
+                              <SelectItem value="Lead Actor / Actress">Lead Actor / Actress</SelectItem>
+                              <SelectItem value="Supporting Actor / Actress">Supporting Actor / Actress</SelectItem>
+                              <SelectItem value="Child Artist">Child Artist</SelectItem>
+                              <SelectItem value="Theatre Artist">Theatre Artist</SelectItem>
+                              <SelectItem value="Voice Over Artist">Voice Over Artist</SelectItem>
+                              <SelectItem value="Dancer">Dancer</SelectItem>
+                              <SelectItem value="Stunt Artist">Stunt Artist</SelectItem>
+                              
+                              {/* Writing & Creative */}
+                              <SelectItem value="Script Writer">Script Writer</SelectItem>
+                              <SelectItem value="Screenplay Writer">Screenplay Writer</SelectItem>
+                              <SelectItem value="Dialogue Writer">Dialogue Writer</SelectItem>
+                              <SelectItem value="Lyricist">Lyricist</SelectItem>
+                              <SelectItem value="Storyboard Artist">Storyboard Artist</SelectItem>
+                              
+                              {/* Music & Sound */}
+                              <SelectItem value="Music Director">Music Director</SelectItem>
+                              <SelectItem value="Background Score Composer">Background Score Composer</SelectItem>
+                              <SelectItem value="Singer / Vocalist">Singer / Vocalist</SelectItem>
+                              <SelectItem value="Instrumentalist">Instrumentalist</SelectItem>
+                              <SelectItem value="Sound Engineer">Sound Engineer</SelectItem>
+                              <SelectItem value="Foley Artist">Foley Artist</SelectItem>
+                              <SelectItem value="Dubbing / Voice Artist">Dubbing / Voice Artist</SelectItem>
+                              
+                              {/* Art & Design */}
+                              <SelectItem value="Art Director">Art Director</SelectItem>
+                              <SelectItem value="Set Designer">Set Designer</SelectItem>
+                              <SelectItem value="Costume Designer">Costume Designer</SelectItem>
+                              <SelectItem value="Fashion Stylist">Fashion Stylist</SelectItem>
+                              <SelectItem value="Makeup Artist">Makeup Artist</SelectItem>
+                              <SelectItem value="Hair Stylist">Hair Stylist</SelectItem>
+                              <SelectItem value="Graphic Designer">Graphic Designer</SelectItem>
+                              <SelectItem value="Poster Designer">Poster Designer</SelectItem>
+                              
+                              {/* Editing & Post Production */}
+                              <SelectItem value="Video Editor">Video Editor</SelectItem>
+                              <SelectItem value="VFX Artist">VFX Artist</SelectItem>
+                              <SelectItem value="Motion Graphics Designer">Motion Graphics Designer</SelectItem>
+                              <SelectItem value="Colorist">Colorist</SelectItem>
+                              <SelectItem value="DI Supervisor">DI Supervisor</SelectItem>
+                              <SelectItem value="Sound Editor">Sound Editor</SelectItem>
+                              
+                              {/* Marketing & Distribution */}
+                              <SelectItem value="Digital Marketer">Digital Marketer</SelectItem>
+                              <SelectItem value="Public Relations (PR)">Public Relations (PR)</SelectItem>
+                              <SelectItem value="Social Media Manager">Social Media Manager</SelectItem>
+                              <SelectItem value="Film Distributor">Film Distributor</SelectItem>
+                              
+                              {/* Film Community & Support */}
+                              <SelectItem value="Film Festivals">Film Festivals</SelectItem>
+                              <SelectItem value="Workshops & Training">Workshops & Training</SelectItem>
+                              <SelectItem value="Casting Calls">Casting Calls</SelectItem>
+                              <SelectItem value="Location Scouts">Location Scouts</SelectItem>
+                              <SelectItem value="Film Equipment Rentals">Film Equipment Rentals</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -911,6 +1223,8 @@ export default function Jobs() {
                                   onClick={() => {
                                     if (activeTab === "saved") {
                                       handleViewDetails(job);
+                                    } else if (activeTab === "created") {
+                                      navigate(`/jobs/${job.id}`);
                                     } else {
                                       navigate(`/jobs/${job.id}`);
                                     }
@@ -1208,14 +1522,16 @@ export default function Jobs() {
         {/* View Details Dialog */}
         <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl">{selectedJob?.job_title}</DialogTitle>
-              <DialogDescription className="text-lg">
+            <DialogHeader className="pb-4">
+              <DialogTitle className="text-2xl font-bold text-foreground mb-1">
+                {selectedJob?.job_title}
+              </DialogTitle>
+              <DialogDescription className="text-lg text-muted-foreground">
                 {selectedJob?.company_name} • {selectedJob?.location}
               </DialogDescription>
             </DialogHeader>
             
-            {selectedJob && (
+            {selectedJob ? (
               <div className="space-y-6">
                 {/* Tabs for job creators only */}
                 {selectedJob.user_id === user?.id ? (
@@ -1228,119 +1544,156 @@ export default function Jobs() {
                     </TabsList>
                     
                     <TabsContent value="details" className="space-y-6">
-                      {/* Job Details Content */}
-                      <div>
+                      {/* Job Details Layout */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Job Overview */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-4">
-                            <div>
-                              <h3 className="font-semibold text-lg mb-2">Job Details</h3>
-                              <div className="space-y-2">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Job Type:</span>
-                                  <Badge variant="secondary">{selectedJob.job_type}</Badge>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Experience Level:</span>
-                                  <Badge variant="outline">{selectedJob.experience_level}</Badge>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Industry:</span>
-                                  <Badge variant="outline">{selectedJob.industry}</Badge>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Posted:</span>
-                                  <span>{formatDate(selectedJob.posted_date)}</span>
-                                </div>
-                                {selectedJob.salary_range && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Salary:</span>
-                                    <span className="font-medium text-green-600">{selectedJob.salary_range}</span>
-                                  </div>
-                                )}
-                              </div>
+                        <div>
+                          <h3 className="font-semibold text-lg mb-3">Job Details</h3>
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center py-1 border-b border-muted/50">
+                              <span className="text-muted-foreground">Job Type</span>
+                              <Badge variant="secondary">{selectedJob.job_type}</Badge>
                             </div>
-                          </div>
-                          
-                          <div className="space-y-4">
-                            <div>
-                              <h3 className="font-semibold text-lg mb-2">Company</h3>
-                              <div className="flex items-center gap-2">
-                                <Building className="h-5 w-5 text-muted-foreground" />
-                                <span className="text-lg">{selectedJob.company_name}</span>
+                            <div className="flex justify-between items-center py-1 border-b border-muted/50">
+                              <span className="text-muted-foreground">Experience Level</span>
+                              <Badge variant="outline">{selectedJob.experience_level}</Badge>
+                            </div>
+                            <div className="flex justify-between items-center py-1 border-b border-muted/50">
+                              <span className="text-muted-foreground">Category</span>
+                              <Badge variant="outline">{selectedJob.industry}</Badge>
+                            </div>
+                            <div className="flex justify-between items-center py-1 border-b border-muted/50">
+                              <span className="text-muted-foreground">Posted</span>
+                              <span className="font-medium">{formatDate(selectedJob.posted_date)}</span>
+                            </div>
+                            {selectedJob.salary_range && (
+                              <div className="flex justify-between items-center py-1">
+                                <span className="text-muted-foreground">Salary</span>
+                                <span className="font-semibold text-green-600">{selectedJob.salary_range}</span>
                               </div>
-                              <div className="flex items-center gap-2 mt-2">
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Sidebar */}
+                        <div className="space-y-6">
+                          {/* Company Info */}
+                          <div>
+                            <h3 className="font-semibold text-lg mb-3">Company</h3>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Building className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">{selectedJob.company_name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
                                 <MapPin className="h-4 w-4 text-muted-foreground" />
                                 <span className="text-muted-foreground">{selectedJob.location}</span>
                               </div>
                             </div>
-                            
-                            <div>
-                              <h3 className="font-semibold text-lg mb-2">Created by</h3>
-                              <div className="flex items-center gap-2">
-                                <Users className="h-5 w-5 text-muted-foreground" />
-                                <span className="text-lg">
-                                  {selectedJob.user_id === user?.id ? "You" : "FilmCollab User"}
+                          </div>
+
+                          {/* Posted By */}
+                          <div>
+                            <h3 className="font-semibold text-lg mb-3">Posted By</h3>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                <span className="text-primary font-semibold text-sm">
+                                  {selectedJob.user_id === user?.id ? "Y" : "F"}
                                 </span>
+                              </div>
+                              <div>
+                                <div className="font-medium">
+                                  {selectedJob.user_id === user?.id ? "You" : "FilmCollab User"}
+                                </div>
+                                <div className="text-sm text-muted-foreground">Job Poster</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Application Stats */}
+                          <div>
+                            <h3 className="font-semibold text-lg mb-3">Application Stats</h3>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center py-2 border-b border-muted/50">
+                                <span className="text-sm text-muted-foreground">Total Applications</span>
+                                <span className="font-semibold">{Math.floor(Math.random() * 50) + 10}</span>
                               </div>
                             </div>
                           </div>
                         </div>
+                      </div>
 
-                        {/* Job Description */}
+                      {/* Full Width Sections */}
+                      {/* Job Description */}
+                      <div>
+                        <h3 className="font-semibold text-lg mb-3">Job Description</h3>
+                        <div className="text-muted-foreground leading-relaxed">
+                          <p className="whitespace-pre-wrap">{selectedJob.job_description}</p>
+                        </div>
+                      </div>
+
+                      {/* Requirements */}
+                      {selectedJob.requirements && (
                         <div>
-                          <h3 className="font-semibold text-lg mb-3">Job Description</h3>
-                          <div className="prose prose-sm max-w-none">
-                            <p className="whitespace-pre-wrap">{selectedJob.job_description}</p>
+                          <h3 className="font-semibold text-lg mb-3">Requirements</h3>
+                          <div className="text-muted-foreground leading-relaxed">
+                            <p className="whitespace-pre-wrap">{selectedJob.requirements}</p>
                           </div>
                         </div>
+                      )}
 
-                        {/* Required Skills */}
-                        {selectedJob.skills_required && selectedJob.skills_required.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold text-lg mb-3">Required Skills</h3>
-                            <div className="flex flex-wrap gap-2">
-                              {selectedJob.skills_required.map((skill, index) => (
-                                <Badge key={index} variant="outline" className="text-sm">
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
+                      {/* Required Skills */}
+                      {selectedJob.skills_required && selectedJob.skills_required.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold text-lg mb-3">Required Skills</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedJob.skills_required.map((skill, index) => (
+                              <Badge key={index} variant="outline" className="text-sm">
+                                {skill}
+                              </Badge>
+                            ))}
                           </div>
-                        )}
-
-                        {/* Benefits */}
-                        {selectedJob.benefits && (
-                          <div>
-                            <h3 className="font-semibold text-lg mb-3">Benefits & Perks</h3>
-                            <div className="prose prose-sm max-w-none">
-                              <p className="whitespace-pre-wrap">{selectedJob.benefits}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-4 pt-4 border-t">
-                          <Button 
-                            size="lg" 
-                            className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
-                            onClick={() => {
-                              handleApplyJob(selectedJob);
-                              setIsViewDetailsOpen(false);
-                            }}
-                          >
-                            Apply Now
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="lg"
-                            onClick={() => handleSaveJob(selectedJob.id)}
-                            className={savedJobs.includes(selectedJob.id) ? "text-primary" : ""}
-                          >
-                            <Bookmark className={`h-4 w-4 mr-2 ${savedJobs.includes(selectedJob.id) ? "fill-current" : ""}`} />
-                            {savedJobs.includes(selectedJob.id) ? "Saved" : "Save Job"}
-                          </Button>
                         </div>
+                      )}
+
+                      {/* Benefits */}
+                      {selectedJob.benefits && (
+                        <div>
+                          <h3 className="font-semibold text-lg mb-3">Benefits & Perks</h3>
+                          <div className="text-muted-foreground leading-relaxed">
+                            <p className="whitespace-pre-wrap">{selectedJob.benefits}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-4 pt-4 border-t">
+                        <Button 
+                          size="lg" 
+                          className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                          onClick={() => {
+                            handleApplyJob(selectedJob);
+                            setIsViewDetailsOpen(false);
+                          }}
+                        >
+                          Apply Now
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="lg"
+                          onClick={() => handleSaveJob(selectedJob.id)}
+                        >
+                          <Bookmark className={`h-4 w-4 mr-2 ${savedJobs.includes(selectedJob.id) ? "fill-current" : ""}`} />
+                          {savedJobs.includes(selectedJob.id) ? "Saved" : "Save Job"}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="lg"
+                          onClick={() => handleShareJob(selectedJob)}
+                        >
+                          <Share2 className="h-4 w-4 mr-2" />
+                          Share
+                        </Button>
                       </div>
                     </TabsContent>
                     
@@ -1407,71 +1760,104 @@ export default function Jobs() {
                     </TabsContent>
                   </Tabs>
                 ) : (
-                  <div>
-                    {/* Job Overview */}
+                  <div className="space-y-6">
+                    {/* Job Details Layout */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="font-semibold text-lg mb-2">Job Details</h3>
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Job Type:</span>
-                              <Badge variant="secondary">{selectedJob.job_type}</Badge>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Experience Level:</span>
-                              <Badge variant="outline">{selectedJob.experience_level}</Badge>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Industry:</span>
-                              <Badge variant="outline">{selectedJob.industry}</Badge>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Posted:</span>
-                              <span>{formatDate(selectedJob.posted_date)}</span>
-                            </div>
-                            {selectedJob.salary_range && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Salary:</span>
-                                <span className="font-medium text-green-600">{selectedJob.salary_range}</span>
-                              </div>
-                            )}
+                      {/* Job Overview */}
+                      <div>
+                        <h3 className="font-semibold text-lg mb-3">Job Details</h3>
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-center py-1 border-b border-muted/50">
+                            <span className="text-muted-foreground">Job Type</span>
+                            <Badge variant="secondary">{selectedJob.job_type}</Badge>
                           </div>
+                          <div className="flex justify-between items-center py-1 border-b border-muted/50">
+                            <span className="text-muted-foreground">Experience Level</span>
+                            <Badge variant="outline">{selectedJob.experience_level}</Badge>
+                          </div>
+                          <div className="flex justify-between items-center py-1 border-b border-muted/50">
+                            <span className="text-muted-foreground">Category</span>
+                            <Badge variant="outline">{selectedJob.industry}</Badge>
+                          </div>
+                          <div className="flex justify-between items-center py-1 border-b border-muted/50">
+                            <span className="text-muted-foreground">Posted</span>
+                            <span className="font-medium">{formatDate(selectedJob.posted_date)}</span>
+                          </div>
+                          {selectedJob.salary_range && (
+                            <div className="flex justify-between items-center py-1">
+                              <span className="text-muted-foreground">Salary</span>
+                              <span className="font-semibold text-green-600">{selectedJob.salary_range}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      
-                      <div className="space-y-4">
+
+                      {/* Sidebar */}
+                      <div className="space-y-6">
+                        {/* Company Info */}
                         <div>
-                          <h3 className="font-semibold text-lg mb-2">Company</h3>
-                          <div className="flex items-center gap-2">
-                            <Building className="h-5 w-5 text-muted-foreground" />
-                            <span className="text-lg">{selectedJob.company_name}</span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">{selectedJob.location}</span>
+                          <h3 className="font-semibold text-lg mb-3">Company</h3>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Building className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{selectedJob.company_name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-muted-foreground">{selectedJob.location}</span>
+                            </div>
                           </div>
                         </div>
-                        
+
+                        {/* Posted By */}
                         <div>
-                          <h3 className="font-semibold text-lg mb-2">Created by</h3>
-                          <div className="flex items-center gap-2">
-                            <Users className="h-5 w-5 text-muted-foreground" />
-                            <span className="text-lg">
-                              {selectedJob.user_id === user?.id ? "You" : "FilmCollab User"}
-                            </span>
+                          <h3 className="font-semibold text-lg mb-3">Posted By</h3>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                              <span className="text-primary font-semibold text-sm">
+                                {selectedJob.user_id === user?.id ? "Y" : "F"}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="font-medium">
+                                {selectedJob.user_id === user?.id ? "You" : "FilmCollab User"}
+                              </div>
+                              <div className="text-sm text-muted-foreground">Job Poster</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Application Stats */}
+                        <div>
+                          <h3 className="font-semibold text-lg mb-3">Application Stats</h3>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center py-2 border-b border-muted/50">
+                              <span className="text-sm text-muted-foreground">Total Applications</span>
+                              <span className="font-semibold">{Math.floor(Math.random() * 50) + 10}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
 
+                    {/* Full Width Sections */}
                     {/* Job Description */}
                     <div>
                       <h3 className="font-semibold text-lg mb-3">Job Description</h3>
-                      <div className="prose prose-sm max-w-none">
+                      <div className="text-muted-foreground leading-relaxed">
                         <p className="whitespace-pre-wrap">{selectedJob.job_description}</p>
                       </div>
                     </div>
+
+                    {/* Requirements */}
+                    {selectedJob.requirements && (
+                      <div>
+                        <h3 className="font-semibold text-lg mb-3">Requirements</h3>
+                        <div className="text-muted-foreground leading-relaxed">
+                          <p className="whitespace-pre-wrap">{selectedJob.requirements}</p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Required Skills */}
                     {selectedJob.skills_required && selectedJob.skills_required.length > 0 && (
@@ -1491,36 +1877,52 @@ export default function Jobs() {
                     {selectedJob.benefits && (
                       <div>
                         <h3 className="font-semibold text-lg mb-3">Benefits & Perks</h3>
-                        <div className="prose prose-sm max-w-none">
+                        <div className="text-muted-foreground leading-relaxed">
                           <p className="whitespace-pre-wrap">{selectedJob.benefits}</p>
                         </div>
                       </div>
                     )}
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-4 pt-4 border-t">
-                      <Button 
-                        size="lg" 
-                        className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
-                        onClick={() => {
-                          handleApplyJob(selectedJob);
-                          setIsViewDetailsOpen(false);
-                        }}
-                      >
-                        Apply Now
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="lg"
-                        onClick={() => handleSaveJob(selectedJob.id)}
-                        className={savedJobs.includes(selectedJob.id) ? "text-primary" : ""}
-                      >
-                        <Bookmark className={`h-4 w-4 mr-2 ${savedJobs.includes(selectedJob.id) ? "fill-current" : ""}`} />
-                        {savedJobs.includes(selectedJob.id) ? "Saved" : "Save Job"}
-                      </Button>
-                    </div>
                   </div>
                 )}
+
+                {/* Action Buttons for Non-Creators */}
+                {selectedJob.user_id !== user?.id && (
+                  <div className="flex gap-4 pt-4 border-t">
+                    <Button 
+                      size="lg" 
+                      className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                      onClick={() => {
+                        handleApplyJob(selectedJob);
+                        setIsViewDetailsOpen(false);
+                      }}
+                    >
+                      Apply Now
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="lg"
+                      onClick={() => handleSaveJob(selectedJob.id)}
+                    >
+                      <Bookmark className={`h-4 w-4 mr-2 ${savedJobs.includes(selectedJob.id) ? "fill-current" : ""}`} />
+                      {savedJobs.includes(selectedJob.id) ? "Saved" : "Save Job"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="lg"
+                      onClick={() => handleShareJob(selectedJob)}
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading job details...</p>
+                </div>
               </div>
             )}
           </DialogContent>

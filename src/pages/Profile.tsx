@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Edit,
@@ -51,6 +54,8 @@ import {
   Video,
   FileText as FileIcon,
   Music as MusicIcon,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 interface ProfileData {
@@ -313,6 +318,11 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData>(mockProfileData);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [editForm, setEditForm] = useState<ProfileData>(mockProfileData);
+  const [expandedEditExperience, setExpandedEditExperience] = useState<Set<string>>(new Set());
+  const [expandedEditAchievements, setExpandedEditAchievements] = useState<Set<string>>(new Set());
+  const [expandedEditEducation, setExpandedEditEducation] = useState<Set<string>>(new Set());
 
   const roleIcons = {
     "Director": Camera,
@@ -323,6 +333,71 @@ export default function ProfilePage() {
     "Composer": Music,
     "Designer": Palette,
     "Sound Designer": Mic,
+  };
+
+  const handleEditProfile = () => {
+    setEditForm(profile);
+    setShowEditProfile(true);
+  };
+
+  const handleSaveProfile = () => {
+    setProfile(editForm);
+    setShowEditProfile(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditForm(profile);
+    setShowEditProfile(false);
+  };
+
+  const handleFormChange = (field: keyof ProfileData, value: any) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSkillsChange = (skills: string[]) => {
+    setEditForm(prev => ({
+      ...prev,
+      skills
+    }));
+  };
+
+  const toggleEditExperienceExpansion = (id: string) => {
+    setExpandedEditExperience(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleEditAchievementExpansion = (id: string) => {
+    setExpandedEditAchievements(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleEditEducationExpansion = (id: string) => {
+    setExpandedEditEducation(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
   };
 
   const getRoleIcon = (role: string) => {
@@ -350,46 +425,14 @@ export default function ProfilePage() {
   return (
     <AppLayout>
       <div className="space-y-4 bg-gray-50 min-h-screen p-4 -m-4">
-        {/* Cover Photo and Basic Info */}
+        {/* Profile Header */}
         <Card className="relative overflow-hidden">
-          <div className="h-48 bg-gradient-to-r from-purple-600 to-pink-600 relative">
-            {profile.coverImage && (
-              <img 
-                src={profile.coverImage} 
-                alt="Cover" 
-                className="w-full h-full object-cover"
-              />
-            )}
-            <div className="absolute inset-0 bg-black/20" />
-            <div className="absolute top-4 left-4 flex items-center gap-2 text-white/80">
-              <div className="w-4 h-4 bg-white/20 rounded flex items-center justify-center">
-                <span className="text-xs">🏔️</span>
-              </div>
-              <span className="text-sm font-medium">Cover</span>
-            </div>
-            <div className="absolute top-4 right-4 flex gap-2">
-              <Button 
-                size="sm" 
-                variant="secondary" 
-                className="bg-white/90 hover:bg-white"
-                onClick={() => navigate('/settings')}
-              >
-                <Settings className="w-4 h-4 mr-1" />
-                Settings
-              </Button>
-              <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white">
-                <Edit className="w-4 h-4 mr-1" />
-                Edit Profile
-              </Button>
-            </div>
-          </div>
-          
-          <CardContent className="pt-0">
-            <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-16 relative z-10">
-              <div className="flex flex-col md:flex-row md:items-end gap-4 flex-1">
-                <Avatar className="w-32 h-32 border-4 border-white shadow-lg flex-shrink-0">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1">
+                <Avatar className="w-24 h-24 border-4 border-white shadow-lg flex-shrink-0">
                   <AvatarImage src={profile.avatar} alt={profile.name} />
-                  <AvatarFallback className="text-2xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                  <AvatarFallback className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white">
                     {profile.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
@@ -419,10 +462,16 @@ export default function ProfilePage() {
                 </div>
               </div>
               
-              <div className="flex gap-2 mt-4 md:mt-0 flex-shrink-0">
-                <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 hover:bg-gray-50">
-                  <MessageSquare className="w-4 h-4 mr-1" />
-                  Message
+              {/* Action Buttons */}
+              <div className="flex gap-2 flex-shrink-0">
+                <Button 
+                  size="sm" 
+                  variant="secondary" 
+                  className="bg-white hover:bg-gray-50 border-gray-300"
+                  onClick={handleEditProfile}
+                >
+                  <Edit className="w-4 h-4 mr-1" />
+                  Edit Profile
                 </Button>
                 <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
                   <UserPlus className="w-4 h-4 mr-1" />
@@ -430,55 +479,65 @@ export default function ProfilePage() {
                 </Button>
               </div>
             </div>
+            
+            {/* Statistics Row */}
+            <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-1">
+                <Users className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-900">{profile.stats.connections.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Briefcase className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-900">{profile.stats.projects}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MessageSquare className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-900">{profile.stats.posts}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <UserPlus className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-900">{profile.stats.followers.toLocaleString()}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-lg font-bold text-purple-600 mb-1">
-                {profile.stats.connections.toLocaleString()}
-              </div>
-              <div className="text-xs text-gray-600">Connections</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-lg font-bold text-purple-600 mb-1">
-                {profile.stats.projects}
-              </div>
-              <div className="text-xs text-gray-600">Projects</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-lg font-bold text-purple-600 mb-1">
-                {profile.stats.posts}
-              </div>
-              <div className="text-xs text-gray-600">Posts</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-lg font-bold text-purple-600 mb-1">
-                {profile.stats.followers.toLocaleString()}
-              </div>
-              <div className="text-xs text-gray-600">Followers</div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-                <TabsTrigger value="experience" className="text-xs">Experience</TabsTrigger>
-                <TabsTrigger value="portfolio" className="text-xs">Portfolio</TabsTrigger>
-                <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-5 bg-gray-100">
+                <TabsTrigger 
+                  value="overview" 
+                  className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="experience" 
+                  className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
+                  Experience
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="portfolio" 
+                  className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
+                  Portfolio
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="achievements" 
+                  className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
+                  Achievements
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="education" 
+                  className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
+                  Education
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-4">
@@ -565,57 +624,6 @@ export default function ProfilePage() {
                   </CardContent>
                 </Card>
 
-                {/* Education */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Education</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {profile.education.map((edu) => (
-                        <div key={edu.id} className="flex gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                            <GraduationCap className="w-5 h-5 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-sm text-gray-900">{edu.degree}</h4>
-                            <p className="text-sm text-gray-600">{edu.school}</p>
-                            <p className="text-xs text-gray-500">{edu.location}</p>
-                            <p className="text-xs text-gray-500">
-                              {formatDateShort(edu.startDate)} - {edu.current ? "Present" : formatDateShort(edu.endDate!)}
-                            </p>
-                            {edu.description && (
-                              <p className="text-xs text-gray-600 mt-2">{edu.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Achievements */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Achievements</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {profile.achievements.map((achievement) => (
-                        <div key={achievement.id} className="flex gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Trophy className="w-4 h-4 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-sm text-gray-900">{achievement.title}</h4>
-                            <p className="text-xs text-gray-600">{achievement.description}</p>
-                            <p className="text-xs text-gray-500">{formatDateShort(achievement.date)}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
               </TabsContent>
 
               <TabsContent value="portfolio" className="space-y-4">
@@ -657,22 +665,62 @@ export default function ProfilePage() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="activity" className="space-y-4">
+              <TabsContent value="achievements" className="space-y-4">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Recent Activity</CardTitle>
+                    <CardTitle className="text-lg">Achievements & Awards</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {profile.recentActivity.map((activity) => (
-                        <div key={activity.id} className="flex gap-3">
-                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <activity.icon className="w-4 h-4 text-gray-600" />
+                    <div className="space-y-4">
+                      {profile.achievements.map((achievement) => (
+                        <div key={achievement.id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              {achievement.type === 'award' && <Award className="w-4 h-4 text-purple-600" />}
+                              {achievement.type === 'certification' && <GraduationCap className="w-4 h-4 text-purple-600" />}
+                              {achievement.type === 'publication' && <FileText className="w-4 h-4 text-purple-600" />}
+                              {achievement.type === 'recognition' && <Star className="w-4 h-4 text-purple-600" />}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-medium text-sm text-gray-900">{achievement.title}</h4>
+                                <Badge variant="secondary" className="text-xs">
+                                  {achievement.type.charAt(0).toUpperCase() + achievement.type.slice(1)}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-gray-600 mb-1">{achievement.description}</p>
+                              <p className="text-xs text-gray-500">{achievement.date}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="education" className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Education</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {profile.education.map((edu) => (
+                        <div key={edu.id} className="flex gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <GraduationCap className="w-5 h-5 text-white" />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-medium text-sm text-gray-900">{activity.title}</h4>
-                            <p className="text-xs text-gray-600">{activity.description}</p>
-                            <p className="text-xs text-gray-500">{activity.date}</p>
+                            <h4 className="font-semibold text-sm text-gray-900">{edu.degree}</h4>
+                            <p className="text-sm text-gray-600">{edu.school}</p>
+                            <p className="text-xs text-gray-500">{edu.location}</p>
+                            <p className="text-xs text-gray-500">
+                              {formatDateShort(edu.startDate)} - {edu.current ? "Present" : formatDateShort(edu.endDate!)}
+                            </p>
+                            {edu.description && (
+                              <p className="text-xs text-gray-600 mt-2">{edu.description}</p>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -776,6 +824,552 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Popup */}
+      <Dialog open={showEditProfile} onOpenChange={setShowEditProfile}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Edit Profile</DialogTitle>
+          </DialogHeader>
+          
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="grid w-full grid-cols-5 bg-gray-100">
+              <TabsTrigger 
+                value="profile" 
+                className="text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                Profile
+              </TabsTrigger>
+              <TabsTrigger 
+                value="experience" 
+                className="text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                Experience
+              </TabsTrigger>
+              <TabsTrigger 
+                value="achievements" 
+                className="text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                Achievements
+              </TabsTrigger>
+              <TabsTrigger 
+                value="portfolio" 
+                className="text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                Portfolio
+              </TabsTrigger>
+              <TabsTrigger 
+                value="education" 
+                className="text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                Education
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Profile Tab */}
+            <TabsContent value="profile" className="space-y-6 mt-6">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      value={editForm.name}
+                      onChange={(e) => handleFormChange('name', e.target.value)}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      value={editForm.username}
+                      onChange={(e) => handleFormChange('username', e.target.value)}
+                      placeholder="Enter your username"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => handleFormChange('email', e.target.value)}
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={editForm.phone || ''}
+                      onChange={(e) => handleFormChange('phone', e.target.value)}
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={editForm.location}
+                      onChange={(e) => handleFormChange('location', e.target.value)}
+                      placeholder="Enter your location"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="role">Role</Label>
+                    <Select value={editForm.role} onValueChange={(value) => handleFormChange('role', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Director">Director</SelectItem>
+                        <SelectItem value="Producer">Producer</SelectItem>
+                        <SelectItem value="Cinematographer">Cinematographer</SelectItem>
+                        <SelectItem value="Editor">Editor</SelectItem>
+                        <SelectItem value="Writer">Writer</SelectItem>
+                        <SelectItem value="Composer">Composer</SelectItem>
+                        <SelectItem value="Designer">Designer</SelectItem>
+                        <SelectItem value="Sound Designer">Sound Designer</SelectItem>
+                        <SelectItem value="Actor">Actor</SelectItem>
+                        <SelectItem value="Actress">Actress</SelectItem>
+                        <SelectItem value="Screenwriter">Screenwriter</SelectItem>
+                        <SelectItem value="Production Manager">Production Manager</SelectItem>
+                        <SelectItem value="Assistant Director">Assistant Director</SelectItem>
+                        <SelectItem value="Camera Operator">Camera Operator</SelectItem>
+                        <SelectItem value="Sound Engineer">Sound Engineer</SelectItem>
+                        <SelectItem value="Makeup Artist">Makeup Artist</SelectItem>
+                        <SelectItem value="Costume Designer">Costume Designer</SelectItem>
+                        <SelectItem value="Set Designer">Set Designer</SelectItem>
+                        <SelectItem value="VFX Artist">VFX Artist</SelectItem>
+                        <SelectItem value="Motion Graphics Designer">Motion Graphics Designer</SelectItem>
+                        <SelectItem value="Colorist">Colorist</SelectItem>
+                        <SelectItem value="Film Distributor">Film Distributor</SelectItem>
+                        <SelectItem value="Digital Marketer">Digital Marketer</SelectItem>
+                        <SelectItem value="Social Media Manager">Social Media Manager</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="company">Company</Label>
+                    <Input
+                      id="company"
+                      value={editForm.company || ''}
+                      onChange={(e) => handleFormChange('company', e.target.value)}
+                      placeholder="Enter your company"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      value={editForm.website || ''}
+                      onChange={(e) => handleFormChange('website', e.target.value)}
+                      placeholder="Enter your website URL"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bio */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">About You</h3>
+                <div>
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    value={editForm.bio}
+                    onChange={(e) => handleFormChange('bio', e.target.value)}
+                    placeholder="Tell us about yourself, your experience, and what you're passionate about..."
+                    rows={4}
+                  />
+                </div>
+              </div>
+
+              {/* Skills */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Skills</h3>
+                <div>
+                  <Label>Skills (comma-separated)</Label>
+                  <Input
+                    value={editForm.skills.join(', ')}
+                    onChange={(e) => handleSkillsChange(e.target.value.split(',').map(s => s.trim()).filter(s => s))}
+                    placeholder="Enter your skills separated by commas"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Example: Directing, Producing, Screenwriting, Post-Production</p>
+                </div>
+              </div>
+
+              {/* Social Links */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Social Links</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="linkedin">LinkedIn</Label>
+                    <Input
+                      id="linkedin"
+                      value={editForm.linkedin || ''}
+                      onChange={(e) => handleFormChange('linkedin', e.target.value)}
+                      placeholder="Enter your LinkedIn profile URL"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="twitter">Twitter</Label>
+                    <Input
+                      id="twitter"
+                      value={editForm.twitter || ''}
+                      onChange={(e) => handleFormChange('twitter', e.target.value)}
+                      placeholder="Enter your Twitter profile URL"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="instagram">Instagram</Label>
+                    <Input
+                      id="instagram"
+                      value={editForm.instagram || ''}
+                      onChange={(e) => handleFormChange('instagram', e.target.value)}
+                      placeholder="Enter your Instagram profile URL"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="youtube">YouTube</Label>
+                    <Input
+                      id="youtube"
+                      value={editForm.youtube || ''}
+                      onChange={(e) => handleFormChange('youtube', e.target.value)}
+                      placeholder="Enter your YouTube channel URL"
+                    />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Experience Tab */}
+            <TabsContent value="experience" className="space-y-6 mt-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">Work Experience</h3>
+                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Experience
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {editForm.experience.map((exp, index) => {
+                    const isExpanded = expandedEditExperience.has(exp.id);
+                    return (
+                      <Card key={exp.id} className="border border-gray-200">
+                        <CardContent className="p-4">
+                          <div 
+                            className="flex items-center justify-between cursor-pointer"
+                            onClick={() => toggleEditExperienceExpansion(exp.id)}
+                          >
+                            <div className="flex gap-3 flex-1">
+                              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                <Briefcase className="w-5 h-5 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-sm text-gray-900">{exp.title}</h4>
+                                <p className="text-sm text-gray-600">{exp.company}</p>
+                                <p className="text-xs text-gray-500">{exp.location}</p>
+                                <p className="text-xs text-gray-500">
+                                  {exp.startDate} - {exp.current ? "Present" : exp.endDate}
+                                </p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" className="p-1">
+                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                          {isExpanded && (
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <Label>Job Title</Label>
+                                  <Input value={exp.title} placeholder="Enter job title" />
+                                </div>
+                                <div>
+                                  <Label>Company</Label>
+                                  <Input value={exp.company} placeholder="Enter company name" />
+                                </div>
+                                <div>
+                                  <Label>Location</Label>
+                                  <Input value={exp.location} placeholder="Enter location" />
+                                </div>
+                                <div>
+                                  <Label>Start Date</Label>
+                                  <Input value={exp.startDate} placeholder="MM/YYYY" />
+                                </div>
+                                <div>
+                                  <Label>End Date</Label>
+                                  <Input value={exp.endDate || ''} placeholder="MM/YYYY (leave empty if current)" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" checked={exp.current} />
+                                  <Label>Currently working here</Label>
+                                </div>
+                              </div>
+                              <div className="mt-4">
+                                <Label>Description</Label>
+                                <Textarea value={exp.description} rows={3} placeholder="Describe your role and responsibilities" />
+                              </div>
+                              <div className="flex justify-end gap-2 mt-4">
+                                <Button size="sm" variant="outline">Edit</Button>
+                                <Button size="sm" variant="destructive">Delete</Button>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Achievements Tab */}
+            <TabsContent value="achievements" className="space-y-6 mt-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">Achievements & Awards</h3>
+                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Achievement
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {editForm.achievements.map((achievement, index) => {
+                    const isExpanded = expandedEditAchievements.has(achievement.id);
+                    return (
+                      <Card key={achievement.id} className="border border-gray-200">
+                        <CardContent className="p-4">
+                          <div 
+                            className="flex items-center justify-between cursor-pointer"
+                            onClick={() => toggleEditAchievementExpansion(achievement.id)}
+                          >
+                            <div className="flex gap-3 flex-1">
+                              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                {achievement.type === 'award' && <Award className="w-4 h-4 text-purple-600" />}
+                                {achievement.type === 'certification' && <GraduationCap className="w-4 h-4 text-purple-600" />}
+                                {achievement.type === 'publication' && <FileText className="w-4 h-4 text-purple-600" />}
+                                {achievement.type === 'recognition' && <Star className="w-4 h-4 text-purple-600" />}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-medium text-sm text-gray-900">{achievement.title}</h4>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {achievement.type.charAt(0).toUpperCase() + achievement.type.slice(1)}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-gray-500">{achievement.date}</p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" className="p-1">
+                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                          {isExpanded && (
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <Label>Achievement Title</Label>
+                                  <Input value={achievement.title} placeholder="Enter achievement title" />
+                                </div>
+                                <div>
+                                  <Label>Type</Label>
+                                  <Select value={achievement.type}>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="award">Award</SelectItem>
+                                      <SelectItem value="certification">Certification</SelectItem>
+                                      <SelectItem value="publication">Publication</SelectItem>
+                                      <SelectItem value="recognition">Recognition</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label>Date</Label>
+                                  <Input value={achievement.date} placeholder="MM/YYYY" />
+                                </div>
+                              </div>
+                              <div className="mt-4">
+                                <Label>Description</Label>
+                                <Textarea value={achievement.description} rows={3} placeholder="Describe the achievement" />
+                              </div>
+                              <div className="flex justify-end gap-2 mt-4">
+                                <Button size="sm" variant="outline">Edit</Button>
+                                <Button size="sm" variant="destructive">Delete</Button>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Portfolio Tab */}
+            <TabsContent value="portfolio" className="space-y-6 mt-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">Portfolio Items</h3>
+                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Portfolio Item
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {editForm.portfolio.map((item, index) => (
+                    <Card key={item.id} className="border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        {item.type === "video" && (
+                          <div className="text-center">
+                            <Video className="w-12 h-12 text-purple-600 mx-auto mb-2" />
+                            <p className="text-sm font-medium text-gray-700">Video</p>
+                          </div>
+                        )}
+                        {item.type === "image" && (
+                          <div className="text-center">
+                            <ImageIcon className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+                            <p className="text-sm font-medium text-gray-700">Image</p>
+                          </div>
+                        )}
+                        {item.type === "document" && (
+                          <div className="text-center">
+                            <FileIcon className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                            <p className="text-sm font-medium text-gray-700">Document</p>
+                          </div>
+                        )}
+                        {item.type === "audio" && (
+                          <div className="text-center">
+                            <MusicIcon className="w-12 h-12 text-orange-600 mx-auto mb-2" />
+                            <p className="text-sm font-medium text-gray-700">Audio</p>
+                          </div>
+                        )}
+                      </div>
+                      <CardContent className="p-4">
+                        <h4 className="font-medium text-sm text-gray-900 mb-2 line-clamp-2">{item.title}</h4>
+                        <p className="text-xs text-gray-600 mb-3 line-clamp-2">{item.description}</p>
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                          <span>{item.date}</span>
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            <span>{item.views}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-1">Edit</Button>
+                          <Button size="sm" variant="destructive" className="flex-1">Delete</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Education Tab */}
+            <TabsContent value="education" className="space-y-6 mt-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">Education</h3>
+                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Education
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {editForm.education.map((edu, index) => {
+                    const isExpanded = expandedEditEducation.has(edu.id);
+                    return (
+                      <Card key={edu.id} className="border border-gray-200">
+                        <CardContent className="p-4">
+                          <div 
+                            className="flex items-center justify-between cursor-pointer"
+                            onClick={() => toggleEditEducationExpansion(edu.id)}
+                          >
+                            <div className="flex gap-3 flex-1">
+                              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                <GraduationCap className="w-5 h-5 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-sm text-gray-900">{edu.degree}</h4>
+                                <p className="text-sm text-gray-600">{edu.school}</p>
+                                <p className="text-xs text-gray-500">{edu.location}</p>
+                                <p className="text-xs text-gray-500">
+                                  {edu.startDate} - {edu.current ? "Present" : edu.endDate}
+                                </p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" className="p-1">
+                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                          {isExpanded && (
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <Label>Degree</Label>
+                                  <Input value={edu.degree} placeholder="Enter degree" />
+                                </div>
+                                <div>
+                                  <Label>School</Label>
+                                  <Input value={edu.school} placeholder="Enter school name" />
+                                </div>
+                                <div>
+                                  <Label>Location</Label>
+                                  <Input value={edu.location} placeholder="Enter location" />
+                                </div>
+                                <div>
+                                  <Label>Start Date</Label>
+                                  <Input value={edu.startDate} placeholder="MM/YYYY" />
+                                </div>
+                                <div>
+                                  <Label>End Date</Label>
+                                  <Input value={edu.endDate || ''} placeholder="MM/YYYY (leave empty if current)" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" checked={edu.current} />
+                                  <Label>Currently studying</Label>
+                                </div>
+                              </div>
+                              <div className="mt-4">
+                                <Label>Description</Label>
+                                <Textarea value={edu.description || ''} rows={3} placeholder="Describe your education" />
+                              </div>
+                              <div className="flex justify-end gap-2 mt-4">
+                                <Button size="sm" variant="outline">Edit</Button>
+                                <Button size="sm" variant="destructive">Delete</Button>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
+              <Button variant="outline" onClick={handleCancelEdit}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveProfile} className="bg-purple-600 hover:bg-purple-700 text-white">
+                Save Changes
+              </Button>
+            </div>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

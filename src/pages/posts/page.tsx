@@ -79,9 +79,186 @@ const PostsPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
+  // Hardcoded posts data
+  const hardcodedPosts: Post[] = [
+    {
+      id: "1",
+      title: "Behind the Scenes: New Short Film Project",
+      content: "Just wrapped up filming for our latest short film 'Echoes of Tomorrow'. The cinematography turned out amazing! Can't wait to share the final cut with everyone. #filmmaking #shortfilm #cinematography #indie",
+      author_id: "user-1",
+      media_urls: ["https://images.unsplash.com/photo-1489599808417-8a4a4b4b4b4b?w=800"],
+      media_types: ["image"],
+      hashtags: ["filmmaking", "shortfilm", "cinematography", "indie"],
+      is_published: true,
+      is_featured: true,
+      likes_count: 24,
+      comments_count: 8,
+      shares_count: 3,
+      created_at: "2024-12-15T10:30:00Z",
+      updated_at: "2024-12-15T10:30:00Z",
+      author: {
+        id: "user-1",
+        full_name: "Sarah Chen"
+      },
+      is_liked: false,
+      is_saved: false
+    },
+    {
+      id: "2",
+      title: "Looking for Sound Designer",
+      content: "Our upcoming documentary about climate change needs a talented sound designer. Must have experience with nature documentaries and environmental audio. Budget: ₹50,000-₹75,000. DM for details! #hiring #sounddesign #documentary #climatechange",
+      author_id: "user-2",
+      media_urls: [],
+      media_types: [],
+      hashtags: ["hiring", "sounddesign", "documentary", "climatechange"],
+      is_published: true,
+      is_featured: false,
+      likes_count: 12,
+      comments_count: 5,
+      shares_count: 7,
+      created_at: "2024-12-14T16:45:00Z",
+      updated_at: "2024-12-14T16:45:00Z",
+      author: {
+        id: "user-2",
+        full_name: "Raj Patel"
+      },
+      is_liked: true,
+      is_saved: false
+    },
+    {
+      id: "3",
+      content: "Just finished editing this music video for a local band. The color grading really brought the story to life! What do you think? #musicvideo #editing #colorgrading #localmusic",
+      author_id: "user-3",
+      media_urls: ["https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800"],
+      media_types: ["image"],
+      hashtags: ["musicvideo", "editing", "colorgrading", "localmusic"],
+      is_published: true,
+      is_featured: false,
+      likes_count: 18,
+      comments_count: 6,
+      shares_count: 2,
+      created_at: "2024-12-14T09:20:00Z",
+      updated_at: "2024-12-14T09:20:00Z",
+      author: {
+        id: "user-3",
+        full_name: "Maya Sharma"
+      },
+      is_liked: false,
+      is_saved: true
+    },
+    {
+      id: "4",
+      title: "Film Festival Submission Tips",
+      content: "After submitting to 15+ festivals this year, here are my top tips: 1) Research each festival's specific requirements 2) Create compelling loglines 3) Submit early 4) Follow up professionally. What's your experience with festival submissions? #filmfestival #submission #tips #filmmaking",
+      author_id: "user-4",
+      media_urls: [],
+      media_types: [],
+      hashtags: ["filmfestival", "submission", "tips", "filmmaking"],
+      is_published: true,
+      is_featured: true,
+      likes_count: 31,
+      comments_count: 12,
+      shares_count: 9,
+      created_at: "2024-12-13T14:15:00Z",
+      updated_at: "2024-12-13T14:15:00Z",
+      author: {
+        id: "user-4",
+        full_name: "Alex Kumar"
+      },
+      is_liked: true,
+      is_saved: true
+    },
+    {
+      id: "5",
+      content: "Working on a new web series concept. The script is coming together nicely! Looking for feedback from fellow writers. Anyone interested in a script swap? #webseries #scriptwriting #collaboration #feedback",
+      author_id: "user-5",
+      media_urls: [],
+      media_types: [],
+      hashtags: ["webseries", "scriptwriting", "collaboration", "feedback"],
+      is_published: true,
+      is_featured: false,
+      likes_count: 15,
+      comments_count: 4,
+      shares_count: 1,
+      created_at: "2024-12-13T11:30:00Z",
+      updated_at: "2024-12-13T11:30:00Z",
+      author: {
+        id: "user-5",
+        full_name: "Priya Singh"
+      },
+      is_liked: false,
+      is_saved: false
+    },
+    {
+      id: "6",
+      title: "Cinematography Workshop This Weekend",
+      content: "Join us for a hands-on cinematography workshop this Saturday! We'll cover lighting techniques, camera movement, and composition. Perfect for beginners and intermediate filmmakers. Limited seats available! #workshop #cinematography #learning #filmmaking",
+      author_id: "user-6",
+      media_urls: ["https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800"],
+      media_types: ["image"],
+      hashtags: ["workshop", "cinematography", "learning", "filmmaking"],
+      is_published: true,
+      is_featured: false,
+      likes_count: 22,
+      comments_count: 7,
+      shares_count: 5,
+      created_at: "2024-12-12T18:00:00Z",
+      updated_at: "2024-12-12T18:00:00Z",
+      author: {
+        id: "user-6",
+        full_name: "David Wilson"
+      },
+      is_liked: false,
+      is_saved: false
+    },
+    {
+      id: "7",
+      content: "Just got my first paid gig as a freelance editor! Starting with corporate videos and hoping to move into narrative work. Any advice for building a portfolio? #freelance #editing #career #advice",
+      author_id: "user-7",
+      media_urls: [],
+      media_types: [],
+      hashtags: ["freelance", "editing", "career", "advice"],
+      is_published: true,
+      is_featured: false,
+      likes_count: 19,
+      comments_count: 9,
+      shares_count: 3,
+      created_at: "2024-12-12T13:45:00Z",
+      updated_at: "2024-12-12T13:45:00Z",
+      author: {
+        id: "user-7",
+        full_name: "Neha Gupta"
+      },
+      is_liked: true,
+      is_saved: false
+    },
+    {
+      id: "8",
+      title: "Equipment Rental Available",
+      content: "Professional camera equipment available for rent: Sony FX6, Canon C70, lighting kits, audio gear. Daily/weekly rates. Perfect for indie filmmakers and content creators. DM for pricing! #equipment #rental #camera #lighting #audio",
+      author_id: "user-8",
+      media_urls: ["https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=800"],
+      media_types: ["image"],
+      hashtags: ["equipment", "rental", "camera", "lighting", "audio"],
+      is_published: true,
+      is_featured: false,
+      likes_count: 16,
+      comments_count: 3,
+      shares_count: 8,
+      created_at: "2024-12-11T20:30:00Z",
+      updated_at: "2024-12-11T20:30:00Z",
+      author: {
+        id: "user-8",
+        full_name: "Rohit Agarwal"
+      },
+      is_liked: false,
+      is_saved: true
+    }
+  ];
+  
   // State management
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>(hardcodedPosts);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("recent");
@@ -147,112 +324,40 @@ const PostsPage = () => {
     }
   };
 
-  // Fetch posts from database
+  // Fetch posts from hardcoded data
   const fetchPosts = async () => {
     try {
       setLoading(true);
       
-      let query = supabase
-        .from('posts')
-        .select(`
-          *,
-          author:profiles(id, full_name)
-        `)
-        .eq('is_published', true)
-        .order('created_at', { ascending: false });
+      let filteredPosts = [...hardcodedPosts];
 
       // Apply filters based on active tab
       if (activeTab === "trending") {
-        query = query.order('likes_count', { ascending: false });
+        filteredPosts = filteredPosts.sort((a, b) => b.likes_count - a.likes_count);
       } else if (activeTab === "published") {
-        query = query.eq('is_published', true);
+        filteredPosts = filteredPosts.filter(post => post.is_published);
       } else if (activeTab === "saved") {
-        if (!user?.id) {
-          setPosts([]);
-          return;
-        }
-        // Get saved posts
-        try {
-          const profile = await getOrCreateProfile();
-          if (!profile) {
-            setPosts([]);
-            return;
-          }
-
-        const { data: savedPosts } = await supabase
-          .from('post_saves')
-          .select('post_id')
-          .eq('user_id', profile.id);
-        
-        if (savedPosts && savedPosts.length > 0) {
-          const postIds = savedPosts.map(sp => sp.post_id);
-          query = query.in('id', postIds);
-        } else {
-          setPosts([]);
-          return;
-        }
-        } catch (profileError) {
-          console.error('Error getting profile for saved posts:', profileError);
-          setPosts([]);
-          return;
-        }
+        // Filter for saved posts (posts where is_saved is true)
+        filteredPosts = filteredPosts.filter(post => post.is_saved);
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching posts:', error);
-        throw error;
-      }
-
-      console.log('Fetched posts:', data);
-
-      // Get user interactions (likes and saves) for each post
-      if (user?.id && data) {
-        try {
-          const profile = await getOrCreateProfile();
-          if (profile) {
-          const postIds = data.map(post => post.id);
-          
-          const [likesResult, savesResult] = await Promise.all([
-            supabase
-              .from('post_likes')
-              .select('post_id')
-              .eq('user_id', profile.id)
-              .in('post_id', postIds),
-            supabase
-              .from('post_saves')
-              .select('post_id')
-              .eq('user_id', profile.id)
-              .in('post_id', postIds)
-          ]);
-
-          const likedPostIds = new Set(likesResult.data?.map(like => like.post_id) || []);
-          const savedPostIds = new Set(savesResult.data?.map(save => save.post_id) || []);
-
-          const postsWithInteractions = data.map(post => ({
-            ...post,
-            is_liked: likedPostIds.has(post.id),
-            is_saved: savedPostIds.has(post.id),
-          }));
-
-          setPosts(postsWithInteractions);
-          } else {
-            setPosts(data || []);
-          }
-        } catch (profileError) {
-          console.error('Error getting profile in fetchPosts:', profileError);
-          setPosts(data || []);
-        }
+      // Apply sorting
+      if (sortBy === "popular") {
+        filteredPosts = filteredPosts.sort((a, b) => b.likes_count - a.likes_count);
+      } else if (sortBy === "trending") {
+        filteredPosts = filteredPosts.sort((a, b) => (b.likes_count + b.comments_count + b.shares_count) - (a.likes_count + a.comments_count + a.shares_count));
       } else {
-        setPosts(data || []);
+        // Most recent (default)
+        filteredPosts = filteredPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       }
+
+      setPosts(filteredPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to fetch posts. Please make sure the database is set up correctly."
+        description: "Failed to load posts"
       });
     } finally {
       setLoading(false);
@@ -358,73 +463,41 @@ const PostsPage = () => {
     try {
       setIsUploading(true);
 
-      // First, get the profile ID for the current user
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        toast({
-          variant: "destructive",
-          title: "Profile Error",
-          description: "Could not find user profile. Please make sure you have a profile set up."
-        });
-        return;
-      }
-
-      let mediaUrls: string[] = [];
-      let mediaTypes: string[] = [];
-
-      // Upload media files if any
-      if (newPost.mediaFiles.length > 0) {
-        try {
-          mediaUrls = await uploadMedia(newPost.mediaFiles);
-          mediaTypes = newPost.mediaFiles.map(file => 
-            file.type.startsWith('video/') ? 'video' : 'image'
-          );
-        } catch (uploadError) {
-          console.error('Media upload failed:', uploadError);
-          toast({
-            variant: "destructive",
-            title: "Upload Error",
-            description: "Failed to upload media files. Creating post without media."
-          });
-          // Continue without media
-          mediaUrls = [];
-          mediaTypes = [];
-        }
-      }
-
       // Extract hashtags from content
       const hashtagMatches = newPost.content.match(/#\w+/g);
       const hashtags = hashtagMatches ? hashtagMatches.map(tag => tag.substring(1)) : [];
 
-      const postData = {
-        title: newPost.title || null,
+      // Create new post object
+      const newPostData: Post = {
+        id: Date.now().toString(),
+        title: newPost.title || undefined,
         content: newPost.content,
-        author_id: profile.id, // Use profile ID, not user ID
-        media_urls: mediaUrls.length > 0 ? mediaUrls : null,
-        media_types: mediaTypes.length > 0 ? mediaTypes : null,
-        hashtags: hashtags.length > 0 ? hashtags : null,
+        author_id: user.id,
+        media_urls: newPost.mediaUrls.length > 0 ? newPost.mediaUrls : undefined,
+        media_types: newPost.mediaFiles.length > 0 ? newPost.mediaFiles.map(file => 
+          file.type.startsWith('video/') ? 'video' : 'image'
+        ) : undefined,
+        hashtags: hashtags.length > 0 ? hashtags : undefined,
         is_published: true,
+        is_featured: false,
+        likes_count: 0,
+        comments_count: 0,
+        shares_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        author: {
+          id: user.id,
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
+        },
+        is_liked: false,
+        is_saved: false
       };
 
-      console.log('Creating post with data:', postData);
-
-      const { data: insertedData, error } = await supabase
-        .from('posts')
-        .insert(postData)
-        .select();
-
-      if (error) {
-        console.error('Supabase error details:', error);
-        throw error;
-      }
-
-      console.log('Post created successfully:', insertedData);
+      // Add to hardcoded posts array
+      hardcodedPosts.unshift(newPostData);
+      
+      // Update state
+      setPosts(prev => [newPostData, ...prev]);
 
       toast({
         title: "Success",
@@ -441,14 +514,12 @@ const PostsPage = () => {
       });
       setIsCreateDialogOpen(false);
       
-      // Refresh posts
-      fetchPosts();
     } catch (error) {
       console.error('Error creating post:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create post. Please make sure the database is set up correctly."
+        description: "Failed to create post"
       });
     } finally {
       setIsUploading(false);
@@ -470,33 +541,6 @@ const PostsPage = () => {
     setLoadingActions(prev => ({ ...prev, [actionKey]: true }));
 
     try {
-      // Get or create user profile
-      const profile = await getOrCreateProfile();
-      if (!profile) {
-        throw new Error('Unable to get or create user profile');
-      }
-
-      if (isLiked) {
-        // Unlike
-        const { error } = await supabase
-          .from('post_likes')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', profile.id);
-
-        if (error) throw error;
-      } else {
-        // Like
-        const { error } = await supabase
-          .from('post_likes')
-          .insert({
-            post_id: postId,
-            user_id: profile.id,
-          });
-
-        if (error) throw error;
-      }
-
       // Update local state
       setPosts(prev => prev.map(post => 
         post.id === postId 
@@ -507,6 +551,16 @@ const PostsPage = () => {
             }
           : post
       ));
+
+      // Update hardcoded posts array
+      const postIndex = hardcodedPosts.findIndex(post => post.id === postId);
+      if (postIndex !== -1) {
+        hardcodedPosts[postIndex] = {
+          ...hardcodedPosts[postIndex],
+          is_liked: !isLiked,
+          likes_count: isLiked ? hardcodedPosts[postIndex].likes_count - 1 : hardcodedPosts[postIndex].likes_count + 1
+        };
+      }
 
       // Show success feedback
       toast({
@@ -540,39 +594,21 @@ const PostsPage = () => {
     setLoadingActions(prev => ({ ...prev, [actionKey]: true }));
 
     try {
-      // Get or create user profile
-      const profile = await getOrCreateProfile();
-      if (!profile) {
-        throw new Error('Unable to get or create user profile');
-      }
-
-      if (isSaved) {
-        // Unsave
-        const { error } = await supabase
-          .from('post_saves')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', profile.id);
-
-        if (error) throw error;
-      } else {
-        // Save
-        const { error } = await supabase
-          .from('post_saves')
-          .insert({
-            post_id: postId,
-            user_id: profile.id,
-          });
-
-        if (error) throw error;
-      }
-
       // Update local state
       setPosts(prev => prev.map(post => 
         post.id === postId 
           ? { ...post, is_saved: !isSaved }
           : post
       ));
+
+      // Update hardcoded posts array
+      const postIndex = hardcodedPosts.findIndex(post => post.id === postId);
+      if (postIndex !== -1) {
+        hardcodedPosts[postIndex] = {
+          ...hardcodedPosts[postIndex],
+          is_saved: !isSaved
+        };
+      }
 
       // Show success feedback
       toast({
@@ -781,11 +817,11 @@ const PostsPage = () => {
   // Load posts on component mount and when dependencies change
   useEffect(() => {
     fetchPosts();
-  }, [activeTab, user?.id]);
+  }, [activeTab, sortBy]);
 
   return (
     <AppLayout pageTitle="Posts">
-      <div className="max-w-4xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+      <div className="w-full py-4 px-4">
         {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

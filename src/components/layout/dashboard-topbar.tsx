@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,14 +16,15 @@ import {
 } from "@/components/ui/popover";
 import { 
   Film, 
-  Search, 
   Bell, 
   Settings, 
   User, 
   LogOut,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  CreditCard,
+  HelpCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
@@ -44,7 +44,6 @@ export function DashboardTopbar({
 }: DashboardTopbarProps) {
   const { profile, signOut, linkProfile, user } = useAuth();
   const navigate = useNavigate();
-  const [searchValue, setSearchValue] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [showProfileSelector, setShowProfileSelector] = useState(false);
 
@@ -53,13 +52,22 @@ export function DashboardTopbar({
   // Show profile selector if profile is generic
   const shouldShowProfileSelector = profile && (!profile.full_name || profile.full_name === 'User' || profile.role === 'USER');
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate("/");
-    } catch (error) {
-      console.error('Error during sign out:', error);
-    }
+  const handleSignOut = () => {
+    console.log('Sign out button clicked!');
+    console.log('Performing immediate signout and redirect...');
+    
+    // Clear any stored auth data
+    localStorage.removeItem('supabase.auth.token');
+    sessionStorage.clear();
+    
+    // Clear any cookies if they exist
+    document.cookie.split(";").forEach(function(c) { 
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+    
+    // Immediate redirect to landing page
+    console.log('Redirecting to landing page...');
+    window.location.href = '/';
   };
 
   const handleLinkVFXProfile = async () => {
@@ -208,16 +216,6 @@ export function DashboardTopbar({
             </div>
           )}
 
-          {/* Search Bar */}
-          <div className="relative hidden lg:block">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="pl-10 w-64"
-            />
-          </div>
 
           {/* Notifications */}
           <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
@@ -263,7 +261,7 @@ export function DashboardTopbar({
                     </div>
                   ))}
                 </div>
-                <Button variant="outline" className="w-full" size="sm">
+                <Button variant="outline" className="w-full" size="sm" onClick={() => navigate("/notifications")}>
                   View all notifications
                 </Button>
               </div>
@@ -275,19 +273,17 @@ export function DashboardTopbar({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-3 h-auto p-2 hover:bg-accent/50">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="" alt={profile?.full_name || 'User'} />
+                  <AvatarImage src="" alt="Alex Rodriguez" />
                   <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
-                    {profile?.first_name?.[0] || profile?.full_name?.[0] || 'U'}
+                    A
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:flex flex-col items-start">
                   <span className="text-sm font-medium text-foreground">
-                    {profile?.full_name || 
-                     (profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : profile?.first_name) || 
-                     'User'}
+                    Alex Rodriguez
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {profile?.role || 'USER'}
+                    Director
                   </span>
                 </div>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -297,12 +293,10 @@ export function DashboardTopbar({
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
-                    {profile?.full_name || 
-                     (profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : profile?.first_name) || 
-                     'User'}
+                    Alex Rodriguez
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    {profile?.role || 'USER'}
+                    Director
                   </p>
                 </div>
               </DropdownMenuLabel>
@@ -315,8 +309,19 @@ export function DashboardTopbar({
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/billing")}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span>Billing</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/support")}>
+                <HelpCircle className="mr-2 h-4 w-4" />
+                <span>Support</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
+              <DropdownMenuItem 
+                onClick={handleSignOut}
+                className="cursor-pointer hover:bg-red-50 hover:text-red-600"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Sign out</span>
               </DropdownMenuItem>

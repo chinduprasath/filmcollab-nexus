@@ -20,11 +20,16 @@ import Projects from "./pages/projects/page";
 import Posts from "./pages/posts/page";
 import Directory from "./pages/directory/page";
 import Community from "./pages/community/page";
+import GroupDetails from "./pages/community/GroupDetails";
+import JoinedGroupDetails from "./pages/community/JoinedGroupDetails";
 import Discover from "./pages/discover/page";
 import Messages from "./pages/messages/page";
 import Connections from "./pages/connections/page";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Billing from "./pages/Billing";
+import Support from "./pages/Support";
+import Notifications from "./pages/Notifications";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminUsers from "./pages/AdminUsers";
 import AdminPosts from "./pages/AdminPosts";
@@ -192,6 +197,14 @@ function AppRoutes() {
         }
       />
         <Route
+          path="/jobs/:jobId"
+          element={
+            <ProtectedRoute>
+              <JobDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/jobs/:id"
           element={
             <ProtectedRoute>
@@ -200,7 +213,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/projects/:id"
+          path="/projects/:projectId"
           element={
             <ProtectedRoute>
               <ProjectDetails />
@@ -248,6 +261,22 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/community/group/:groupId"
+        element={
+          <ProtectedRoute>
+            <GroupDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/community/joined-group/:groupId"
+        element={
+          <ProtectedRoute>
+            <JoinedGroupDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/discover"
         element={
           <ProtectedRoute>
@@ -284,6 +313,30 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/billing"
+        element={
+          <ProtectedRoute>
+            <Billing />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/support"
+        element={
+          <ProtectedRoute>
+            <Support />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <Notifications />
           </ProtectedRoute>
         }
       />

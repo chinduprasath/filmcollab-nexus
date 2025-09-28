@@ -456,22 +456,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: "Welcome back!"
         });
         
-        // Force set user and profile immediately
+        // Set user immediately, but let the auth state listener handle profile loading
         setUser(data.user);
-        const fallbackProfile = {
-          id: data.user.id,
-          user_id: data.user.id,
-          full_name: null,
-          first_name: null,
-          last_name: null,
-          role: 'USER',
-          category: 'user',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setProfile(fallbackProfile);
         setLoading(false);
-        console.log('SignIn - user and profile set immediately');
+        console.log('SignIn - user set, profile will be loaded by auth listener');
       }
 
       return { error: null };

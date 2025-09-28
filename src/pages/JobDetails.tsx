@@ -1,231 +1,366 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/app-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  ArrowLeft,
+  ArrowLeft, 
   MapPin, 
   Clock, 
-  Building, 
+  DollarSign, 
   Users, 
-  Bookmark,
-  Share2,
-  Eye,
   Calendar,
-  DollarSign
+  Building,
+  Briefcase,
+  Star,
+  Share2,
+  Bookmark,
+  Edit,
+  Trash2,
+  User,
+  Mail,
+  Phone,
+  GraduationCap
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface Job {
   id: string;
-  job_title: string;
-  company_name: string;
+  title: string;
+  company: string;
   location: string;
+  min_salary: number;
+  max_salary: number;
+  description: string;
+  requirements: string;
+  skills_required: string[];
+  benefits: string;
   job_type: string;
   experience_level: string;
-  industry: string;
-  salary_range?: string;
-  salary_min?: number;
-  salary_max?: number;
-  skills_required?: string[];
-  job_description: string;
-  benefits?: string;
+  category: string;
   posted_date: string;
-  user_id: string;
+  application_deadline: string;
   status: string;
+  user_id: string;
   created_at: string;
   updated_at: string;
 }
 
 export default function JobDetails() {
-  const { id } = useParams<{ id: string }>();
+  const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
-  const [savedJobs, setSavedJobs] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState("details");
-  const [applicants, setApplicants] = useState<any[]>([]);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isApplied, setIsApplied] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Job>>({});
+
+  // Hardcoded jobs data (same as in Jobs.tsx)
+  const hardcodedJobs: Job[] = [
+    {
+      id: "my-1",
+      title: "Senior Film Director",
+      company: "Netflix Studios",
+      location: "Los Angeles, CA",
+      min_salary: 150000,
+      max_salary: 250000,
+      description: "We are looking for an experienced film director to lead our upcoming feature film project. The ideal candidate will have a strong vision for storytelling and experience working with large production teams. This role involves overseeing the entire creative process from pre-production through post-production, working closely with producers, writers, cinematographers, and editors to bring compelling stories to life on screen.",
+      requirements: "Minimum 8 years of experience in film direction, proven track record of successful feature films, strong leadership skills, ability to work under pressure, excellent communication skills, experience with both studio and independent productions, knowledge of current film industry trends and technologies.",
+      skills_required: ["Film Direction", "Storytelling", "Leadership", "Project Management", "Creative Vision", "Team Management", "Budget Management", "Post-Production"],
+      benefits: "Comprehensive health insurance, flexible working hours, creative freedom, professional development opportunities, stock options, annual bonus, relocation assistance, equipment allowance.",
+      job_type: "Full-time",
+      experience_level: "Senior",
+      category: "Director",
+      posted_date: "2024-01-15",
+      application_deadline: "2024-02-15",
+      status: "Active",
+      user_id: "current-user-id",
+      created_at: "2024-01-15T10:00:00Z",
+      updated_at: "2024-01-15T10:00:00Z"
+    },
+    {
+      id: "1",
+      title: "Film Director",
+      company: "Hollywood Studios",
+      location: "Los Angeles, CA",
+      min_salary: 80000,
+      max_salary: 120000,
+      description: "We are looking for an experienced film director to lead our upcoming feature film project. The ideal candidate will have a strong vision for storytelling and experience working with large production teams.",
+      requirements: "Minimum 5 years of experience in film direction, proven track record of successful projects, strong leadership skills, ability to work under pressure.",
+      skills_required: ["Film Direction", "Storytelling", "Leadership", "Project Management"],
+      benefits: "Comprehensive health insurance, flexible working hours, creative freedom, professional development opportunities.",
+      job_type: "Full-time",
+      experience_level: "Senior",
+      category: "Director",
+      posted_date: "2024-01-15",
+      application_deadline: "2024-02-15",
+      status: "Active",
+      user_id: "current-user-id",
+      created_at: "2024-01-15T10:00:00Z",
+      updated_at: "2024-01-15T10:00:00Z"
+    },
+    {
+      id: "2",
+      title: "Cinematographer",
+      company: "Warner Bros",
+      location: "Burbank, CA",
+      min_salary: 80000,
+      max_salary: 120000,
+      description: "Join our cinematography team to work on high-profile film and television projects. We need a creative and technical cinematographer with experience in various shooting styles.",
+      requirements: "Bachelor's degree in Film or related field, 3+ years of cinematography experience, proficiency with professional camera equipment, strong portfolio.",
+      skills_required: ["Cinematography", "Camera Operation", "Lighting", "Color Grading"],
+      benefits: "Competitive salary, health benefits, equipment allowance, networking opportunities.",
+      job_type: "Full-time",
+      experience_level: "Mid-level",
+      category: "Cinematographer / DOP",
+      posted_date: "2024-01-14",
+      application_deadline: "2024-02-14",
+      status: "Active",
+      user_id: "current-user-id",
+      created_at: "2024-01-14T09:00:00Z",
+      updated_at: "2024-01-14T09:00:00Z"
+    },
+    {
+      id: "3",
+      title: "Video Editor",
+      company: "Disney Studios",
+      location: "Orlando, FL",
+      min_salary: 60000,
+      max_salary: 90000,
+      description: "We're seeking a talented video editor to join our post-production team. You'll work on various projects including feature films, documentaries, and promotional content.",
+      requirements: "Proficiency in Adobe Premiere Pro, After Effects, and DaVinci Resolve, 2+ years of editing experience, strong storytelling skills.",
+      skills_required: ["Video Editing", "Adobe Premiere", "After Effects", "Color Correction"],
+      benefits: "Health insurance, paid time off, professional development, creative projects.",
+      job_type: "Full-time",
+      experience_level: "Mid-level",
+      category: "Video Editor",
+      posted_date: "2024-01-13",
+      application_deadline: "2024-02-13",
+      status: "Active",
+      user_id: "current-user-id",
+      created_at: "2024-01-13T08:00:00Z",
+      updated_at: "2024-01-13T08:00:00Z"
+    },
+    {
+      id: "4",
+      title: "Script Writer",
+      company: "Amazon Studios",
+      location: "Seattle, WA",
+      min_salary: 70000,
+      max_salary: 110000,
+      description: "Join our creative writing team to develop compelling scripts for our streaming platform. We're looking for writers with fresh perspectives and strong narrative skills.",
+      requirements: "Bachelor's degree in Creative Writing or Film, portfolio of completed scripts, 3+ years of writing experience, ability to work collaboratively.",
+      skills_required: ["Script Writing", "Storytelling", "Character Development", "Dialogue Writing"],
+      benefits: "Competitive compensation, health benefits, flexible schedule, creative freedom.",
+      job_type: "Full-time",
+      experience_level: "Mid-level",
+      category: "Script Writer",
+      posted_date: "2024-01-12",
+      application_deadline: "2024-02-12",
+      status: "Active",
+      user_id: "current-user-id",
+      created_at: "2024-01-12T07:00:00Z",
+      updated_at: "2024-01-12T07:00:00Z"
+    },
+    {
+      id: "5",
+      title: "Sound Engineer",
+      company: "Sony Pictures",
+      location: "Culver City, CA",
+      min_salary: 65000,
+      max_salary: 95000,
+      description: "We need a skilled sound engineer to work on our film and television productions. You'll be responsible for recording, mixing, and mastering audio content.",
+      requirements: "Degree in Audio Engineering or related field, 3+ years of sound engineering experience, proficiency with Pro Tools, strong technical skills.",
+      skills_required: ["Sound Engineering", "Audio Mixing", "Pro Tools", "Foley"],
+      benefits: "Health insurance, retirement plan, professional equipment, career growth opportunities.",
+      job_type: "Full-time",
+      experience_level: "Mid-level",
+      category: "Sound Engineer",
+      posted_date: "2024-01-11",
+      application_deadline: "2024-02-11",
+      status: "Active",
+      user_id: "current-user-id",
+      created_at: "2024-01-11T06:00:00Z",
+      updated_at: "2024-01-11T06:00:00Z"
+    }
+  ];
+
+  // Hardcoded applicants data
+  const applicants = [
+    {
+      id: "app-1",
+      name: "Sarah Johnson",
+      email: "sarah.johnson@email.com",
+      phone: "+1 (555) 123-4567",
+      experience: "8 years",
+      skills: ["Film Direction", "Storytelling", "Leadership", "Project Management"],
+      appliedDate: "2024-01-16",
+      status: "Under Review",
+      resume: "sarah_johnson_resume.pdf",
+      portfolio: "sarahjohnson.com"
+    },
+    {
+      id: "app-2", 
+      name: "Michael Chen",
+      email: "michael.chen@email.com",
+      phone: "+1 (555) 234-5678",
+      experience: "6 years",
+      skills: ["Film Direction", "Creative Vision", "Team Management", "Post-Production"],
+      appliedDate: "2024-01-17",
+      status: "Interview Scheduled",
+      resume: "michael_chen_resume.pdf",
+      portfolio: "michaelchenfilms.com"
+    },
+    {
+      id: "app-3",
+      name: "Emily Rodriguez",
+      email: "emily.rodriguez@email.com", 
+      phone: "+1 (555) 345-6789",
+      experience: "10 years",
+      skills: ["Film Direction", "Budget Management", "Leadership", "Creative Vision"],
+      appliedDate: "2024-01-18",
+      status: "Under Review",
+      resume: "emily_rodriguez_resume.pdf",
+      portfolio: "emilyrodriguez.com"
+    }
+  ];
+
+  const handleEdit = () => {
+    if (job) {
+      setEditForm({
+        ...job,
+        skills_required: job.skills_required.join(', ')
+      });
+      setShowEditDialog(true);
+    }
+  };
+
+  const handleDelete = () => {
+    if (job) {
+      toast({
+        title: "Job deleted",
+        description: "The job has been deleted successfully."
+      });
+      navigate("/jobs");
+    }
+  };
+
+  const handleUpdateJob = () => {
+    if (job && editForm) {
+      const updatedJob = {
+        ...job,
+        ...editForm,
+        skills_required: editForm.skills_required ? editForm.skills_required.split(',').map(s => s.trim()) : job.skills_required
+      };
+      setJob(updatedJob);
+      setShowEditDialog(false);
+      toast({
+        title: "Job updated",
+        description: "The job has been updated successfully."
+      });
+    }
+  };
 
   useEffect(() => {
-    if (id) {
-      fetchJobDetails();
-    }
-  }, [id]);
-
-  useEffect(() => {
-    // Load saved jobs from localStorage
-    const saved = localStorage.getItem('savedJobs');
-    if (saved) {
-      setSavedJobs(JSON.parse(saved));
-    }
-  }, []);
-
-  const fetchJobDetails = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching job:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load job details"
-        });
-        navigate('/jobs');
+    const fetchJobDetails = () => {
+      console.log('JobDetails: jobId from URL:', jobId);
+      console.log('JobDetails: Available job IDs:', hardcodedJobs.map(job => job.id));
+      
+      if (!jobId) {
+        console.log('JobDetails: No jobId provided');
+        setLoading(false);
         return;
       }
 
-      setJob(data);
+      // Find the job in hardcoded data
+      const foundJob = hardcodedJobs.find(job => job.id === jobId);
+      console.log('JobDetails: Found job:', foundJob);
       
-      // If it's the user's own job, fetch applicants
-      if (data.user_id === user?.id) {
-        fetchApplicants(data.id);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An unexpected error occurred"
-      });
-      navigate('/jobs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchApplicants = async (jobId: string) => {
-    try {
-      // Mock applicants data - in a real app, you'd fetch from your database
-      const mockApplicants = [
-        {
-          id: "1",
-          name: "John Smith",
-          email: "john.smith@email.com",
-          avatar: "JS",
-          appliedDate: "2025-01-08",
-          status: "pending",
-          experience: "5 years",
-          skills: ["React", "Node.js", "TypeScript"],
-          resume: "john_smith_resume.pdf"
-        },
-        {
-          id: "2", 
-          name: "Sarah Johnson",
-          email: "sarah.j@email.com",
-          avatar: "SJ",
-          appliedDate: "2025-01-07",
-          status: "reviewed",
-          experience: "3 years",
-          skills: ["Vue.js", "Python", "Django"],
-          resume: "sarah_johnson_resume.pdf"
-        },
-        {
-          id: "3",
-          name: "Mike Chen",
-          email: "mike.chen@email.com", 
-          avatar: "MC",
-          appliedDate: "2025-01-06",
-          status: "shortlisted",
-          experience: "7 years",
-          skills: ["Angular", "Java", "Spring Boot"],
-          resume: "mike_chen_resume.pdf"
-        }
-      ];
-      setApplicants(mockApplicants);
-    } catch (error) {
-      console.error('Error fetching applicants:', error);
-      setApplicants([]);
-    }
-  };
-
-  const handleSaveJob = (jobId: string) => {
-    const newSavedJobs = savedJobs.includes(jobId)
-      ? savedJobs.filter(id => id !== jobId)
-      : [...savedJobs, jobId];
-    
-    setSavedJobs(newSavedJobs);
-    localStorage.setItem('savedJobs', JSON.stringify(newSavedJobs));
-    
-    toast({
-      title: savedJobs.includes(jobId) ? "Job Removed" : "Job Saved",
-      description: savedJobs.includes(jobId) 
-        ? "Job removed from saved jobs" 
-        : "Job added to saved jobs"
-    });
-  };
-
-  const handleShareJob = async () => {
-    if (!job) return;
-    
-    const jobUrl = window.location.href;
-    const shareText = `Check out this job opportunity: ${job.job_title} at ${job.company_name}`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: job.job_title,
-          text: shareText,
-          url: jobUrl,
-        });
-      } catch (error) {
-        console.log('Share cancelled or failed');
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(`${shareText}\n${jobUrl}`);
+      if (foundJob) {
+        setJob(foundJob);
+        setLoading(false);
+      } else {
+        console.log('JobDetails: Job not found for ID:', jobId);
+        setLoading(false);
         toast({
-          title: "Link Copied",
-          description: "Job link has been copied to clipboard"
+          variant: "destructive",
+          title: "Job not found",
+          description: "The requested job could not be found."
         });
-      } catch (error) {
-        alert(`${shareText}\n${jobUrl}`);
       }
-    }
+    };
+
+    fetchJobDetails();
+  }, [jobId, toast]);
+
+  const handleApply = () => {
+    setIsApplied(true);
+    toast({
+      title: "Application submitted",
+      description: "Your application has been submitted successfully."
+    });
   };
 
-  const handleApplyJob = () => {
-    if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Sign In Required",
-        description: "Please sign in to apply for this job"
-      });
-      return;
-    }
-
+  const handleSave = () => {
+    setIsSaved(!isSaved);
     toast({
-      title: "Application Submitted",
-      description: "Your application has been submitted successfully"
+      title: isSaved ? "Job unsaved" : "Job saved",
+      description: isSaved ? "Job removed from saved jobs." : "Job added to saved jobs."
     });
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: job?.title || "Job Opportunity",
+      text: `Check out this job opportunity: ${job?.title} at ${job?.company}`,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link copied",
+          description: "Job link has been copied to clipboard."
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'short',
+      month: 'long',
       day: 'numeric'
     });
+  };
+
+  const formatSalary = (min: number, max: number) => {
+    return `₹${min.toLocaleString()} - ₹${max.toLocaleString()}`;
   };
 
   if (loading) {
     return (
       <AppLayout pageTitle="Job Details">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading job details...</p>
+          </div>
         </div>
       </AppLayout>
     );
@@ -234,63 +369,66 @@ export default function JobDetails() {
   if (!job) {
     return (
       <AppLayout pageTitle="Job Not Found">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold mb-4">Job Not Found</h1>
-          <p className="text-muted-foreground mb-6">The job you're looking for doesn't exist or has been removed.</p>
-          <Button onClick={() => navigate('/jobs')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Jobs
-          </Button>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-foreground mb-4">Job Not Found</h1>
+            <p className="text-muted-foreground mb-6">The requested job could not be found.</p>
+            <Button onClick={() => navigate("/jobs")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Jobs
+            </Button>
+          </div>
         </div>
       </AppLayout>
     );
   }
 
   return (
-    <AppLayout pageTitle={job.job_title}>
-      <div className="max-w-6xl mx-auto space-y-4">
-        {/* Back Button */}
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/jobs')}
-          className="mb-2"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Jobs
-        </Button>
+    <AppLayout pageTitle={`${job.title} - ${job.company}`}>
+      <div className="w-full space-y-6">
+        {/* Header with Back Button */}
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/jobs")}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Jobs
+          </Button>
+        </div>
 
         {/* Job Header */}
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader>
             <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <CardTitle className="text-2xl mb-1">{job.job_title}</CardTitle>
-                <CardDescription className="text-base flex items-center gap-2">
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  {job.title}
+                </CardTitle>
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Building className="h-4 w-4" />
-                  {job.company_name}
-                </CardDescription>
-                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {job.location}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatDate(job.posted_date)}
-                  </div>
+                  <span className="font-medium">{job.company}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  <span>{job.location}</span>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSaveJob(job.id)}
-                  className={savedJobs.includes(job.id) ? "text-primary" : ""}
-                >
-                  <Bookmark className={`h-4 w-4 mr-2 ${savedJobs.includes(job.id) ? "fill-current" : ""}`} />
-                  {savedJobs.includes(job.id) ? "Saved" : "Save"}
+                <Button variant="outline" onClick={handleEdit}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleShareJob}>
+                <Button variant="outline" onClick={handleDelete}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+                <Button variant="outline" onClick={handleSave}>
+                  <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                  {isSaved ? 'Saved' : 'Save'}
+                </Button>
+                <Button variant="outline" onClick={handleShare}>
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
@@ -300,97 +438,145 @@ export default function JobDetails() {
         </Card>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="details">Job Details</TabsTrigger>
-            <TabsTrigger value="applicants">
-              Applicants ({applicants.length})
-            </TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="applicants">Applicants ({applicants.length})</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="details" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+          <TabsContent value="overview" className="space-y-6">
+            {/* Job Details Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main Content */}
-              <div className="lg:col-span-2 space-y-4">
+              <div className="lg:col-span-2 space-y-6">
                 {/* Job Description */}
                 <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Job Description</CardTitle>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Briefcase className="h-5 w-5" />
+                      Job Description
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="prose prose-sm max-w-none">
-                      <p className="whitespace-pre-wrap">{job.job_description}</p>
-                    </div>
+                    <p className="text-muted-foreground whitespace-pre-wrap">
+                      {job.description}
+                    </p>
                   </CardContent>
                 </Card>
 
-                {/* Required Skills */}
-                {job.skills_required && job.skills_required.length > 0 && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg">Required Skills</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                {/* Requirements */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Requirements</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground whitespace-pre-wrap mb-4">
+                      {job.requirements}
+                    </p>
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Required Skills:</h4>
                       <div className="flex flex-wrap gap-2">
                         {job.skills_required.map((skill, index) => (
-                          <Badge key={index} variant="outline" className="text-sm">
+                          <Badge key={index} variant="secondary">
                             {skill}
                           </Badge>
                         ))}
                       </div>
-                    </CardContent>
-                  </Card>
-                )}
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Benefits */}
-                {job.benefits && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg">Benefits & Perks</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="prose prose-sm max-w-none">
-                        <p className="whitespace-pre-wrap">{job.benefits}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Benefits</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground whitespace-pre-wrap">
+                      {job.benefits}
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Sidebar */}
-              <div className="space-y-4">
-                {/* Job Details */}
+              <div className="space-y-6">
+                {/* Job Info */}
                 <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Job Details</CardTitle>
+                  <CardHeader>
+                    <CardTitle>Job Information</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Job Type:</span>
-                      <Badge variant="secondary">{job.job_type}</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Experience Level:</span>
-                      <Badge variant="outline">{job.experience_level}</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Industry:</span>
-                      <Badge variant="outline">{job.industry}</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Posted:</span>
-                      <span>{formatDate(job.posted_date)}</span>
-                    </div>
-                    {job.salary_range && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Salary:</span>
-                        <span className="font-medium text-green-600">{job.salary_range}</span>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Salary Range</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatSalary(job.min_salary, job.max_salary)}
+                        </p>
                       </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status:</span>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Job Type</p>
+                        <p className="text-sm text-muted-foreground">{job.job_type}</p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center gap-3">
+                      <Star className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Experience Level</p>
+                        <p className="text-sm text-muted-foreground">{job.experience_level}</p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center gap-3">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Category</p>
+                        <p className="text-sm text-muted-foreground">{job.category}</p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Posted Date</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(job.posted_date)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Application Deadline</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(job.application_deadline)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center gap-3">
                       <Badge 
-                        variant={job.status === "active" ? "default" : "secondary"}
+                        variant={job.status === 'Active' ? 'default' : 'secondary'}
+                        className="w-fit"
                       >
                         {job.status}
                       </Badge>
@@ -398,117 +584,215 @@ export default function JobDetails() {
                   </CardContent>
                 </Card>
 
-                {/* Company Info */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Company</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{job.company_name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">{job.location}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Created by */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Posted by</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span>
-                        {job.user_id === user?.id ? "You" : "FilmCollab User"}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-
                 {/* Apply Button */}
-                <Button 
-                  size="lg" 
-                  className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground"
-                  onClick={handleApplyJob}
-                >
-                  Apply Now
-                </Button>
+                <Card>
+                  <CardContent className="pt-6">
+                    <Button 
+                      className="w-full" 
+                      size="lg"
+                      onClick={handleApply}
+                      disabled={isApplied}
+                    >
+                      {isApplied ? 'Applied' : 'Apply Now'}
+                    </Button>
+                    {isApplied && (
+                      <p className="text-sm text-green-600 text-center mt-2">
+                        ✓ Application submitted successfully
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </TabsContent>
-          
-          <TabsContent value="applicants" className="space-y-4">
+
+          <TabsContent value="applicants" className="space-y-6">
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Job Applicants</CardTitle>
+              <CardHeader>
+                <CardTitle>Job Applicants</CardTitle>
               </CardHeader>
               <CardContent>
-                {applicants.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No applicants yet</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {applicants.map((applicant) => (
-                      <Card key={applicant.id} className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-                              <span className="text-white font-semibold text-sm">
-                                {applicant.avatar}
-                              </span>
+                <div className="space-y-4">
+                  {applicants.map((applicant) => (
+                    <Card key={applicant.id} className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <h3 className="font-semibold">{applicant.name}</h3>
+                            <Badge variant="outline">{applicant.status}</Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {applicant.email}
                             </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-lg">{applicant.name}</h4>
-                              <p className="text-muted-foreground text-sm">{applicant.email}</p>
-                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                <span>Applied: {formatDate(applicant.appliedDate)}</span>
-                                <span>Experience: {applicant.experience}</span>
-                              </div>
-                              <div className="flex flex-wrap gap-2 mt-3">
-                                {applicant.skills.map((skill: string, index: number) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    {skill}
-                                  </Badge>
-                                ))}
-                              </div>
+                            <div className="flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {applicant.phone}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <GraduationCap className="h-3 w-3" />
+                              {applicant.experience}
                             </div>
                           </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <Badge 
-                              variant={
-                                applicant.status === "shortlisted" ? "default" :
-                                applicant.status === "reviewed" ? "secondary" : "outline"
-                              }
-                            >
-                              {applicant.status}
-                            </Badge>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline">
-                                View Resume
-                              </Button>
-                              <Button size="sm" variant="outline">
-                                Contact
-                              </Button>
-                            </div>
+                          <div className="flex flex-wrap gap-1">
+                            {applicant.skills.map((skill, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
                           </div>
+                          <p className="text-xs text-muted-foreground">
+                            Applied on {formatDate(applicant.appliedDate)}
+                          </p>
                         </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">
+                            View Resume
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            View Portfolio
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Job</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="title">Job Title</Label>
+                  <Input
+                    id="title"
+                    value={editForm.title || ''}
+                    onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="company">Company</Label>
+                  <Input
+                    id="company"
+                    value={editForm.company || ''}
+                    onChange={(e) => setEditForm({...editForm, company: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={editForm.location || ''}
+                  onChange={(e) => setEditForm({...editForm, location: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="min_salary">Min Salary</Label>
+                  <Input
+                    id="min_salary"
+                    type="number"
+                    value={editForm.min_salary || ''}
+                    onChange={(e) => setEditForm({...editForm, min_salary: parseInt(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="max_salary">Max Salary</Label>
+                  <Input
+                    id="max_salary"
+                    type="number"
+                    value={editForm.max_salary || ''}
+                    onChange={(e) => setEditForm({...editForm, max_salary: parseInt(e.target.value)})}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={editForm.description || ''}
+                  onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                  rows={4}
+                />
+              </div>
+              <div>
+                <Label htmlFor="requirements">Requirements</Label>
+                <Textarea
+                  id="requirements"
+                  value={editForm.requirements || ''}
+                  onChange={(e) => setEditForm({...editForm, requirements: e.target.value})}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="skills_required">Skills Required (comma separated)</Label>
+                <Input
+                  id="skills_required"
+                  value={editForm.skills_required || ''}
+                  onChange={(e) => setEditForm({...editForm, skills_required: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="benefits">Benefits</Label>
+                <Textarea
+                  id="benefits"
+                  value={editForm.benefits || ''}
+                  onChange={(e) => setEditForm({...editForm, benefits: e.target.value})}
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="job_type">Job Type</Label>
+                  <Select value={editForm.job_type || ''} onValueChange={(value) => setEditForm({...editForm, job_type: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select job type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Full-time">Full-time</SelectItem>
+                      <SelectItem value="Part-time">Part-time</SelectItem>
+                      <SelectItem value="Contract">Contract</SelectItem>
+                      <SelectItem value="Freelance">Freelance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="experience_level">Experience Level</Label>
+                  <Select value={editForm.experience_level || ''} onValueChange={(value) => setEditForm({...editForm, experience_level: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select experience level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Entry">Entry</SelectItem>
+                      <SelectItem value="Mid-level">Mid-level</SelectItem>
+                      <SelectItem value="Senior">Senior</SelectItem>
+                      <SelectItem value="Executive">Executive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateJob}>
+                  Update Job
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );

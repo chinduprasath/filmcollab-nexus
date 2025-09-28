@@ -3,14 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { 
-  Briefcase, 
+  Briefcase,
+  Heart, 
   Users, 
   FolderOpen, 
   MessageCircle, 
   TrendingUp,
-  Calendar,
-  Bell,
-  Plus
+  Calendar
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -20,11 +19,11 @@ export default function Dashboard() {
 
   const stats = [
     {
-      title: "Active Jobs",
-      value: "156",
-      icon: Briefcase,
-      description: "+12% from last month",
-      color: "text-blue-600"
+      title: "Profile Likes",
+      value: "1,247",
+      icon: Heart,
+      description: "+89 this week",
+      color: "text-red-600"
     },
     {
       title: "Connections",
@@ -41,10 +40,10 @@ export default function Dashboard() {
       color: "text-purple-600"
     },
     {
-      title: "Messages",
+      title: "Communities Joined",
       value: "12",
       icon: MessageCircle,
-      description: "4 unread",
+      description: "4 active",
       color: "text-orange-600"
     }
   ];
@@ -80,30 +79,38 @@ export default function Dashboard() {
     }
   ];
 
-  const recentActivity = [
+  const events = [
     {
-      type: "job",
-      title: "New job posted: Senior Director",
-      time: "2 hours ago",
-      company: "Netflix Studios"
+      type: "ongoing",
+      title: "Film Festival Workshop",
+      description: "Cinematography Masterclass",
+      time: "Ongoing",
+      location: "Los Angeles Convention Center",
+      status: "Live Now"
     },
     {
-      type: "connection",
-      title: "John Smith accepted your connection",
-      time: "4 hours ago",
-      company: "Warner Bros"
+      type: "upcoming",
+      title: "Industry Networking Event",
+      description: "Meet fellow filmmakers and producers",
+      time: "Tomorrow, 6:00 PM",
+      location: "Hollywood Studios",
+      status: "Upcoming"
     },
     {
-      type: "project",
-      title: "Project 'Indie Film' needs a cinematographer",
-      time: "6 hours ago",
-      company: "Independent"
+      type: "upcoming",
+      title: "Script Writing Workshop",
+      description: "Learn advanced storytelling techniques",
+      time: "Jan 20, 2:00 PM",
+      location: "Online Event",
+      status: "Upcoming"
     },
     {
-      type: "message",
-      title: "New message from Sarah Johnson",
-      time: "1 day ago",
-      company: "Disney Studios"
+      type: "ongoing",
+      title: "Post-Production Meetup",
+      description: "Share your latest projects",
+      time: "Ongoing",
+      location: "Virtual Meeting",
+      status: "Live Now"
     }
   ];
 
@@ -111,26 +118,13 @@ export default function Dashboard() {
     <AppLayout pageTitle="Dashboard">
       <div className="space-y-8">
         {/* Welcome Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Welcome back, {profile?.first_name || profile?.full_name || 'User'}!
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Here's what's happening in your film industry network today.
-            </p>
-          </div>
-          
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Bell className="h-4 w-4 mr-2" />
-              Notifications
-            </Button>
-            <Button size="sm" className="bg-gradient-to-r from-primary to-accent text-primary-foreground">
-              <Plus className="h-4 w-4 mr-2" />
-              Quick Post
-            </Button>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Welcome back, {profile?.first_name || profile?.full_name || 'User'}!
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Here's what's happening in your film industry network today.
+          </p>
         </div>
 
         {/* Stats Grid */}
@@ -189,28 +183,46 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
+          {/* Events */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                Recent Activity
+                Ongoing & Upcoming Events
               </CardTitle>
               <CardDescription>
-                Stay updated with the latest happenings
+                Stay updated with current and upcoming industry events
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-secondary/30 transition-colors">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                {events.map((event, index) => (
+                  <div 
+                    key={index} 
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-secondary/30 transition-colors cursor-pointer"
+                    onClick={() => navigate("/industry-hub")}
+                  >
+                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                      event.type === 'ongoing' ? 'bg-green-500' : 'bg-blue-500'
+                    }`} />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-foreground">
-                        {activity.title}
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="text-sm font-medium text-foreground">
+                          {event.title}
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          event.type === 'ongoing' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {event.status}
+                        </span>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {activity.company} • {activity.time}
+                      <div className="text-sm text-muted-foreground mb-1">
+                        {event.description}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {event.location} • {event.time}
                       </div>
                     </div>
                   </div>

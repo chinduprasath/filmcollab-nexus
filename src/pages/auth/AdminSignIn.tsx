@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,8 +20,20 @@ type AdminSignInFormData = z.infer<typeof adminSignInSchema>;
 export default function AdminSignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Handle role-based redirect after successful sign in
+  useEffect(() => {
+    if (user && profile && !authLoading) {
+      if (profile.role === 'ADMIN') {
+        navigate("/admin-dashboard");
+      } else {
+        // If user is not admin, redirect to regular dashboard
+        navigate("/dashboard");
+      }
+    }
+  }, [user, profile, authLoading, navigate]);
 
   const form = useForm<AdminSignInFormData>({
     resolver: zodResolver(adminSignInSchema),
@@ -35,10 +47,10 @@ export default function AdminSignIn() {
     setLoading(true);
     try {
       const { error } = await signIn(data.email, data.password);
-      if (!error) {
-        // Note: In a real app, you'd verify admin role before redirecting
-        navigate("/admin-dashboard");
+      if (error) {
+        console.error("Admin sign in error:", error);
       }
+      // Navigation will be handled by the useEffect above
     } catch (error) {
       console.error("Admin sign in error:", error);
     } finally {

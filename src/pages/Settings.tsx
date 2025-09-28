@@ -39,7 +39,7 @@ import {
 
 const Settings = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('account');
+  const [activeTab, setActiveTab] = useState('privacy');
   const [isLoading, setIsLoading] = useState(false);
 
   // Account Settings State
@@ -170,179 +170,36 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="account" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Account
-            </TabsTrigger>
-            <TabsTrigger value="privacy" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-100">
+            <TabsTrigger 
+              value="privacy" 
+              className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+            >
               <Eye className="w-4 h-4" />
               Privacy
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="notifications" 
+              className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+            >
               <Bell className="w-4 h-4" />
               Notifications
             </TabsTrigger>
-            <TabsTrigger value="appearance" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="appearance" 
+              className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+            >
               <Palette className="w-4 h-4" />
               Appearance
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="security" 
+              className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+            >
               <Key className="w-4 h-4" />
               Security
             </TabsTrigger>
           </TabsList>
-
-          {/* Account Settings */}
-          <TabsContent value="account" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Profile Information
-                </CardTitle>
-                <CardDescription>
-                  Update your personal information and profile details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Profile Picture */}
-                <div className="flex items-center gap-4">
-                  <Avatar className="w-20 h-20">
-                    <AvatarImage src="/api/placeholder/80/80" alt="Profile" />
-                    <AvatarFallback className="text-lg">SJ</AvatarFallback>
-                  </Avatar>
-                  <div className="space-y-2">
-                    <Button variant="outline" size="sm">
-                      <Camera className="w-4 h-4 mr-2" />
-                      Change Photo
-                    </Button>
-                    <p className="text-xs text-gray-500">JPG, PNG or GIF. Max size 2MB.</p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={accountData.firstName}
-                      onChange={(e) => handleAccountChange('firstName', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={accountData.lastName}
-                      onChange={(e) => handleAccountChange('lastName', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      id="username"
-                      value={accountData.username}
-                      onChange={(e) => handleAccountChange('username', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={accountData.email}
-                      onChange={(e) => handleAccountChange('email', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    value={accountData.bio}
-                    onChange={(e) => handleAccountChange('bio', e.target.value)}
-                    rows={3}
-                    placeholder="Tell us about yourself..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      value={accountData.phone}
-                      onChange={(e) => handleAccountChange('phone', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      value={accountData.location}
-                      onChange={(e) => handleAccountChange('location', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="website">Website</Label>
-                    <Input
-                      id="website"
-                      value={accountData.website}
-                      onChange={(e) => handleAccountChange('website', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="birthday">Birthday</Label>
-                    <Input
-                      id="birthday"
-                      type="date"
-                      value={accountData.birthday}
-                      onChange={(e) => handleAccountChange('birthday', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="profession">Profession</Label>
-                    <Input
-                      id="profession"
-                      value={accountData.profession}
-                      onChange={(e) => handleAccountChange('profession', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company</Label>
-                    <Input
-                      id="company"
-                      value={accountData.company}
-                      onChange={(e) => handleAccountChange('company', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={() => handleSave('Account')} 
-                  disabled={isLoading}
-                  className="w-full md:w-auto"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isLoading ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* Privacy Settings */}
           <TabsContent value="privacy" className="space-y-6">
@@ -497,16 +354,6 @@ const Settings = () => {
                           onCheckedChange={(checked) => handlePrivacyChange('allowProfileViews', checked)}
                         />
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Allow Search Engines</Label>
-                          <p className="text-sm text-gray-500">Allow search engines to index your profile</p>
-                        </div>
-                        <Switch
-                          checked={privacySettings.allowSearchEngines}
-                          onCheckedChange={(checked) => handlePrivacyChange('allowSearchEngines', checked)}
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -621,63 +468,6 @@ const Settings = () => {
                     </div>
                   </div>
 
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Content & Updates</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Industry News</Label>
-                          <p className="text-sm text-gray-500">Get notified about industry news and updates</p>
-                        </div>
-                        <Switch
-                          checked={notificationSettings.industryNews}
-                          onCheckedChange={(checked) => handleNotificationChange('industryNews', checked)}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Marketing Emails</Label>
-                          <p className="text-sm text-gray-500">Receive promotional emails and offers</p>
-                        </div>
-                        <Switch
-                          checked={notificationSettings.marketingEmails}
-                          onCheckedChange={(checked) => handleNotificationChange('marketingEmails', checked)}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Weekly Digest</Label>
-                          <p className="text-sm text-gray-500">Receive weekly summary of activity</p>
-                        </div>
-                        <Switch
-                          checked={notificationSettings.weeklyDigest}
-                          onCheckedChange={(checked) => handleNotificationChange('weeklyDigest', checked)}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Event Reminders</Label>
-                          <p className="text-sm text-gray-500">Get reminded about upcoming events</p>
-                        </div>
-                        <Switch
-                          checked={notificationSettings.eventReminders}
-                          onCheckedChange={(checked) => handleNotificationChange('eventReminders', checked)}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Deadline Alerts</Label>
-                          <p className="text-sm text-gray-500">Get notified about project deadlines</p>
-                        </div>
-                        <Switch
-                          checked={notificationSettings.deadlineAlerts}
-                          onCheckedChange={(checked) => handleNotificationChange('deadlineAlerts', checked)}
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <Button 
@@ -698,166 +488,29 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="w-5 h-5" />
-                  Appearance & Display
+                  Theme Settings
                 </CardTitle>
                 <CardDescription>
-                  Customize how the interface looks and feels
+                  Choose your preferred theme
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Theme</Label>
-                      <Select 
-                        value={appearanceSettings.theme} 
-                        onValueChange={(value) => handleAppearanceChange('theme', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="light">Light</SelectItem>
-                          <SelectItem value="dark">Dark</SelectItem>
-                          <SelectItem value="system">System</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Language</Label>
-                      <Select 
-                        value={appearanceSettings.language} 
-                        onValueChange={(value) => handleAppearanceChange('language', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="es">Spanish</SelectItem>
-                          <SelectItem value="fr">French</SelectItem>
-                          <SelectItem value="de">German</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Timezone</Label>
-                      <Select 
-                        value={appearanceSettings.timezone} 
-                        onValueChange={(value) => handleAppearanceChange('timezone', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
-                          <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                          <SelectItem value="America/Chicago">Central Time</SelectItem>
-                          <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Date Format</Label>
-                      <Select 
-                        value={appearanceSettings.dateFormat} 
-                        onValueChange={(value) => handleAppearanceChange('dateFormat', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-                          <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
-                          <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Time Format</Label>
-                      <Select 
-                        value={appearanceSettings.timeFormat} 
-                        onValueChange={(value) => handleAppearanceChange('timeFormat', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="12h">12 Hour (AM/PM)</SelectItem>
-                          <SelectItem value="24h">24 Hour</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Font Size</Label>
-                      <Select 
-                        value={appearanceSettings.fontSize} 
-                        onValueChange={(value) => handleAppearanceChange('fontSize', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="small">Small</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="large">Large</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Display Options</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Compact Mode</Label>
-                          <p className="text-sm text-gray-500">Use more compact spacing throughout the interface</p>
-                        </div>
-                        <Switch
-                          checked={appearanceSettings.compactMode}
-                          onCheckedChange={(checked) => handleAppearanceChange('compactMode', checked)}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Show Avatars</Label>
-                          <p className="text-sm text-gray-500">Display user avatars in lists and comments</p>
-                        </div>
-                        <Switch
-                          checked={appearanceSettings.showAvatars}
-                          onCheckedChange={(checked) => handleAppearanceChange('showAvatars', checked)}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Show Timestamps</Label>
-                          <p className="text-sm text-gray-500">Display timestamps on posts and messages</p>
-                        </div>
-                        <Switch
-                          checked={appearanceSettings.showTimestamps}
-                          onCheckedChange={(checked) => handleAppearanceChange('showTimestamps', checked)}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Show Read Receipts</Label>
-                          <p className="text-sm text-gray-500">Show when messages have been read</p>
-                        </div>
-                        <Switch
-                          checked={appearanceSettings.showReadReceipts}
-                          onCheckedChange={(checked) => handleAppearanceChange('showReadReceipts', checked)}
-                        />
-                      </div>
-                    </div>
+                  <div className="space-y-2">
+                    <Label>Theme</Label>
+                    <Select 
+                      value={appearanceSettings.theme} 
+                      onValueChange={(value) => handleAppearanceChange('theme', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="light">Light</SelectItem>
+                        <SelectItem value="dark">Dark</SelectItem>
+                        <SelectItem value="system">System</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -867,7 +520,7 @@ const Settings = () => {
                   className="w-full md:w-auto"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {isLoading ? 'Saving...' : 'Save Appearance Settings'}
+                  {isLoading ? 'Saving...' : 'Save Theme Settings'}
                 </Button>
               </CardContent>
             </Card>
@@ -879,10 +532,10 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Key className="w-5 h-5" />
-                  Security & Authentication
+                  Security Settings
                 </CardTitle>
                 <CardDescription>
-                  Manage your account security and authentication settings
+                  Manage your account security
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -891,7 +544,7 @@ const Settings = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium">Password</h4>
+                        <h4 className="font-medium">Change Password</h4>
                         <p className="text-sm text-gray-500">
                           Last changed: {new Date(securitySettings.passwordLastChanged).toLocaleDateString()}
                         </p>
@@ -899,148 +552,6 @@ const Settings = () => {
                       <Button variant="outline" size="sm">
                         Change Password
                       </Button>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Two-Factor Authentication */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <Label>Two-Factor Authentication</Label>
-                        <p className="text-sm text-gray-500">Add an extra layer of security to your account</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={securitySettings.twoFactorAuth ? "default" : "secondary"}>
-                          {securitySettings.twoFactorAuth ? "Enabled" : "Disabled"}
-                        </Badge>
-                        <Switch
-                          checked={securitySettings.twoFactorAuth}
-                          onCheckedChange={(checked) => handleSecurityChange('twoFactorAuth', checked)}
-                        />
-                      </div>
-                    </div>
-                    {securitySettings.twoFactorAuth && (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                        <div className="flex items-center gap-2 text-green-800">
-                          <Check className="w-4 h-4" />
-                          <span className="text-sm font-medium">Two-factor authentication is active</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <Separator />
-
-                  {/* Login Alerts */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <Label>Login Alerts</Label>
-                        <p className="text-sm text-gray-500">Get notified when someone logs into your account</p>
-                      </div>
-                      <Switch
-                        checked={securitySettings.loginAlerts}
-                        onCheckedChange={(checked) => handleSecurityChange('loginAlerts', checked)}
-                      />
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Session Management */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Session Management</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Session Timeout</Label>
-                          <p className="text-sm text-gray-500">Automatically log out after inactivity</p>
-                        </div>
-                        <Select 
-                          value={securitySettings.sessionTimeout} 
-                          onValueChange={(value) => handleSecurityChange('sessionTimeout', value)}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="15">15 minutes</SelectItem>
-                            <SelectItem value="30">30 minutes</SelectItem>
-                            <SelectItem value="60">1 hour</SelectItem>
-                            <SelectItem value="240">4 hours</SelectItem>
-                            <SelectItem value="480">8 hours</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Active Sessions */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium">Active Sessions</h4>
-                        <p className="text-sm text-gray-500">
-                          {securitySettings.activeSessions} active session(s)
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        View All Sessions
-                      </Button>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Trusted Devices */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium">Trusted Devices</h4>
-                        <p className="text-sm text-gray-500">
-                          {securitySettings.trustedDevices} trusted device(s)
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Manage Devices
-                      </Button>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Data Export & Deletion */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Data Management</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 border border-gray-200 rounded-lg">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Download className="w-5 h-5 text-blue-500" />
-                          <h5 className="font-medium">Export Data</h5>
-                        </div>
-                        <p className="text-sm text-gray-500 mb-3">
-                          Download a copy of your account data
-                        </p>
-                        <Button variant="outline" size="sm" className="w-full">
-                          Request Export
-                        </Button>
-                      </div>
-                      <div className="p-4 border border-red-200 rounded-lg">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Trash2 className="w-5 h-5 text-red-500" />
-                          <h5 className="font-medium">Delete Account</h5>
-                        </div>
-                        <p className="text-sm text-gray-500 mb-3">
-                          Permanently delete your account and all data
-                        </p>
-                        <Button variant="destructive" size="sm" className="w-full">
-                          Delete Account
-                        </Button>
-                      </div>
                     </div>
                   </div>
                 </div>

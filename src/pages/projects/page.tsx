@@ -89,6 +89,7 @@ export default function ProjectsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [likedProjects, setLikedProjects] = useState<string[]>([]);
   const [savedProjects, setSavedProjects] = useState<string[]>([]);
+  const [appliedProjects, setAppliedProjects] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetails, setShowProjectDetails] = useState(false);
@@ -122,6 +123,210 @@ export default function ProjectsPage() {
     },
   });
 
+  // Hardcoded projects data
+  const hardcodedProjects: Project[] = [
+    {
+      id: "1",
+      title: "The Silent Revolution",
+      description: "A gripping thriller about a whistleblower who uncovers corporate corruption in the tech industry. Seeking experienced cinematographer and editor for this indie feature film.",
+      project_type: "Film",
+      category: "Feature Film",
+      status: "pre-production",
+      location: "Mumbai, India",
+      budget_min: 5000000,
+      budget_max: 8000000,
+      budget_currency: "₹",
+      duration_minutes: 120,
+      episodes: null,
+      team_size: 8,
+      tags: ["thriller", "indie", "corruption"],
+      skills_required: ["Director", "Cinematographer", "Editor", "Sound Designer"],
+      created_by: "user-1",
+      featured: true,
+      popular: true,
+      created_at: "2024-12-01T10:00:00Z",
+      updated_at: "2024-12-15T14:30:00Z",
+      likes_count: 45,
+      is_liked: false,
+      is_member: false
+    },
+    {
+      id: "2",
+      title: "Digital Dreams",
+      description: "A sci-fi web series exploring the intersection of artificial intelligence and human creativity. Looking for talented writers and VFX artists.",
+      project_type: "Web Series",
+      category: "Web Series",
+      status: "planning",
+      location: "Bangalore, India",
+      budget_min: 2000000,
+      budget_max: 5000000,
+      budget_currency: "₹",
+      duration_minutes: null,
+      episodes: 8,
+      team_size: 12,
+      tags: ["sci-fi", "AI", "web-series"],
+      skills_required: ["Writer", "VFX Artist", "Director", "Producer"],
+      created_by: "user-2",
+      featured: false,
+      popular: true,
+      created_at: "2024-11-28T09:15:00Z",
+      updated_at: "2024-12-10T16:45:00Z",
+      likes_count: 32,
+      is_liked: false,
+      is_member: false
+    },
+    {
+      id: "3",
+      title: "Mumbai Stories",
+      description: "An anthology series showcasing diverse stories from the heart of Mumbai. Each episode tells a different tale of hope, struggle, and triumph.",
+      project_type: "Television",
+      category: "TV Series",
+      status: "production",
+      location: "Mumbai, India",
+      budget_min: 10000000,
+      budget_max: 15000000,
+      budget_currency: "₹",
+      duration_minutes: null,
+      episodes: 12,
+      team_size: 15,
+      tags: ["drama", "anthology", "mumbai"],
+      skills_required: ["Director", "Script Writer", "Cinematographer", "Production Designer"],
+      created_by: "user-3",
+      featured: true,
+      popular: false,
+      created_at: "2024-11-15T14:20:00Z",
+      updated_at: "2024-12-12T11:30:00Z",
+      likes_count: 28,
+      is_liked: false,
+      is_member: false
+    },
+    {
+      id: "4",
+      title: "The Last Dance",
+      description: "A documentary following the journey of classical dancers preserving traditional Indian dance forms in the modern world.",
+      project_type: "Documentary",
+      category: "Documentary",
+      status: "post-production",
+      location: "Delhi, India",
+      budget_min: 1500000,
+      budget_max: 2500000,
+      budget_currency: "₹",
+      duration_minutes: 90,
+      episodes: null,
+      team_size: 6,
+      tags: ["documentary", "dance", "culture"],
+      skills_required: ["Director", "Cinematographer", "Editor", "Sound Recordist"],
+      created_by: "user-4",
+      featured: false,
+      popular: false,
+      created_at: "2024-10-20T08:30:00Z",
+      updated_at: "2024-12-08T13:15:00Z",
+      likes_count: 19,
+      is_liked: false,
+      is_member: false
+    },
+    {
+      id: "5",
+      title: "Short Circuit",
+      description: "A quirky short film about a robot learning to love. Perfect for emerging filmmakers looking to build their portfolio.",
+      project_type: "Short Film",
+      category: "Short Film",
+      status: "planning",
+      location: "Pune, India",
+      budget_min: 500000,
+      budget_max: 800000,
+      budget_currency: "₹",
+      duration_minutes: 15,
+      episodes: null,
+      team_size: 5,
+      tags: ["short-film", "robot", "love", "quirky"],
+      skills_required: ["Director", "Cinematographer", "Editor", "Actor"],
+      created_by: "user-5",
+      featured: false,
+      popular: false,
+      created_at: "2024-12-05T16:45:00Z",
+      updated_at: "2024-12-14T10:20:00Z",
+      likes_count: 12,
+      is_liked: false,
+      is_member: false
+    },
+    {
+      id: "6",
+      title: "Bollywood Beats",
+      description: "A music video series featuring fusion of classical Indian music with contemporary beats. Seeking musicians and choreographers.",
+      project_type: "Music Video",
+      category: "Music Video",
+      status: "pre-production",
+      location: "Chennai, India",
+      budget_min: 800000,
+      budget_max: 1200000,
+      budget_currency: "₹",
+      duration_minutes: 4,
+      episodes: 6,
+      team_size: 7,
+      tags: ["music", "fusion", "classical", "contemporary"],
+      skills_required: ["Music Director", "Choreographer", "Cinematographer", "Editor"],
+      created_by: "user-6",
+      featured: false,
+      popular: true,
+      created_at: "2024-11-30T12:00:00Z",
+      updated_at: "2024-12-13T15:30:00Z",
+      likes_count: 25,
+      is_liked: false,
+      is_member: false
+    },
+    {
+      id: "7",
+      title: "The Startup Story",
+      description: "A corporate drama series following the journey of young entrepreneurs building India's next unicorn startup.",
+      project_type: "Television",
+      category: "TV Series",
+      status: "planning",
+      location: "Gurgaon, India",
+      budget_min: 12000000,
+      budget_max: 20000000,
+      budget_currency: "₹",
+      duration_minutes: null,
+      episodes: 10,
+      team_size: 18,
+      tags: ["drama", "startup", "entrepreneurship"],
+      skills_required: ["Director", "Writer", "Producer", "Cinematographer", "Production Manager"],
+      created_by: "user-7",
+      featured: true,
+      popular: false,
+      created_at: "2024-12-03T11:30:00Z",
+      updated_at: "2024-12-16T09:45:00Z",
+      likes_count: 38,
+      is_liked: false,
+      is_member: false
+    },
+    {
+      id: "8",
+      title: "Street Art Chronicles",
+      description: "A documentary exploring the vibrant street art scene in Indian cities and the artists behind these beautiful creations.",
+      project_type: "Documentary",
+      category: "Documentary",
+      status: "production",
+      location: "Kolkata, India",
+      budget_min: 2000000,
+      budget_max: 3500000,
+      budget_currency: "₹",
+      duration_minutes: 75,
+      episodes: null,
+      team_size: 8,
+      tags: ["documentary", "street-art", "culture", "urban"],
+      skills_required: ["Director", "Cinematographer", "Editor", "Researcher"],
+      created_by: "user-8",
+      featured: false,
+      popular: false,
+      created_at: "2024-11-25T14:15:00Z",
+      updated_at: "2024-12-11T12:00:00Z",
+      likes_count: 21,
+      is_liked: false,
+      is_member: false
+    }
+  ];
+
   useEffect(() => {
     fetchProjects();
     fetchLikedProjects();
@@ -131,49 +336,128 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
+      
+      // Add some projects that appear as created by current user
+      const userCreatedProjects: Project[] = [
+        {
+          id: "user-created-1",
+          title: "My Indie Film Project",
+          description: "A personal passion project about family relationships and cultural identity. Looking for talented actors and crew members to bring this story to life.",
+          project_type: "Film",
+          category: "Feature Film",
+          status: "pre-production",
+          location: "Mumbai, India",
+          budget_min: 3000000,
+          budget_max: 5000000,
+          budget_currency: "₹",
+          duration_minutes: 110,
+          episodes: null,
+          team_size: 6,
+          tags: ["indie", "family", "culture"],
+          skills_required: ["Director", "Actor", "Cinematographer", "Editor"],
+          created_by: user?.id || "current-user",
+          featured: false,
+          popular: false,
+          created_at: "2024-12-10T09:00:00Z",
+          updated_at: "2024-12-16T14:30:00Z",
+          likes_count: 15,
+          is_liked: false,
+          is_member: true
+        },
+        {
+          id: "user-created-2",
+          title: "Tech Startup Documentary",
+          description: "Documenting the journey of young entrepreneurs building innovative tech solutions in India. Seeking experienced documentary filmmakers.",
+          project_type: "Documentary",
+          category: "Documentary",
+          status: "production",
+          location: "Bangalore, India",
+          budget_min: 1800000,
+          budget_max: 2800000,
+          budget_currency: "₹",
+          duration_minutes: 85,
+          episodes: null,
+          team_size: 4,
+          tags: ["documentary", "tech", "startup"],
+          skills_required: ["Director", "Cinematographer", "Editor", "Producer"],
+          created_by: user?.id || "current-user",
+          featured: false,
+          popular: false,
+          created_at: "2024-11-20T11:15:00Z",
+          updated_at: "2024-12-14T16:45:00Z",
+          likes_count: 22,
+          is_liked: false,
+          is_member: true
+        },
+        {
+          id: "user-created-3",
+          title: "Short Film: The Last Letter",
+          description: "A touching short film about a grandfather writing letters to his grandchildren. Perfect for film festival submissions.",
+          project_type: "Short Film",
+          category: "Short Film",
+          status: "post-production",
+          location: "Delhi, India",
+          budget_min: 400000,
+          budget_max: 600000,
+          budget_currency: "₹",
+          duration_minutes: 12,
+          episodes: null,
+          team_size: 3,
+          tags: ["short-film", "family", "emotional"],
+          skills_required: ["Director", "Actor", "Editor"],
+          created_by: user?.id || "current-user",
+          featured: false,
+          popular: false,
+          created_at: "2024-10-15T08:30:00Z",
+          updated_at: "2024-12-12T10:20:00Z",
+          likes_count: 8,
+          is_liked: false,
+          is_member: true
+        },
+        {
+          id: "user-created-4",
+          title: "Web Series: Urban Tales",
+          description: "An anthology web series exploring modern urban life in Indian cities. Each episode focuses on different characters and their struggles.",
+          project_type: "Web Series",
+          category: "Web Series",
+          status: "planning",
+          location: "Mumbai, India",
+          budget_min: 2500000,
+          budget_max: 4000000,
+          budget_currency: "₹",
+          duration_minutes: null,
+          episodes: 6,
+          team_size: 10,
+          tags: ["web-series", "urban", "anthology"],
+          skills_required: ["Director", "Writer", "Producer", "Cinematographer"],
+          created_by: user?.id || "current-user",
+          featured: false,
+          popular: false,
+          created_at: "2024-12-05T13:45:00Z",
+          updated_at: "2024-12-15T11:30:00Z",
+          likes_count: 18,
+          is_liked: false,
+          is_member: true
+        }
+      ];
 
-      if (error) {
-        console.error('Error fetching projects:', error);
-        return;
-      }
-
-      // Fetch likes and members separately for each project
-      const projectsWithDetails = await Promise.all(
-        (data || []).map(async (project) => {
-          // Get likes count
-          const { count: likesCount } = await supabase
-            .from('project_likes')
-            .select('*', { count: 'exact', head: true })
-            .eq('project_id', project.id);
-
-          // Check if user liked this project
-          const { data: userLike } = await supabase
-            .from('project_likes')
-            .select('id')
-            .eq('project_id', project.id)
-            .eq('user_id', user?.id || '')
-            .single();
-
-          // Check if user is a member
-          const { data: userMember } = await supabase
-            .from('project_members')
-            .select('id')
-            .eq('project_id', project.id)
-            .eq('user_id', user?.id || '')
-            .single();
-
-          return {
-            ...project,
-            likes_count: likesCount || 0,
-            is_liked: !!userLike,
-            is_member: !!userMember,
-          };
-        })
-      );
+      // Combine hardcoded projects with user-created projects
+      const allProjects = [...hardcodedProjects, ...userCreatedProjects];
+      
+      // Use hardcoded projects instead of Supabase
+      const projectsWithDetails = allProjects.map((project) => {
+        // Check if user liked this project (mock data)
+        const isLiked = likedProjects.includes(project.id);
+        
+        // Check if user is a member (mock data)
+        const isMember = project.created_by === user?.id || project.is_member || Math.random() > 0.8; // Random for demo
+        
+        return {
+          ...project,
+          is_liked: isLiked,
+          is_member: isMember,
+        };
+      });
 
       setProjects(projectsWithDetails);
     } catch (error) {
@@ -187,17 +471,9 @@ export default function ProjectsPage() {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
-        .from('project_likes')
-        .select('project_id')
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error fetching liked projects:', error);
-        return;
-      }
-
-      setLikedProjects(data?.map(like => like.project_id) || []);
+      // Mock liked projects for demo - in real app, fetch from database
+      const mockLikedProjects = ["1", "3", "6"]; // Some projects are liked by default
+      setLikedProjects(mockLikedProjects);
     } catch (error) {
       console.error('Error:', error);
     }
@@ -207,19 +483,9 @@ export default function ProjectsPage() {
     if (!user) return;
     
     try {
-      // For now, we'll use the same table as likes for saved projects
-      // In a real app, you might want a separate saved_projects table
-      const { data, error } = await supabase
-        .from('project_likes')
-        .select('project_id')
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error fetching saved projects:', error);
-        return;
-      }
-
-      setSavedProjects(data?.map(like => like.project_id) || []);
+      // Mock saved projects for demo - in real app, fetch from database
+      const mockSavedProjects = ["2", "4", "7"]; // Some projects are saved by default
+      setSavedProjects(mockSavedProjects);
     } catch (error) {
       console.error('Error:', error);
     }
@@ -233,39 +499,43 @@ export default function ProjectsPage() {
         ? data.skills_required.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0)
         : [];
 
-      const { error } = await supabase
-        .from('projects')
-        .insert({
-          title: data.title,
-          description: data.description,
-          project_type: data.project_type,
-          category: data.category,
-          status: data.status,
-          location: data.location,
-          budget_min: data.budget_min && data.budget_min > 0 ? data.budget_min : null,
-          budget_max: data.budget_max && data.budget_max > 0 ? data.budget_max : null,
-          duration_minutes: data.duration_minutes && data.duration_minutes > 0 ? data.duration_minutes : null,
-          episodes: data.episodes && data.episodes > 0 ? data.episodes : null,
-          skills_required: skillsArray,
-          created_by: user.id,
-        });
+      // Create new project object
+      const newProject: Project = {
+        id: Date.now().toString(), // Simple ID generation
+        title: data.title,
+        description: data.description,
+        project_type: data.project_type,
+        category: data.category,
+        status: data.status,
+        location: data.location,
+        budget_min: data.budget_min && data.budget_min > 0 ? data.budget_min : null,
+        budget_max: data.budget_max && data.budget_max > 0 ? data.budget_max : null,
+        budget_currency: "₹",
+        duration_minutes: data.duration_minutes && data.duration_minutes > 0 ? data.duration_minutes : null,
+        episodes: data.episodes && data.episodes > 0 ? data.episodes : null,
+        team_size: Math.floor(Math.random() * 10) + 5, // Random team size for demo
+        tags: [],
+        skills_required: skillsArray,
+        created_by: user.id,
+        featured: false,
+        popular: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        likes_count: 0,
+        is_liked: false,
+        is_member: false
+      };
 
-      if (error) {
-        console.error('Error creating project:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to create project"
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Project created successfully"
-        });
-        form.reset();
-        setIsCreateDialogOpen(false);
-        fetchProjects();
-      }
+      // Add to hardcoded projects array (this will be picked up in next fetch)
+      hardcodedProjects.unshift(newProject); // Add to beginning
+      
+      toast({
+        title: "Success",
+        description: "Project created successfully"
+      });
+      form.reset();
+      setIsCreateDialogOpen(false);
+      fetchProjects(); // Refresh the display
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -291,17 +561,6 @@ export default function ProjectsPage() {
 
       if (isSaved) {
         // Unsave project
-        const { error } = await supabase
-          .from('project_likes')
-          .delete()
-          .eq('project_id', projectId)
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Error unsaving project:', error);
-          return;
-        }
-
         setSavedProjects(prev => prev.filter(id => id !== projectId));
         toast({
           title: "Project Unsaved",
@@ -309,18 +568,6 @@ export default function ProjectsPage() {
         });
       } else {
         // Save project
-        const { error } = await supabase
-          .from('project_likes')
-          .insert({
-            project_id: projectId,
-            user_id: user.id,
-          });
-
-        if (error) {
-          console.error('Error saving project:', error);
-          return;
-        }
-
         setSavedProjects(prev => [...prev, projectId]);
         toast({
           title: "Project Saved",
@@ -350,32 +597,9 @@ export default function ProjectsPage() {
 
       if (isLiked) {
         // Unlike project
-        const { error } = await supabase
-          .from('project_likes')
-          .delete()
-          .eq('project_id', projectId)
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Error unliking project:', error);
-          return;
-        }
-
         setLikedProjects(prev => prev.filter(id => id !== projectId));
       } else {
         // Like project
-        const { error } = await supabase
-          .from('project_likes')
-          .insert({
-            project_id: projectId,
-            user_id: user.id,
-          });
-
-        if (error) {
-          console.error('Error liking project:', error);
-          return;
-        }
-
         setLikedProjects(prev => [...prev, projectId]);
       }
 
@@ -397,27 +621,14 @@ export default function ProjectsPage() {
     }
 
     try {
-      const { error } = await supabase
-        .from('project_members')
-        .insert({
-          project_id: projectId,
-          user_id: user.id,
-        });
-
-      if (error) {
-        console.error('Error joining project:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to join project"
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Successfully joined the project"
-        });
-        fetchProjects();
-      }
+      // Add to applied projects
+      setAppliedProjects(prev => [...prev, projectId]);
+      
+      toast({
+        title: "Application submitted",
+        description: "Your application has been submitted successfully."
+      });
+      fetchProjects();
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -456,14 +667,8 @@ export default function ProjectsPage() {
   };
 
   const handleViewProjectDetails = (project: Project) => {
-    setSelectedProject(project);
-    setProjectDetailsTab("details");
-    setShowProjectDetails(true);
-    
-    // If it's the user's own project, fetch applicants
-    if (project.created_by === user?.id) {
-      fetchApplicants(project.id);
-    }
+    // Navigate to project details page with tab information
+    navigate(`/projects/${project.id}?tab=${activeTab}`);
   };
 
   const fetchApplicants = async (projectId: string) => {
@@ -723,11 +928,7 @@ export default function ProjectsPage() {
                             <div 
                               className="font-semibold cursor-pointer hover:text-primary transition-colors"
                               onClick={() => {
-                                if (activeTab === "created" || activeTab === "joined") {
-                                  navigate(`/projects/${project.id}`);
-                                } else {
-                                  handleViewProjectDetails(project);
-                                }
+                                handleViewProjectDetails(project);
                               }}
                             >
                               {project.title}
@@ -917,11 +1118,13 @@ export default function ProjectsPage() {
                         </Button>
                         {!project.is_member && project.created_by !== user?.id && (
                           <Button 
-                            variant="outline" 
+                            variant={appliedProjects.includes(project.id) ? "default" : "outline"}
                             size="sm"
                             onClick={() => handleJoinProject(project.id)}
+                            disabled={appliedProjects.includes(project.id)}
                           >
-                            <UserPlus className="h-4 w-4" />
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            {appliedProjects.includes(project.id) ? "Applied" : "Join Project"}
                           </Button>
                         )}
                       </div>
@@ -1334,27 +1537,25 @@ export default function ProjectsPage() {
                 {/* Tabs for created projects */}
                 {selectedProject.created_by === user?.id ? (
                   <Tabs value={projectDetailsTab} onValueChange={setProjectDetailsTab}>
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-1">
                       <TabsTrigger value="details">Project Details</TabsTrigger>
-                      <TabsTrigger value="applicants">
-                        Applicants ({applicants.length})
-                      </TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="details" className="space-y-6">
                       {/* Project Details Content */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div>
-                            <h3 className="font-semibold mb-2">Project Information</h3>
-                            <div className="space-y-2 text-sm">
+                      <div className="space-y-6">
+                        {/* Project Overview */}
+                        <div>
+                          <h3 className="font-semibold mb-3 text-lg">Project Overview</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-3">
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Type:</span>
-                                <span>{selectedProject.project_type}</span>
+                                <span className="font-medium">{selectedProject.project_type}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Category:</span>
-                                <span>{selectedProject.category}</span>
+                                <span className="font-medium">{selectedProject.category}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Status:</span>
@@ -1362,14 +1563,10 @@ export default function ProjectsPage() {
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Location:</span>
-                                <span>{selectedProject.location}</span>
+                                <span className="font-medium">{selectedProject.location}</span>
                               </div>
                             </div>
-                          </div>
-
-                          <div>
-                            <h3 className="font-semibold mb-2">Budget & Duration</h3>
-                            <div className="space-y-2 text-sm">
+                            <div className="space-y-3">
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Budget:</span>
                                 <span className="font-medium text-green-600">
@@ -1378,156 +1575,291 @@ export default function ProjectsPage() {
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Duration:</span>
-                                <span>
+                                <span className="font-medium">
                                   {selectedProject.duration_minutes ? `${selectedProject.duration_minutes} minutes` : 
                                    selectedProject.episodes ? `${selectedProject.episodes} episodes` : 'Not specified'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Team Size:</span>
-                                <span>{selectedProject.team_size} members</span>
+                                <span className="font-medium">{selectedProject.team_size} members</span>
                               </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div>
-                            <h3 className="font-semibold mb-2">Skills Required</h3>
-                            <div className="flex flex-wrap gap-2">
-                              {selectedProject.skills_required?.map((skill, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {skill}
-                                </Badge>
-                              )) || <span className="text-muted-foreground text-sm">No skills specified</span>}
-                            </div>
-                          </div>
-
-                          <div>
-                            <h3 className="font-semibold mb-2">Project Details</h3>
-                            <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Created:</span>
-                                <span>{formatDate(selectedProject.created_at)}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Last Updated:</span>
-                                <span>{formatDate(selectedProject.updated_at)}</span>
+                                <span className="font-medium">{formatDate(selectedProject.created_at)}</span>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="applicants" className="space-y-6">
-                      {/* Applicants Content */}
-                      <div>
-                        <h3 className="font-semibold text-lg mb-4">Project Applicants</h3>
-                        {applicants.length === 0 ? (
-                          <div className="text-center py-8">
-                            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                            <p className="text-muted-foreground">No applicants yet</p>
+
+                        {/* Full Description */}
+                        <div>
+                          <h3 className="font-semibold mb-3 text-lg">Project Description</h3>
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <p className="text-gray-700 leading-relaxed">
+                              {selectedProject.full_description || selectedProject.description}
+                            </p>
                           </div>
-                        ) : (
-                          <div className="space-y-4">
-                            {applicants.map((applicant) => (
-                              <Card key={applicant.id} className="p-4">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-                                      <span className="text-white font-semibold text-sm">
-                                        {applicant.avatar}
-                                      </span>
-                                    </div>
-                                    <div className="flex-1">
-                                      <h4 className="font-semibold text-lg">{applicant.name}</h4>
-                                      <p className="text-muted-foreground text-sm">{applicant.email}</p>
-                                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                        <span>Applied: {formatDate(applicant.appliedDate)}</span>
-                                        <span>Experience: {applicant.experience}</span>
-                                        <span>Role: {applicant.role}</span>
-                                      </div>
-                                      <div className="flex flex-wrap gap-2 mt-3">
-                                        {applicant.skills.map((skill: string, index: number) => (
-                                          <Badge key={index} variant="outline" className="text-xs">
-                                            {skill}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex flex-col items-end gap-2">
-                                    <Badge 
-                                      variant={
-                                        applicant.status === "shortlisted" ? "default" :
-                                        applicant.status === "reviewed" ? "secondary" : "outline"
-                                      }
-                                    >
-                                      {applicant.status}
-                                    </Badge>
-                                    <div className="flex gap-2">
-                                      <Button size="sm" variant="outline">
-                                        View Profile
-                                      </Button>
-                                      <Button size="sm" variant="outline">
-                                        Contact
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </Card>
+                        </div>
+
+                        {/* Skills Required */}
+                        <div>
+                          <h3 className="font-semibold mb-3 text-lg">Skills Required</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedProject.skills_required?.map((skill, index) => (
+                              <Badge key={index} variant="outline" className="text-sm px-3 py-1">
+                                {skill}
+                              </Badge>
+                            )) || <span className="text-muted-foreground">No skills specified</span>}
+                          </div>
+                        </div>
+
+                        {/* Requirements */}
+                        <div>
+                          <h3 className="font-semibold mb-3 text-lg">Requirements</h3>
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <ul className="space-y-2">
+                              {selectedProject.requirements?.map((req, index) => (
+                                <li key={index} className="flex items-start gap-2 text-sm">
+                                  <span className="text-primary mt-1">•</span>
+                                  <span>{req}</span>
+                                </li>
+                              )) || <span className="text-muted-foreground">No specific requirements listed</span>}
+                            </ul>
+                          </div>
+                        </div>
+
+                        {/* Benefits */}
+                        <div>
+                          <h3 className="font-semibold mb-3 text-lg">Benefits & Perks</h3>
+                          <div className="bg-green-50 p-4 rounded-lg">
+                            <ul className="space-y-2">
+                              {selectedProject.benefits?.map((benefit, index) => (
+                                <li key={index} className="flex items-start gap-2 text-sm">
+                                  <span className="text-green-600 mt-1">✓</span>
+                                  <span>{benefit}</span>
+                                </li>
+                              )) || <span className="text-muted-foreground">Benefits will be discussed during interview</span>}
+                            </ul>
+                          </div>
+                        </div>
+
+                        {/* Timeline */}
+                        <div>
+                          <h3 className="font-semibold mb-3 text-lg">Project Timeline</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {selectedProject.timeline && Object.entries(selectedProject.timeline).map(([phase, duration]) => (
+                              <div key={phase} className="bg-blue-50 p-3 rounded-lg text-center">
+                                <div className="text-sm font-medium capitalize">{phase.replace('_', ' ')}</div>
+                                <div className="text-xs text-muted-foreground mt-1">{duration}</div>
+                              </div>
                             ))}
                           </div>
-                        )}
+                        </div>
+
+                        {/* Additional Information */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h3 className="font-semibold mb-3 text-lg">Target Audience</h3>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <p className="text-sm text-gray-700">{selectedProject.target_audience}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold mb-3 text-lg">Distribution Plan</h3>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <p className="text-sm text-gray-700">{selectedProject.distribution_plan}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Production Notes */}
+                        <div>
+                          <h3 className="font-semibold mb-3 text-lg">Production Notes</h3>
+                          <div className="bg-yellow-50 p-4 rounded-lg">
+                            <p className="text-sm text-gray-700">{selectedProject.production_notes}</p>
+                          </div>
+                        </div>
+
+                        {/* Contact Information */}
+                        <div>
+                          <h3 className="font-semibold mb-3 text-lg">Contact Information</h3>
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Email:</span>
+                                <span className="font-medium">{selectedProject.contact_info?.email}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Phone:</span>
+                                <span className="font-medium">{selectedProject.contact_info?.phone}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Preferred Contact:</span>
+                                <span className="font-medium">{selectedProject.contact_info?.preferred_contact}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </TabsContent>
                   </Tabs>
                 ) : (
                   // Regular project details for non-creators
                   <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="font-semibold mb-2">Project Information</h3>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Type:</span>
-                              <span>{selectedProject.project_type}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Category:</span>
-                              <span>{selectedProject.category}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Status:</span>
-                              <Badge variant="outline" className="capitalize">{selectedProject.status}</Badge>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Location:</span>
-                              <span>{selectedProject.location}</span>
-                            </div>
+                    {/* Project Overview */}
+                    <div>
+                      <h3 className="font-semibold mb-3 text-lg">Project Overview</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Type:</span>
+                            <span className="font-medium">{selectedProject.project_type}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Category:</span>
+                            <span className="font-medium">{selectedProject.category}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Status:</span>
+                            <Badge variant="outline" className="capitalize">{selectedProject.status}</Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Location:</span>
+                            <span className="font-medium">{selectedProject.location}</span>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Budget:</span>
+                            <span className="font-medium text-green-600">
+                              {formatBudget(selectedProject.budget_min, selectedProject.budget_max, selectedProject.budget_currency)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Duration:</span>
+                            <span className="font-medium">
+                              {selectedProject.duration_minutes ? `${selectedProject.duration_minutes} minutes` : 
+                               selectedProject.episodes ? `${selectedProject.episodes} episodes` : 'Not specified'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Team Size:</span>
+                            <span className="font-medium">{selectedProject.team_size} members</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Created:</span>
+                            <span className="font-medium">{formatDate(selectedProject.created_at)}</span>
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="font-semibold mb-2">Budget & Duration</h3>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Budget:</span>
-                              <span className="font-medium text-green-600">
-                                {formatBudget(selectedProject.budget_min, selectedProject.budget_max, selectedProject.budget_currency)}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Duration:</span>
-                              <span>
-                                {selectedProject.duration_minutes ? `${selectedProject.duration_minutes} minutes` : 
-                                 selectedProject.episodes ? `${selectedProject.episodes} episodes` : 'Not specified'}
-                              </span>
-                            </div>
+                    {/* Full Description */}
+                    <div>
+                      <h3 className="font-semibold mb-3 text-lg">Project Description</h3>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-gray-700 leading-relaxed">
+                          {selectedProject.full_description || selectedProject.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Skills Required */}
+                    <div>
+                      <h3 className="font-semibold mb-3 text-lg">Skills Required</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedProject.skills_required?.map((skill, index) => (
+                          <Badge key={index} variant="outline" className="text-sm px-3 py-1">
+                            {skill}
+                          </Badge>
+                        )) || <span className="text-muted-foreground">No skills specified</span>}
+                      </div>
+                    </div>
+
+                    {/* Requirements */}
+                    <div>
+                      <h3 className="font-semibold mb-3 text-lg">Requirements</h3>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <ul className="space-y-2">
+                          {selectedProject.requirements?.map((req, index) => (
+                            <li key={index} className="flex items-start gap-2 text-sm">
+                              <span className="text-primary mt-1">•</span>
+                              <span>{req}</span>
+                            </li>
+                          )) || <span className="text-muted-foreground">No specific requirements listed</span>}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Benefits */}
+                    <div>
+                      <h3 className="font-semibold mb-3 text-lg">Benefits & Perks</h3>
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <ul className="space-y-2">
+                          {selectedProject.benefits?.map((benefit, index) => (
+                            <li key={index} className="flex items-start gap-2 text-sm">
+                              <span className="text-green-600 mt-1">✓</span>
+                              <span>{benefit}</span>
+                            </li>
+                          )) || <span className="text-muted-foreground">Benefits will be discussed during interview</span>}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Timeline */}
+                    <div>
+                      <h3 className="font-semibold mb-3 text-lg">Project Timeline</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {selectedProject.timeline && Object.entries(selectedProject.timeline).map(([phase, duration]) => (
+                          <div key={phase} className="bg-blue-50 p-3 rounded-lg text-center">
+                            <div className="text-sm font-medium capitalize">{phase.replace('_', ' ')}</div>
+                            <div className="text-xs text-muted-foreground mt-1">{duration}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Additional Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h3 className="font-semibold mb-3 text-lg">Target Audience</h3>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-sm text-gray-700">{selectedProject.target_audience}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-3 text-lg">Distribution Plan</h3>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-sm text-gray-700">{selectedProject.distribution_plan}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Production Notes */}
+                    <div>
+                      <h3 className="font-semibold mb-3 text-lg">Production Notes</h3>
+                      <div className="bg-yellow-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-700">{selectedProject.production_notes}</p>
+                      </div>
+                    </div>
+
+                    {/* Contact Information */}
+                    <div>
+                      <h3 className="font-semibold mb-3 text-lg">Contact Information</h3>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Email:</span>
+                            <span className="font-medium">{selectedProject.contact_info?.email}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Phone:</span>
+                            <span className="font-medium">{selectedProject.contact_info?.phone}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Preferred Contact:</span>
+                            <span className="font-medium">{selectedProject.contact_info?.preferred_contact}</span>
                           </div>
                         </div>
                       </div>

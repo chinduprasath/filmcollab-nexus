@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Search,
@@ -43,7 +42,7 @@ interface User {
   website?: string;
   skills?: string[];
   experience_level?: string;
-  industry?: string;
+  category?: string;
   portfolio_url?: string;
   linkedin_url?: string;
   github_url?: string;
@@ -59,7 +58,27 @@ interface User {
 
 type FilterType = "all" | "verified" | "new" | "popular";
 type SortType = "recent" | "popular" | "alphabetical";
-type IndustryFilter = "all" | "film" | "television" | "advertising" | "documentary" | "animation" | "photography" | "music" | "other";
+type CategoryFilter = "all" | 
+  // Film & Media Projects
+  "Short Films" | "Feature Films" | "Web Series" | "Documentaries" | "Music Videos" | "Advertisements / Commercials" | "Corporate Videos" | "Theatre / Stage Plays" |
+  // Direction & Production
+  "Director" | "Assistant Director" | "Producer" | "Executive Producer" | "Line Producer" | "Production Manager" | "Production Assistant" |
+  // Cinematography & Camera
+  "Cinematographer / DOP" | "Assistant Cameraman" | "Camera Operator" | "Steadicam Operator" | "Drone Operator" | "Gaffer" | "Lighting Technician" |
+  // Actors & Performers
+  "Lead Actor / Actress" | "Supporting Actor / Actress" | "Child Artist" | "Theatre Artist" | "Voice Over Artist" | "Dancer" | "Stunt Artist" |
+  // Writing & Creative
+  "Script Writer" | "Screenplay Writer" | "Dialogue Writer" | "Lyricist" | "Storyboard Artist" |
+  // Music & Sound
+  "Music Director" | "Background Score Composer" | "Singer / Vocalist" | "Instrumentalist" | "Sound Engineer" | "Foley Artist" | "Dubbing / Voice Artist" |
+  // Art & Design
+  "Art Director" | "Set Designer" | "Costume Designer" | "Fashion Stylist" | "Makeup Artist" | "Hair Stylist" | "Graphic Designer" | "Poster Designer" |
+  // Editing & Post Production
+  "Video Editor" | "VFX Artist" | "Motion Graphics Designer" | "Colorist" | "DI Supervisor" | "Sound Editor" |
+  // Marketing & Distribution
+  "Digital Marketer" | "Public Relations (PR)" | "Social Media Manager" | "Film Distributor" |
+  // Film Community & Support
+  "Film Festivals" | "Workshops & Training" | "Casting Calls" | "Location Scouts" | "Film Equipment Rentals";
 
 // Mock data for demonstration
 const mockUsers: User[] = [
@@ -67,14 +86,14 @@ const mockUsers: User[] = [
     id: "1",
     full_name: "Sarah Johnson",
     email: "sarah@example.com",
-    avatar_url: "/placeholder/avatar1.jpg",
-    bio: "Cinematographer with 8+ years of experience in film and commercial production. Passionate about visual storytelling.",
+    avatar_url: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+    bio: "Cinematographer with 8+ years of experience in film and commercial production. Passionate about visual storytelling and creating compelling narratives through the lens.",
     location: "Los Angeles, CA",
     role: "Cinematographer",
     website: "https://sarahjohnson.com",
-    skills: ["Cinematography", "Lighting", "Color Grading", "Film Production"],
+    skills: ["Cinematography", "Lighting", "Color Grading", "Film Production", "Visual Storytelling"],
     experience_level: "Senior",
-    industry: "film",
+    category: "Cinematographer / DOP",
     portfolio_url: "https://portfolio.sarahjohnson.com",
     linkedin_url: "https://linkedin.com/in/sarahjohnson",
     created_at: "2024-01-15T10:00:00Z",
@@ -90,13 +109,13 @@ const mockUsers: User[] = [
     id: "2",
     full_name: "Raj Patel",
     email: "raj@example.com",
-    avatar_url: "/placeholder/avatar2.jpg",
-    bio: "Film Director and Producer specializing in independent films and documentaries.",
+    avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    bio: "Film Director and Producer specializing in independent films and documentaries. Award-winning filmmaker with a passion for telling authentic stories.",
     location: "Mumbai, India",
     role: "Film Director",
-    skills: ["Directing", "Producing", "Screenwriting", "Post-Production"],
+    skills: ["Directing", "Producing", "Screenwriting", "Post-Production", "Documentary"],
     experience_level: "Mid",
-    industry: "documentary",
+    category: "Director",
     created_at: "2024-02-20T14:30:00Z",
     is_verified: false,
     followers_count: 890,
@@ -110,13 +129,13 @@ const mockUsers: User[] = [
     id: "3",
     full_name: "Amelia Chen",
     email: "amelia@example.com",
-    avatar_url: "/placeholder/avatar3.jpg",
-    bio: "Sound Designer and Audio Engineer with expertise in film and game audio.",
+    avatar_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+    bio: "Sound Designer and Audio Engineer with expertise in film and game audio. Creating immersive soundscapes that enhance storytelling.",
     location: "San Francisco, CA",
     role: "Sound Designer",
-    skills: ["Sound Design", "Audio Engineering", "Music Production", "Foley"],
+    skills: ["Sound Design", "Audio Engineering", "Music Production", "Foley", "Game Audio"],
     experience_level: "Senior",
-    industry: "music",
+    category: "Sound Engineer",
     github_url: "https://github.com/ameliachen",
     created_at: "2024-03-10T09:15:00Z",
     is_verified: true,
@@ -131,13 +150,13 @@ const mockUsers: User[] = [
     id: "4",
     full_name: "Alex Rodriguez",
     email: "alex@example.com",
-    avatar_url: "/placeholder/avatar4.jpg",
-    bio: "Creative Director and Visual Effects Artist. Bringing stories to life through cutting-edge VFX.",
+    avatar_url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+    bio: "Creative Director and Visual Effects Artist. Bringing stories to life through cutting-edge VFX and innovative visual techniques.",
     location: "New York, NY",
     role: "VFX Artist",
-    skills: ["VFX", "Motion Graphics", "3D Animation", "Creative Direction"],
+    skills: ["VFX", "Motion Graphics", "3D Animation", "Creative Direction", "Compositing"],
     experience_level: "Senior",
-    industry: "animation",
+    category: "VFX Artist",
     portfolio_url: "https://alexrodriguez.vfx",
     created_at: "2024-01-05T16:45:00Z",
     is_verified: true,
@@ -152,13 +171,13 @@ const mockUsers: User[] = [
     id: "5",
     full_name: "Priya Sharma",
     email: "priya@example.com",
-    avatar_url: "/placeholder/avatar5.jpg",
-    bio: "Photographer and Visual Artist. Capturing moments that tell powerful stories.",
+    avatar_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
+    bio: "Photographer and Visual Artist. Capturing moments that tell powerful stories and evoke emotions through the art of photography.",
     location: "Delhi, India",
     role: "Photographer",
-    skills: ["Photography", "Photo Editing", "Visual Storytelling", "Portrait Photography"],
+    skills: ["Photography", "Photo Editing", "Visual Storytelling", "Portrait Photography", "Commercial Photography"],
     experience_level: "Mid",
-    industry: "photography",
+    category: "Graphic Designer",
     website: "https://priyasharma.photography",
     created_at: "2024-04-12T11:20:00Z",
     is_verified: false,
@@ -173,13 +192,13 @@ const mockUsers: User[] = [
     id: "6",
     full_name: "Marcus Thompson",
     email: "marcus@example.com",
-    avatar_url: "/placeholder/avatar6.jpg",
-    bio: "Film Editor and Post-Production Specialist. Crafting compelling narratives through precise editing.",
+    avatar_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
+    bio: "Film Editor and Post-Production Specialist. Crafting compelling narratives through precise editing and seamless post-production workflows.",
     location: "London, UK",
     role: "Film Editor",
-    skills: ["Video Editing", "Post-Production", "Color Correction", "Motion Graphics"],
+    skills: ["Video Editing", "Post-Production", "Color Correction", "Motion Graphics", "Sound Design"],
     experience_level: "Senior",
-    industry: "television",
+    category: "Video Editor",
     linkedin_url: "https://linkedin.com/in/marcusthompson",
     created_at: "2024-02-28T13:10:00Z",
     is_verified: true,
@@ -190,154 +209,145 @@ const mockUsers: User[] = [
     is_liked: true,
     is_saved: false,
   },
+  {
+    id: "7",
+    full_name: "Lisa Park",
+    email: "lisa@example.com",
+    avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
+    bio: "Production Designer and Art Director. Creating immersive visual worlds that bring stories to life through meticulous attention to detail.",
+    location: "Seoul, South Korea",
+    role: "Production Designer",
+    skills: ["Production Design", "Art Direction", "Set Design", "Costume Design", "Visual Development"],
+    experience_level: "Mid",
+    category: "Art Director",
+    created_at: "2024-03-15T08:30:00Z",
+    is_verified: false,
+    followers_count: 750,
+    projects_count: 22,
+    posts_count: 12,
+    likes_count: 34,
+    is_liked: false,
+    is_saved: false,
+  },
+  {
+    id: "8",
+    full_name: "David Kim",
+    email: "david@example.com",
+    avatar_url: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face",
+    bio: "Screenwriter and Story Consultant. Crafting compelling narratives and helping filmmakers develop their stories from concept to completion.",
+    location: "Toronto, Canada",
+    role: "Screenwriter",
+    skills: ["Screenwriting", "Story Development", "Script Consulting", "Character Development", "Dialogue Writing"],
+    experience_level: "Senior",
+    category: "Script Writer",
+    created_at: "2024-01-22T12:15:00Z",
+    is_verified: true,
+    followers_count: 1450,
+    projects_count: 38,
+    posts_count: 28,
+    likes_count: 98,
+    is_liked: false,
+    is_saved: true,
+  },
+  {
+    id: "9",
+    full_name: "Emma Rodriguez",
+    email: "emma@example.com",
+    avatar_url: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face",
+    bio: "Actress and Voice Artist. Bringing characters to life through authentic performances and expressive voice work across various media.",
+    location: "Austin, TX",
+    role: "Actress",
+    skills: ["Acting", "Voice Acting", "Character Development", "Improvisation", "Stage Performance"],
+    experience_level: "Mid",
+    category: "Lead Actor / Actress",
+    created_at: "2024-04-05T15:45:00Z",
+    is_verified: false,
+    followers_count: 920,
+    projects_count: 41,
+    posts_count: 19,
+    likes_count: 76,
+    is_liked: true,
+    is_saved: false,
+  },
+  {
+    id: "10",
+    full_name: "James Wilson",
+    email: "james@example.com",
+    avatar_url: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=150&h=150&fit=crop&crop=face",
+    bio: "Music Composer and Sound Designer. Creating original scores and soundscapes that enhance storytelling and emotional impact.",
+    location: "Melbourne, Australia",
+    role: "Music Composer",
+    skills: ["Music Composition", "Sound Design", "Orchestration", "Film Scoring", "Audio Production"],
+    experience_level: "Senior",
+    category: "Music Director",
+    created_at: "2024-02-10T09:20:00Z",
+    is_verified: true,
+    followers_count: 1680,
+    projects_count: 55,
+    posts_count: 33,
+    likes_count: 142,
+    is_liked: false,
+    is_saved: false,
+  },
+  {
+    id: "11",
+    full_name: "Maria Garcia",
+    email: "maria@example.com",
+    avatar_url: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=150&h=150&fit=crop&crop=face",
+    bio: "Documentary Filmmaker and Producer. Telling important stories that matter and creating documentaries that inspire change.",
+    location: "Barcelona, Spain",
+    role: "Documentary Filmmaker",
+    skills: ["Documentary Filmmaking", "Producing", "Research", "Interviewing", "Social Impact"],
+    experience_level: "Mid",
+    category: "Producer",
+    created_at: "2024-03-25T11:30:00Z",
+    is_verified: false,
+    followers_count: 580,
+    projects_count: 18,
+    posts_count: 14,
+    likes_count: 52,
+    is_liked: false,
+    is_saved: false,
+  },
+  {
+    id: "12",
+    full_name: "Michael Chen",
+    email: "michael@example.com",
+    avatar_url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
+    bio: "Animation Director and Character Designer. Creating memorable characters and bringing animated worlds to life through innovative techniques.",
+    location: "Tokyo, Japan",
+    role: "Animation Director",
+    skills: ["Animation", "Character Design", "Storyboarding", "3D Modeling", "Rigging"],
+    experience_level: "Senior",
+    category: "Motion Graphics Designer",
+    created_at: "2024-01-08T14:00:00Z",
+    is_verified: true,
+    followers_count: 2200,
+    projects_count: 72,
+    posts_count: 47,
+    likes_count: 189,
+    is_liked: true,
+    is_saved: true,
+  }
 ];
 
 export default function DiscoverPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [sortType, setSortType] = useState<SortType>("recent");
-  const [industryFilter, setIndustryFilter] = useState<IndustryFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const pageSize = 12;
 
-  // Fetch users from database
+  // Initialize with hardcoded data
   useEffect(() => {
-    fetchUsers();
-  }, []); // Run once on mount
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch all profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          user_id,
-          full_name,
-          first_name,
-          last_name,
-          role,
-          category,
-          bio,
-          location,
-          website,
-          skills,
-          experience_level,
-          industry,
-          portfolio_url,
-          linkedin_url,
-          github_url,
-          is_verified,
-          followers_count,
-          projects_count,
-          posts_count,
-          likes_count,
-          created_at,
-          updated_at
-        `)
-        .order('created_at', { ascending: false });
-
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
-      }
-
-
-      if (!profiles || profiles.length === 0) {
-        setUsers([]);
-        return;
-      }
-
-      // Filter out admin users (include both real users and sample profiles)
-      const filteredProfiles = profiles.filter(profile => {
-        // Must have a first name
-        if (!profile.first_name) return false;
-        
-        // Filter out admin users by name
-        if (profile.first_name.toLowerCase().includes('admin')) return false;
-        
-        // Filter out admin users by role
-        if (profile.role && profile.role.toLowerCase().includes('admin')) return false;
-        
-        return true;
-      });
-
-      // Get current user's likes and saves if authenticated
-      let likedUserIds = new Set();
-      let savedUserIds = new Set();
-      
-      if (user?.id) {
-        const { data: currentProfile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-
-        if (currentProfile) {
-          const [likesResult, savesResult] = await Promise.all([
-            supabase
-              .from('user_likes')
-              .select('liked_user_id')
-              .eq('user_id', currentProfile.id),
-            supabase
-              .from('user_saves')
-              .select('saved_user_id')
-              .eq('user_id', currentProfile.id)
-          ]);
-
-          likedUserIds = new Set(likesResult.data?.map(like => like.liked_user_id) || []);
-          savedUserIds = new Set(savesResult.data?.map(save => save.saved_user_id) || []);
-        }
-      }
-
-      // Transform data
-      const usersWithInteractions: User[] = filteredProfiles.map(profile => {
-        // Create full_name from first_name and last_name
-        const fullName = profile.first_name && profile.last_name 
-          ? `${profile.first_name} ${profile.last_name}`
-          : profile.first_name || 'Unknown User';
-          
-        return {
-          id: profile.id,
-          full_name: fullName,
-          email: '',
-          avatar_url: undefined,
-          role: profile.role,
-          bio: profile.bio,
-          location: profile.location,
-          website: profile.website,
-          skills: profile.skills || [],
-          experience_level: profile.experience_level,
-          industry: profile.industry,
-          portfolio_url: profile.portfolio_url,
-          linkedin_url: profile.linkedin_url,
-          github_url: profile.github_url,
-          created_at: profile.created_at || new Date().toISOString(),
-          is_verified: profile.is_verified || false,
-          followers_count: profile.followers_count || 0,
-          projects_count: profile.projects_count || 0,
-          posts_count: profile.posts_count || 0,
-          likes_count: profile.likes_count || 0,
-          is_liked: likedUserIds.has(profile.id),
-          is_saved: savedUserIds.has(profile.id),
-        };
-      });
-
-      setUsers(usersWithInteractions);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setUsers(mockUsers);
+  }, []);
 
   const filtered = useMemo(() => {
     let filteredUsers = [...users];
@@ -371,9 +381,9 @@ export default function DiscoverPage() {
       });
     }
 
-    // Filter by industry
-    if (industryFilter !== "all") {
-      filteredUsers = filteredUsers.filter((user) => user.industry === industryFilter);
+    // Filter by category
+    if (categoryFilter !== "all") {
+      filteredUsers = filteredUsers.filter((user) => user.category === categoryFilter);
     }
 
     // Sort users
@@ -390,7 +400,7 @@ export default function DiscoverPage() {
     });
 
     return filteredUsers;
-  }, [users, query, filterType, sortType, industryFilter]);
+  }, [users, query, filterType, sortType, categoryFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -411,63 +421,11 @@ export default function DiscoverPage() {
         return;
       }
 
-      // Get current user's profile ID
-      const { data: currentProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileError || !currentProfile) {
-        throw new Error('User profile not found');
-      }
-
-      // Check if connection already exists
-      const { data: existingConnection, error: checkError } = await supabase
-        .from('connections')
-        .select('*')
-        .eq('user_id', currentProfile.id)
-        .eq('connected_user_id', userId)
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
-      }
-
-      if (existingConnection) {
-        toast({
-          variant: "destructive",
-          title: "Already Connected",
-          description: `You already have a connection with ${userName}`,
-        });
-        return;
-      }
-
-      // Create connection request
-      const { error } = await supabase
-        .from('connections')
-        .insert({
-          user_id: currentProfile.id,
-          connected_user_id: userId,
-          status: 'pending'
-        });
-
-      if (error) {
-        if (error.code === '23505') {
-          toast({
-            variant: "destructive",
-            title: "Already Connected",
-            description: `You already have a connection with ${userName}`,
-          });
-        } else {
-          throw error;
-        }
-      } else {
-        toast({
-          title: "Connection Request Sent",
-          description: `Connection request sent to ${userName}`,
-        });
-      }
+      // Simulate connection request
+      toast({
+        title: "Connection Request Sent",
+        description: `Connection request sent to ${userName}`,
+      });
     } catch (error) {
       console.error('Error sending connection request:', error);
       toast({
@@ -509,41 +467,9 @@ export default function DiscoverPage() {
         return;
       }
 
-      // Get current user's profile ID
-      const { data: currentProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileError || !currentProfile) {
-        throw new Error('User profile not found');
-      }
-
       const currentUser = users.find(u => u.id === userId);
       const isCurrentlyLiked = currentUser?.is_liked || false;
 
-      if (isCurrentlyLiked) {
-        // Unlike
-        const { error } = await supabase
-          .from('user_likes')
-          .delete()
-          .eq('user_id', currentProfile.id)
-          .eq('liked_user_id', userId);
-
-        if (error) throw error;
-      } else {
-        // Like
-        const { error } = await supabase
-          .from('user_likes')
-          .insert({
-            user_id: currentProfile.id,
-            liked_user_id: userId
-          });
-
-        if (error) throw error;
-      }
-      
       // Update local state
       setUsers(prevUsers => 
         prevUsers.map(u => 
@@ -585,41 +511,9 @@ export default function DiscoverPage() {
         return;
       }
 
-      // Get current user's profile ID
-      const { data: currentProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileError || !currentProfile) {
-        throw new Error('User profile not found');
-      }
-
       const currentUser = users.find(u => u.id === userId);
       const isCurrentlySaved = currentUser?.is_saved || false;
 
-      if (isCurrentlySaved) {
-        // Unsave
-        const { error } = await supabase
-          .from('user_saves')
-          .delete()
-          .eq('user_id', currentProfile.id)
-          .eq('saved_user_id', userId);
-
-        if (error) throw error;
-      } else {
-        // Save
-        const { error } = await supabase
-          .from('user_saves')
-          .insert({
-            user_id: currentProfile.id,
-            saved_user_id: userId
-          });
-
-        if (error) throw error;
-      }
-      
       // Update local state
       setUsers(prevUsers => 
         prevUsers.map(u => 
@@ -685,25 +579,60 @@ export default function DiscoverPage() {
     }
   };
 
-  const getIndustryIcon = (industry?: string) => {
-    switch (industry) {
-      case "film":
-        return <Award className="w-4 h-4" />;
-      case "television":
-        return <Globe className="w-4 h-4" />;
-      case "advertising":
-        return <Briefcase className="w-4 h-4" />;
-      case "documentary":
-        return <UserIcon className="w-4 h-4" />;
-      case "animation":
-        return <Star className="w-4 h-4" />;
-      case "photography":
-        return <Heart className="w-4 h-4" />;
-      case "music":
-        return <GraduationCap className="w-4 h-4" />;
-      default:
-        return <Briefcase className="w-4 h-4" />;
+  const getCategoryIcon = (category?: string) => {
+    if (!category) return <Briefcase className="w-4 h-4" />;
+    
+    // Film & Media Projects
+    if (category.includes("Film") || category.includes("Series") || category.includes("Documentaries")) {
+      return <Award className="w-4 h-4" />;
     }
+    
+    // Direction & Production
+    if (category.includes("Director") || category.includes("Producer")) {
+      return <UserIcon className="w-4 h-4" />;
+    }
+    
+    // Cinematography & Camera
+    if (category.includes("Cinematographer") || category.includes("Camera") || category.includes("Gaffer")) {
+      return <Heart className="w-4 h-4" />;
+    }
+    
+    // Actors & Performers
+    if (category.includes("Actor") || category.includes("Artist") || category.includes("Dancer")) {
+      return <Star className="w-4 h-4" />;
+    }
+    
+    // Writing & Creative
+    if (category.includes("Writer") || category.includes("Lyricist")) {
+      return <GraduationCap className="w-4 h-4" />;
+    }
+    
+    // Music & Sound
+    if (category.includes("Music") || category.includes("Sound") || category.includes("Singer")) {
+      return <GraduationCap className="w-4 h-4" />;
+    }
+    
+    // Art & Design
+    if (category.includes("Designer") || category.includes("Stylist") || category.includes("Artist")) {
+      return <Heart className="w-4 h-4" />;
+    }
+    
+    // Editing & Post Production
+    if (category.includes("Editor") || category.includes("VFX") || category.includes("Graphics")) {
+      return <Globe className="w-4 h-4" />;
+    }
+    
+    // Marketing & Distribution
+    if (category.includes("Marketer") || category.includes("PR") || category.includes("Social")) {
+      return <Briefcase className="w-4 h-4" />;
+    }
+    
+    // Film Community & Support
+    if (category.includes("Festival") || category.includes("Workshop") || category.includes("Casting")) {
+      return <Users className="w-4 h-4" />;
+    }
+    
+    return <Briefcase className="w-4 h-4" />;
   };
 
   return (
@@ -759,21 +688,97 @@ export default function DiscoverPage() {
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
-                <Select value={industryFilter} onValueChange={(value) => { setIndustryFilter(value as IndustryFilter); resetPaging(); }}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value as CategoryFilter); resetPaging(); }}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select industry" />
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Industries</SelectItem>
-                    <SelectItem value="film">Film</SelectItem>
-                    <SelectItem value="television">Television</SelectItem>
-                    <SelectItem value="advertising">Advertising</SelectItem>
-                    <SelectItem value="documentary">Documentary</SelectItem>
-                    <SelectItem value="animation">Animation</SelectItem>
-                    <SelectItem value="photography">Photography</SelectItem>
-                    <SelectItem value="music">Music</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    
+                    {/* Film & Media Projects */}
+                    <SelectItem value="Short Films">Short Films</SelectItem>
+                    <SelectItem value="Feature Films">Feature Films</SelectItem>
+                    <SelectItem value="Web Series">Web Series</SelectItem>
+                    <SelectItem value="Documentaries">Documentaries</SelectItem>
+                    <SelectItem value="Music Videos">Music Videos</SelectItem>
+                    <SelectItem value="Advertisements / Commercials">Advertisements / Commercials</SelectItem>
+                    <SelectItem value="Corporate Videos">Corporate Videos</SelectItem>
+                    <SelectItem value="Theatre / Stage Plays">Theatre / Stage Plays</SelectItem>
+                    
+                    {/* Direction & Production */}
+                    <SelectItem value="Director">Director</SelectItem>
+                    <SelectItem value="Assistant Director">Assistant Director</SelectItem>
+                    <SelectItem value="Producer">Producer</SelectItem>
+                    <SelectItem value="Executive Producer">Executive Producer</SelectItem>
+                    <SelectItem value="Line Producer">Line Producer</SelectItem>
+                    <SelectItem value="Production Manager">Production Manager</SelectItem>
+                    <SelectItem value="Production Assistant">Production Assistant</SelectItem>
+                    
+                    {/* Cinematography & Camera */}
+                    <SelectItem value="Cinematographer / DOP">Cinematographer / DOP</SelectItem>
+                    <SelectItem value="Assistant Cameraman">Assistant Cameraman</SelectItem>
+                    <SelectItem value="Camera Operator">Camera Operator</SelectItem>
+                    <SelectItem value="Steadicam Operator">Steadicam Operator</SelectItem>
+                    <SelectItem value="Drone Operator">Drone Operator</SelectItem>
+                    <SelectItem value="Gaffer">Gaffer</SelectItem>
+                    <SelectItem value="Lighting Technician">Lighting Technician</SelectItem>
+                    
+                    {/* Actors & Performers */}
+                    <SelectItem value="Lead Actor / Actress">Lead Actor / Actress</SelectItem>
+                    <SelectItem value="Supporting Actor / Actress">Supporting Actor / Actress</SelectItem>
+                    <SelectItem value="Child Artist">Child Artist</SelectItem>
+                    <SelectItem value="Theatre Artist">Theatre Artist</SelectItem>
+                    <SelectItem value="Voice Over Artist">Voice Over Artist</SelectItem>
+                    <SelectItem value="Dancer">Dancer</SelectItem>
+                    <SelectItem value="Stunt Artist">Stunt Artist</SelectItem>
+                    
+                    {/* Writing & Creative */}
+                    <SelectItem value="Script Writer">Script Writer</SelectItem>
+                    <SelectItem value="Screenplay Writer">Screenplay Writer</SelectItem>
+                    <SelectItem value="Dialogue Writer">Dialogue Writer</SelectItem>
+                    <SelectItem value="Lyricist">Lyricist</SelectItem>
+                    <SelectItem value="Storyboard Artist">Storyboard Artist</SelectItem>
+                    
+                    {/* Music & Sound */}
+                    <SelectItem value="Music Director">Music Director</SelectItem>
+                    <SelectItem value="Background Score Composer">Background Score Composer</SelectItem>
+                    <SelectItem value="Singer / Vocalist">Singer / Vocalist</SelectItem>
+                    <SelectItem value="Instrumentalist">Instrumentalist</SelectItem>
+                    <SelectItem value="Sound Engineer">Sound Engineer</SelectItem>
+                    <SelectItem value="Foley Artist">Foley Artist</SelectItem>
+                    <SelectItem value="Dubbing / Voice Artist">Dubbing / Voice Artist</SelectItem>
+                    
+                    {/* Art & Design */}
+                    <SelectItem value="Art Director">Art Director</SelectItem>
+                    <SelectItem value="Set Designer">Set Designer</SelectItem>
+                    <SelectItem value="Costume Designer">Costume Designer</SelectItem>
+                    <SelectItem value="Fashion Stylist">Fashion Stylist</SelectItem>
+                    <SelectItem value="Makeup Artist">Makeup Artist</SelectItem>
+                    <SelectItem value="Hair Stylist">Hair Stylist</SelectItem>
+                    <SelectItem value="Graphic Designer">Graphic Designer</SelectItem>
+                    <SelectItem value="Poster Designer">Poster Designer</SelectItem>
+                    
+                    {/* Editing & Post Production */}
+                    <SelectItem value="Video Editor">Video Editor</SelectItem>
+                    <SelectItem value="VFX Artist">VFX Artist</SelectItem>
+                    <SelectItem value="Motion Graphics Designer">Motion Graphics Designer</SelectItem>
+                    <SelectItem value="Colorist">Colorist</SelectItem>
+                    <SelectItem value="DI Supervisor">DI Supervisor</SelectItem>
+                    <SelectItem value="Sound Editor">Sound Editor</SelectItem>
+                    
+                    {/* Marketing & Distribution */}
+                    <SelectItem value="Digital Marketer">Digital Marketer</SelectItem>
+                    <SelectItem value="Public Relations (PR)">Public Relations (PR)</SelectItem>
+                    <SelectItem value="Social Media Manager">Social Media Manager</SelectItem>
+                    <SelectItem value="Film Distributor">Film Distributor</SelectItem>
+                    
+                    {/* Film Community & Support */}
+                    <SelectItem value="Film Festivals">Film Festivals</SelectItem>
+                    <SelectItem value="Workshops & Training">Workshops & Training</SelectItem>
+                    <SelectItem value="Casting Calls">Casting Calls</SelectItem>
+                    <SelectItem value="Location Scouts">Location Scouts</SelectItem>
+                    <SelectItem value="Film Equipment Rentals">Film Equipment Rentals</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
