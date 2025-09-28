@@ -117,15 +117,8 @@ export default function Dashboard() {
               Welcome back, {profile?.first_name || profile?.full_name || 'User'}!
             </h1>
             <p className="text-muted-foreground mt-2">
-              {profile?.role && `${profile.role} | `}
-              {profile?.location && `${profile.location} | `}
               Here's what's happening in your film industry network today.
             </p>
-            {profile?.bio && (
-              <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-                {profile.bio}
-              </p>
-            )}
           </div>
           
           <div className="flex gap-2">
