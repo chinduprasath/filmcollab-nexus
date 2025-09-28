@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,6 +14,8 @@ import { useAuth } from "@/hooks/use-auth";
 import {
   Search,
   Filter,
+  MapPin,
+  Calendar,
   User as UserIcon,
   MessageCircle,
   UserPlus,
@@ -60,10 +61,140 @@ type FilterType = "all" | "verified" | "new" | "popular";
 type SortType = "recent" | "popular" | "alphabetical";
 type IndustryFilter = "all" | "film" | "television" | "advertising" | "documentary" | "animation" | "photography" | "music" | "other";
 
+// Mock data for demonstration
+const mockUsers: User[] = [
+  {
+    id: "1",
+    full_name: "Sarah Johnson",
+    email: "sarah@example.com",
+    avatar_url: "/placeholder/avatar1.jpg",
+    bio: "Cinematographer with 8+ years of experience in film and commercial production. Passionate about visual storytelling.",
+    location: "Los Angeles, CA",
+    role: "Cinematographer",
+    website: "https://sarahjohnson.com",
+    skills: ["Cinematography", "Lighting", "Color Grading", "Film Production"],
+    experience_level: "Senior",
+    industry: "film",
+    portfolio_url: "https://portfolio.sarahjohnson.com",
+    linkedin_url: "https://linkedin.com/in/sarahjohnson",
+    created_at: "2024-01-15T10:00:00Z",
+    is_verified: true,
+    followers_count: 1250,
+    projects_count: 45,
+    posts_count: 23,
+    likes_count: 89,
+    is_liked: false,
+    is_saved: false,
+  },
+  {
+    id: "2",
+    full_name: "Raj Patel",
+    email: "raj@example.com",
+    avatar_url: "/placeholder/avatar2.jpg",
+    bio: "Film Director and Producer specializing in independent films and documentaries.",
+    location: "Mumbai, India",
+    role: "Film Director",
+    skills: ["Directing", "Producing", "Screenwriting", "Post-Production"],
+    experience_level: "Mid",
+    industry: "documentary",
+    created_at: "2024-02-20T14:30:00Z",
+    is_verified: false,
+    followers_count: 890,
+    projects_count: 28,
+    posts_count: 15,
+    likes_count: 45,
+    is_liked: false,
+    is_saved: false,
+  },
+  {
+    id: "3",
+    full_name: "Amelia Chen",
+    email: "amelia@example.com",
+    avatar_url: "/placeholder/avatar3.jpg",
+    bio: "Sound Designer and Audio Engineer with expertise in film and game audio.",
+    location: "San Francisco, CA",
+    role: "Sound Designer",
+    skills: ["Sound Design", "Audio Engineering", "Music Production", "Foley"],
+    experience_level: "Senior",
+    industry: "music",
+    github_url: "https://github.com/ameliachen",
+    created_at: "2024-03-10T09:15:00Z",
+    is_verified: true,
+    followers_count: 2100,
+    projects_count: 67,
+    posts_count: 42,
+    likes_count: 156,
+    is_liked: true,
+    is_saved: false,
+  },
+  {
+    id: "4",
+    full_name: "Alex Rodriguez",
+    email: "alex@example.com",
+    avatar_url: "/placeholder/avatar4.jpg",
+    bio: "Creative Director and Visual Effects Artist. Bringing stories to life through cutting-edge VFX.",
+    location: "New York, NY",
+    role: "VFX Artist",
+    skills: ["VFX", "Motion Graphics", "3D Animation", "Creative Direction"],
+    experience_level: "Senior",
+    industry: "animation",
+    portfolio_url: "https://alexrodriguez.vfx",
+    created_at: "2024-01-05T16:45:00Z",
+    is_verified: true,
+    followers_count: 3200,
+    projects_count: 89,
+    posts_count: 56,
+    likes_count: 234,
+    is_liked: false,
+    is_saved: true,
+  },
+  {
+    id: "5",
+    full_name: "Priya Sharma",
+    email: "priya@example.com",
+    avatar_url: "/placeholder/avatar5.jpg",
+    bio: "Photographer and Visual Artist. Capturing moments that tell powerful stories.",
+    location: "Delhi, India",
+    role: "Photographer",
+    skills: ["Photography", "Photo Editing", "Visual Storytelling", "Portrait Photography"],
+    experience_level: "Mid",
+    industry: "photography",
+    website: "https://priyasharma.photography",
+    created_at: "2024-04-12T11:20:00Z",
+    is_verified: false,
+    followers_count: 650,
+    projects_count: 34,
+    posts_count: 18,
+    likes_count: 67,
+    is_liked: false,
+    is_saved: false,
+  },
+  {
+    id: "6",
+    full_name: "Marcus Thompson",
+    email: "marcus@example.com",
+    avatar_url: "/placeholder/avatar6.jpg",
+    bio: "Film Editor and Post-Production Specialist. Crafting compelling narratives through precise editing.",
+    location: "London, UK",
+    role: "Film Editor",
+    skills: ["Video Editing", "Post-Production", "Color Correction", "Motion Graphics"],
+    experience_level: "Senior",
+    industry: "television",
+    linkedin_url: "https://linkedin.com/in/marcusthompson",
+    created_at: "2024-02-28T13:10:00Z",
+    is_verified: true,
+    followers_count: 1800,
+    projects_count: 52,
+    posts_count: 31,
+    likes_count: 123,
+    is_liked: true,
+    is_saved: false,
+  },
+];
+
 export default function DiscoverPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -72,38 +203,30 @@ export default function DiscoverPage() {
   const [industryFilter, setIndustryFilter] = useState<IndustryFilter>("all");
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [totalUsers, setTotalUsers] = useState(0);
   const pageSize = 12;
-  const totalPages = Math.ceil(totalUsers / pageSize);
 
   // Fetch users from database
   useEffect(() => {
     fetchUsers();
-  }, [page, pageSize]);
+  }, []);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      const { data: profiles, error, count } = await supabase
+      
+      const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range(from, to);
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching profiles:', error);
         throw error;
       }
 
-      if (!profiles) {
+      if (!profiles || profiles.length === 0) {
         setUsers([]);
         return;
-      }
-      if (count) {
-        setTotalUsers(count);
       }
 
       // Filter out admin users and ensure proper data
@@ -135,6 +258,7 @@ export default function DiscoverPage() {
         }
       }
 
+      // Transform profiles to users
       const transformedUsers: User[] = filteredProfiles.map(profile => ({
         id: profile.id,
         full_name: profile.full_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
@@ -649,7 +773,7 @@ export default function DiscoverPage() {
                             {user.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0" onClick={() => navigate(`/profile/${user.id}`)} style={{ cursor: 'pointer' }}>
+                        <div className="flex-1 min-w-0">
                           <CardTitle className="text-lg font-semibold text-gray-900 truncate">
                             {user.full_name}
                           </CardTitle>
@@ -760,11 +884,11 @@ export default function DiscoverPage() {
                 Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filtered.length)} of {filtered.length} creators
               </span>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={page <= 1} 
+                  onClick={() => setPage((p) => Math.max(1, p - 1))} 
                   className="border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Previous
@@ -772,11 +896,11 @@ export default function DiscoverPage() {
                 <span className="text-sm text-gray-600 px-3">
                   Page {page} of {totalPages}
                 </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={page >= totalPages} 
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))} 
                   className="border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Next
