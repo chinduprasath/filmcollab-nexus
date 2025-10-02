@@ -228,6 +228,7 @@ const Notifications = () => {
                 variant="outline" 
                 size="sm"
                 onClick={handleMarkAllAsRead}
+                className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
               >
                 <CheckCircle className="w-4 h-4 mr-1" />
                 Mark All Read
@@ -276,7 +277,7 @@ const Notifications = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   <Filter className="w-4 h-4 mr-1" />
                   Filter
                 </Button>
@@ -293,14 +294,14 @@ const Notifications = () => {
               <Card 
                 key={notification.id} 
                 className={`hover:shadow-md transition-shadow ${
-                  notification.status === 'unread' ? 'border-l-4 border-l-purple-500 bg-purple-50/30' : ''
+                  notification.status === 'unread' ? 'border-l-4 border-l-yellow-500 bg-yellow-50/30' : ''
                 }`}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                       notification.status === 'unread' 
-                        ? 'bg-purple-100 text-purple-600' 
+                        ? 'bg-yellow-100 text-yellow-600' 
                         : 'bg-gray-100 text-gray-600'
                     }`}>
                       <IconComponent className="w-5 h-5" />
@@ -337,7 +338,7 @@ const Notifications = () => {
                               variant="ghost" 
                               size="sm"
                               onClick={() => handleMarkAsRead(notification.id)}
-                              className="text-purple-600 hover:text-purple-700"
+                              className="text-yellow-600 hover:text-yellow-700"
                             >
                               <CheckCircle className="w-4 h-4" />
                             </Button>
@@ -350,7 +351,7 @@ const Notifications = () => {
                           >
                             <XCircle className="w-4 h-4" />
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                             {notification.action}
                           </Button>
                         </div>
@@ -383,6 +384,7 @@ const Notifications = () => {
                     setFilterType('all');
                     setFilterStatus('all');
                   }}
+                  className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
                 >
                   Clear Filters
                 </Button>
@@ -412,28 +414,28 @@ const Notifications = () => {
                       <Briefcase className="w-4 h-4 text-gray-500" />
                       <span className="text-sm">Job notifications</span>
                     </div>
-                    <Button variant="outline" size="sm">Configure</Button>
+                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-gray-500" />
                       <span className="text-sm">Connection requests</span>
                     </div>
-                    <Button variant="outline" size="sm">Configure</Button>
+                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <MessageSquare className="w-4 h-4 text-gray-500" />
                       <span className="text-sm">Project updates</span>
                     </div>
-                    <Button variant="outline" size="sm">Configure</Button>
+                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-500" />
                       <span className="text-sm">Event reminders</span>
                     </div>
-                    <Button variant="outline" size="sm">Configure</Button>
+                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
                   </div>
                 </div>
               </div>
@@ -445,28 +447,28 @@ const Notifications = () => {
                       <Bell className="w-4 h-4 text-gray-500" />
                       <span className="text-sm">Push notifications</span>
                     </div>
-                    <Button variant="outline" size="sm">Configure</Button>
+                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <MessageSquare className="w-4 h-4 text-gray-500" />
                       <span className="text-sm">Email notifications</span>
                     </div>
-                    <Button variant="outline" size="sm">Configure</Button>
+                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Star className="w-4 h-4 text-gray-500" />
                       <span className="text-sm">SMS notifications</span>
                     </div>
-                    <Button variant="outline" size="sm">Configure</Button>
+                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
                   </div>
                 </div>
               </div>
             </div>
             <Separator className="my-6" />
             <div className="text-center">
-              <Button variant="outline">
+              <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                 Go to Settings
               </Button>
             </div>

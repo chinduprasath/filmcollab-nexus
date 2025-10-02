@@ -36,8 +36,11 @@ import AdminPosts from "./pages/AdminPosts";
 import AdminProjects from "./pages/AdminProjects";
 import AdminJobs from "./pages/AdminJobs";
 import AdminDirectory from "./pages/AdminDirectory";
-import AdminProfile from "./pages/AdminProfile";
-import AdminSettings from "./pages/AdminSettings";
+import AdminTeam from "./pages/AdminTeam";
+import AdminTickets from "./pages/AdminTickets";
+import AdminTicketDetail from "./pages/AdminTicketDetail";
+import AdminCommunities from "./pages/AdminCommunities";
+import AdminNotifications from "./pages/AdminNotifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +77,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // Admin Route Component
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, profile } = useAuth();
+  
+  // Check for hardcoded admin session
+  const adminSession = localStorage.getItem("admin-session");
+  if (adminSession) {
+    try {
+      const adminData = JSON.parse(adminSession);
+      if (adminData.role === 'ADMIN') {
+        return <>{children}</>;
+      }
+    } catch (error) {
+      // Invalid session data, clear it
+      localStorage.removeItem("admin-session");
+    }
+  }
   
   if (loading) {
     return (
@@ -391,6 +408,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/admin-dashboard/communities"
+        element={
+          <AdminRoute>
+            <AdminCommunities />
+          </AdminRoute>
+        }
+      />
+      <Route
         path="/admin-dashboard/directory"
         element={
           <AdminRoute>
@@ -399,18 +424,34 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/admin-dashboard/profile"
+        path="/admin-dashboard/team"
         element={
           <AdminRoute>
-            <AdminProfile />
+            <AdminTeam />
           </AdminRoute>
         }
       />
       <Route
-        path="/admin-dashboard/settings"
+        path="/admin-dashboard/tickets"
         element={
           <AdminRoute>
-            <AdminSettings />
+            <AdminTickets />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard/tickets/:ticketId"
+        element={
+          <AdminRoute>
+            <AdminTicketDetail />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard/notifications"
+        element={
+          <AdminRoute>
+            <AdminNotifications />
           </AdminRoute>
         }
       />

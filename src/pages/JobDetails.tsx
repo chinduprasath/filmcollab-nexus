@@ -391,7 +391,7 @@ export default function JobDetails() {
           <Button 
             variant="outline" 
             onClick={() => navigate("/jobs")}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Jobs
@@ -399,36 +399,36 @@ export default function JobDetails() {
         </div>
 
         {/* Job Header */}
-        <Card>
+        <Card className="border-yellow-200">
           <CardHeader>
             <div className="flex justify-between items-start">
               <div className="space-y-2">
-                <CardTitle className="text-2xl font-bold text-foreground">
+                <CardTitle className="text-2xl font-bold text-gray-900">
                   {job.title}
                 </CardTitle>
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-gray-600">
                   <Building className="h-4 w-4" />
                   <span className="font-medium">{job.company}</span>
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-gray-600">
                   <MapPin className="h-4 w-4" />
                   <span>{job.location}</span>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={handleEdit}>
+                <Button variant="outline" onClick={handleEdit} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
-                <Button variant="outline" onClick={handleDelete}>
+                <Button variant="outline" onClick={handleDelete} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
-                <Button variant="outline" onClick={handleSave}>
+                <Button variant="outline" onClick={handleSave} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
                   {isSaved ? 'Saved' : 'Save'}
                 </Button>
-                <Button variant="outline" onClick={handleShare}>
+                <Button variant="outline" onClick={handleShare} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
@@ -439,9 +439,9 @@ export default function JobDetails() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="applicants">Applicants ({applicants.length})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-yellow-50 border-yellow-200">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Overview</TabsTrigger>
+            <TabsTrigger value="applicants" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Applicants ({applicants.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -450,34 +450,34 @@ export default function JobDetails() {
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Job Description */}
-                <Card>
+                <Card className="border-yellow-200">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Briefcase className="h-5 w-5" />
+                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                      <Briefcase className="h-5 w-5 text-yellow-600" />
                       Job Description
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap">
+                    <p className="text-gray-600 whitespace-pre-wrap">
                       {job.description}
                     </p>
                   </CardContent>
                 </Card>
 
                 {/* Requirements */}
-                <Card>
+                <Card className="border-yellow-200">
                   <CardHeader>
-                    <CardTitle>Requirements</CardTitle>
+                    <CardTitle className="text-gray-900">Requirements</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap mb-4">
+                    <p className="text-gray-600 whitespace-pre-wrap mb-4">
                       {job.requirements}
                     </p>
                     <div className="space-y-2">
-                      <h4 className="font-medium">Required Skills:</h4>
+                      <h4 className="font-medium text-gray-900">Required Skills:</h4>
                       <div className="flex flex-wrap gap-2">
                         {job.skills_required.map((skill, index) => (
-                          <Badge key={index} variant="secondary">
+                          <Badge key={index} variant="secondary" className="bg-yellow-100 text-yellow-800">
                             {skill}
                           </Badge>
                         ))}
@@ -487,12 +487,12 @@ export default function JobDetails() {
                 </Card>
 
                 {/* Benefits */}
-                <Card>
+                <Card className="border-yellow-200">
                   <CardHeader>
-                    <CardTitle>Benefits</CardTitle>
+                    <CardTitle className="text-gray-900">Benefits</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap">
+                    <p className="text-gray-600 whitespace-pre-wrap">
                       {job.benefits}
                     </p>
                   </CardContent>
@@ -502,16 +502,16 @@ export default function JobDetails() {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Job Info */}
-                <Card>
+                <Card className="border-yellow-200">
                   <CardHeader>
-                    <CardTitle>Job Information</CardTitle>
+                    <CardTitle className="text-gray-900">Job Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <DollarSign className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Salary Range</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm font-medium text-gray-900">Salary Range</p>
+                        <p className="text-sm text-gray-600">
                           {formatSalary(job.min_salary, job.max_salary)}
                         </p>
                       </div>
@@ -520,40 +520,40 @@ export default function JobDetails() {
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <Clock className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Job Type</p>
-                        <p className="text-sm text-muted-foreground">{job.job_type}</p>
+                        <p className="text-sm font-medium text-gray-900">Job Type</p>
+                        <p className="text-sm text-gray-600">{job.job_type}</p>
                       </div>
                     </div>
 
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Star className="h-4 w-4 text-muted-foreground" />
+                      <Star className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Experience Level</p>
-                        <p className="text-sm text-muted-foreground">{job.experience_level}</p>
+                        <p className="text-sm font-medium text-gray-900">Experience Level</p>
+                        <p className="text-sm text-gray-600">{job.experience_level}</p>
                       </div>
                     </div>
 
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <Users className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Category</p>
-                        <p className="text-sm text-muted-foreground">{job.category}</p>
+                        <p className="text-sm font-medium text-gray-900">Category</p>
+                        <p className="text-sm text-gray-600">{job.category}</p>
                       </div>
                     </div>
 
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <Calendar className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Posted Date</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm font-medium text-gray-900">Posted Date</p>
+                        <p className="text-sm text-gray-600">
                           {formatDate(job.posted_date)}
                         </p>
                       </div>
@@ -562,10 +562,10 @@ export default function JobDetails() {
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <Calendar className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Application Deadline</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm font-medium text-gray-900">Application Deadline</p>
+                        <p className="text-sm text-gray-600">
                           {formatDate(job.application_deadline)}
                         </p>
                       </div>
@@ -576,7 +576,7 @@ export default function JobDetails() {
                     <div className="flex items-center gap-3">
                       <Badge 
                         variant={job.status === 'Active' ? 'default' : 'secondary'}
-                        className="w-fit"
+                        className={`w-fit ${job.status === 'Active' ? 'bg-yellow-500 text-white' : 'bg-yellow-100 text-yellow-800'}`}
                       >
                         {job.status}
                       </Badge>
@@ -585,10 +585,10 @@ export default function JobDetails() {
                 </Card>
 
                 {/* Apply Button */}
-                <Card>
+                <Card className="border-yellow-200">
                   <CardContent className="pt-6">
                     <Button 
-                      className="w-full" 
+                      className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white" 
                       size="lg"
                       onClick={handleApply}
                       disabled={isApplied}
@@ -607,22 +607,22 @@ export default function JobDetails() {
           </TabsContent>
 
           <TabsContent value="applicants" className="space-y-6">
-            <Card>
+            <Card className="border-yellow-200">
               <CardHeader>
-                <CardTitle>Job Applicants</CardTitle>
+                <CardTitle className="text-gray-900">Job Applicants</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {applicants.map((applicant) => (
-                    <Card key={applicant.id} className="p-4">
+                    <Card key={applicant.id} className="p-4 border-yellow-200">
                       <div className="flex justify-between items-start">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <h3 className="font-semibold">{applicant.name}</h3>
-                            <Badge variant="outline">{applicant.status}</Badge>
+                            <User className="h-4 w-4 text-gray-500" />
+                            <h3 className="font-semibold text-gray-900">{applicant.name}</h3>
+                            <Badge variant="outline" className="border-yellow-200">{applicant.status}</Badge>
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Mail className="h-3 w-3" />
                               {applicant.email}
@@ -638,20 +638,20 @@ export default function JobDetails() {
                           </div>
                           <div className="flex flex-wrap gap-1">
                             {applicant.skills.map((skill, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
+                              <Badge key={index} variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
                                 {skill}
                               </Badge>
                             ))}
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-gray-500">
                             Applied on {formatDate(applicant.appliedDate)}
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                             View Resume
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                             View Portfolio
                           </Button>
                         </div>
@@ -668,95 +668,104 @@ export default function JobDetails() {
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Job</DialogTitle>
+              <DialogTitle className="text-gray-900">Edit Job</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title">Job Title</Label>
+                  <Label htmlFor="title" className="text-gray-700">Job Title</Label>
                   <Input
                     id="title"
                     value={editForm.title || ''}
                     onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+                    className="border-yellow-200 focus:border-yellow-500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="company">Company</Label>
+                  <Label htmlFor="company" className="text-gray-700">Company</Label>
                   <Input
                     id="company"
                     value={editForm.company || ''}
                     onChange={(e) => setEditForm({...editForm, company: e.target.value})}
+                    className="border-yellow-200 focus:border-yellow-500"
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location" className="text-gray-700">Location</Label>
                 <Input
                   id="location"
                   value={editForm.location || ''}
                   onChange={(e) => setEditForm({...editForm, location: e.target.value})}
+                  className="border-yellow-200 focus:border-yellow-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="min_salary">Min Salary</Label>
+                  <Label htmlFor="min_salary" className="text-gray-700">Min Salary</Label>
                   <Input
                     id="min_salary"
                     type="number"
                     value={editForm.min_salary || ''}
                     onChange={(e) => setEditForm({...editForm, min_salary: parseInt(e.target.value)})}
+                    className="border-yellow-200 focus:border-yellow-500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="max_salary">Max Salary</Label>
+                  <Label htmlFor="max_salary" className="text-gray-700">Max Salary</Label>
                   <Input
                     id="max_salary"
                     type="number"
                     value={editForm.max_salary || ''}
                     onChange={(e) => setEditForm({...editForm, max_salary: parseInt(e.target.value)})}
+                    className="border-yellow-200 focus:border-yellow-500"
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description" className="text-gray-700">Description</Label>
                 <Textarea
                   id="description"
                   value={editForm.description || ''}
                   onChange={(e) => setEditForm({...editForm, description: e.target.value})}
                   rows={4}
+                  className="border-yellow-200 focus:border-yellow-500"
                 />
               </div>
               <div>
-                <Label htmlFor="requirements">Requirements</Label>
+                <Label htmlFor="requirements" className="text-gray-700">Requirements</Label>
                 <Textarea
                   id="requirements"
                   value={editForm.requirements || ''}
                   onChange={(e) => setEditForm({...editForm, requirements: e.target.value})}
                   rows={3}
+                  className="border-yellow-200 focus:border-yellow-500"
                 />
               </div>
               <div>
-                <Label htmlFor="skills_required">Skills Required (comma separated)</Label>
+                <Label htmlFor="skills_required" className="text-gray-700">Skills Required (comma separated)</Label>
                 <Input
                   id="skills_required"
                   value={editForm.skills_required || ''}
                   onChange={(e) => setEditForm({...editForm, skills_required: e.target.value})}
+                  className="border-yellow-200 focus:border-yellow-500"
                 />
               </div>
               <div>
-                <Label htmlFor="benefits">Benefits</Label>
+                <Label htmlFor="benefits" className="text-gray-700">Benefits</Label>
                 <Textarea
                   id="benefits"
                   value={editForm.benefits || ''}
                   onChange={(e) => setEditForm({...editForm, benefits: e.target.value})}
                   rows={3}
+                  className="border-yellow-200 focus:border-yellow-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="job_type">Job Type</Label>
+                  <Label htmlFor="job_type" className="text-gray-700">Job Type</Label>
                   <Select value={editForm.job_type || ''} onValueChange={(value) => setEditForm({...editForm, job_type: value})}>
-                    <SelectTrigger>
+                    <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
                       <SelectValue placeholder="Select job type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -768,9 +777,9 @@ export default function JobDetails() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="experience_level">Experience Level</Label>
+                  <Label htmlFor="experience_level" className="text-gray-700">Experience Level</Label>
                   <Select value={editForm.experience_level || ''} onValueChange={(value) => setEditForm({...editForm, experience_level: value})}>
-                    <SelectTrigger>
+                    <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
                       <SelectValue placeholder="Select experience level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -783,10 +792,10 @@ export default function JobDetails() {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                <Button variant="outline" onClick={() => setShowEditDialog(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   Cancel
                 </Button>
-                <Button onClick={handleUpdateJob}>
+                <Button onClick={handleUpdateJob} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                   Update Job
                 </Button>
               </div>

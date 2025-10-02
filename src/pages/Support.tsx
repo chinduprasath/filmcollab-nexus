@@ -203,7 +203,7 @@ const Support = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="cursor-pointer hover:shadow-md transition-shadow">
             <CardContent className="p-4 text-center">
-              <MessageSquare className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+              <MessageSquare className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
               <h3 className="font-medium text-sm">Live Chat</h3>
               <p className="text-xs text-gray-500 mt-1">Chat with support</p>
             </CardContent>
@@ -237,7 +237,7 @@ const Support = () => {
             onClick={() => setActiveTab('create')}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'create'
-                ? 'bg-white text-purple-600 shadow-sm'
+                ? 'bg-white text-yellow-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -247,7 +247,7 @@ const Support = () => {
             onClick={() => setActiveTab('tickets')}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'tickets'
-                ? 'bg-white text-purple-600 shadow-sm'
+                ? 'bg-white text-yellow-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -340,7 +340,7 @@ const Support = () => {
               <Button 
                 onClick={handleSubmitTicket}
                 disabled={isLoading}
-                className="w-full md:w-auto"
+                className="w-full md:w-auto bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
               >
                 <Send className="w-4 h-4 mr-2" />
                 {isLoading ? 'Creating Ticket...' : 'Submit Ticket'}
@@ -381,7 +381,7 @@ const Support = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                       <Filter className="w-4 h-4 mr-1" />
                       Filter
                     </Button>
@@ -424,7 +424,7 @@ const Support = () => {
                       <div className="flex flex-col items-end gap-2">
                         {getStatusBadge(ticket.status)}
                         {getPriorityBadge(ticket.priority)}
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                           <Eye className="w-4 h-4 mr-1" />
                           View
                         </Button>
@@ -447,7 +447,7 @@ const Support = () => {
                     }
                   </p>
                   {!searchQuery && filterStatus === 'all' && (
-                    <Button onClick={() => setActiveTab('create')}>
+                    <Button onClick={() => setActiveTab('create')} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                       <Plus className="w-4 h-4 mr-2" />
                       Create Your First Ticket
                     </Button>
@@ -529,7 +529,7 @@ const Support = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center p-4 border border-gray-200 rounded-lg">
-                <Mail className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                <Mail className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
                 <h4 className="font-medium mb-1">Email Support</h4>
                 <p className="text-sm text-gray-600 mb-2">support@filmcollab.com</p>
                 <p className="text-xs text-gray-500">Response within 24 hours</p>

@@ -222,9 +222,9 @@ export default function IndustryHubPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 bg-gray-50 min-h-screen p-4 -m-4">
+      <div className="space-y-4 bg-yellow-50 min-h-screen p-4 -m-4">
         {/* Header */}
-        <div className="bg-white p-4 rounded-lg shadow-sm">
+        <div className="bg-white p-4 rounded-lg shadow-sm border-yellow-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">Industry Hub</h1>
@@ -234,17 +234,17 @@ export default function IndustryHubPage() {
             </div>
             <div className="flex items-center gap-4 w-full lg:w-auto">
               <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                 <Input
                   placeholder="Search news..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-purple-500 text-sm"
+                  className="pl-9 h-9 border-yellow-200 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 text-sm"
                 />
               </div>
               <div className="flex items-center gap-2">
                 <Select value={selectedPostType} onValueChange={setSelectedPostType}>
-                  <SelectTrigger className="w-32 h-9 border-gray-300 rounded-lg text-sm">
+                  <SelectTrigger className="w-32 h-9 border-yellow-200 rounded-lg text-sm focus:border-yellow-500">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -257,7 +257,7 @@ export default function IndustryHubPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowCreatePopup(true)}
-                  className="h-9 px-3 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm"
+                  className="h-9 px-3 border-yellow-200 text-gray-700 hover:bg-yellow-50 rounded-lg text-sm"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Post
@@ -281,7 +281,7 @@ export default function IndustryHubPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-3 border-b-2 font-medium transition-colors relative flex items-center text-sm ${
                   activeTab === tab.id
-                    ? "border-purple-600 text-purple-600"
+                    ? "border-yellow-500 text-yellow-600"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -409,7 +409,7 @@ export default function IndustryHubPage() {
                           <div className="pt-2">
                             <Button
                               size="sm"
-                              className="w-full text-xs h-7"
+                              className="w-full text-xs h-7 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Handle booking logic here
@@ -488,7 +488,7 @@ export default function IndustryHubPage() {
                             <UserPlus className="w-3 h-3" />
                             <span>Instructor: {course.instructor}</span>
                           </div>
-                          <Button size="sm" className="w-full mt-2 text-xs h-8">
+                          <Button size="sm" className="w-full mt-2 text-xs h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                             Register Now
                           </Button>
                         </div>
@@ -569,7 +569,7 @@ export default function IndustryHubPage() {
                       {/* Sample created content - you can replace this with actual data */}
                       <tr>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="outline">News</Badge>
+                          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">News</Badge>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           Sample News Article
@@ -581,15 +581,15 @@ export default function IndustryHubPage() {
                           2024-12-10
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="default">Published</Badge>
+                          <Badge variant="default" className="bg-yellow-100 text-yellow-800">Published</Badge>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                               <Edit className="w-3 h-3 mr-1" />
                               Edit
                             </Button>
-                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-500 hover:bg-red-50">
                               <X className="w-3 h-3 mr-1" />
                               Delete
                             </Button>
@@ -598,7 +598,7 @@ export default function IndustryHubPage() {
                       </tr>
                       <tr>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="secondary">Event</Badge>
+                          <Badge variant="secondary" className="bg-gray-100 text-gray-700">Event</Badge>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           Sample Event
@@ -610,15 +610,15 @@ export default function IndustryHubPage() {
                           2024-12-09
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="default">Active</Badge>
+                          <Badge variant="default" className="bg-yellow-100 text-yellow-800">Active</Badge>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                               <Edit className="w-3 h-3 mr-1" />
                               Edit
                             </Button>
-                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-500 hover:bg-red-50">
                               <X className="w-3 h-3 mr-1" />
                               Delete
                             </Button>
@@ -627,7 +627,7 @@ export default function IndustryHubPage() {
                       </tr>
                       <tr>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="outline">Course</Badge>
+                          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">Course</Badge>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           Sample Course
@@ -639,15 +639,15 @@ export default function IndustryHubPage() {
                           2024-12-08
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="default">Published</Badge>
+                          <Badge variant="default" className="bg-yellow-100 text-yellow-800">Published</Badge>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                               <Edit className="w-3 h-3 mr-1" />
                               Edit
                             </Button>
-                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-500 hover:bg-red-50">
                               <X className="w-3 h-3 mr-1" />
                               Delete
                             </Button>
@@ -718,11 +718,11 @@ export default function IndustryHubPage() {
                     </div>
 
                     <div className="flex gap-2 pt-2">
-                      <Button className="flex-1 h-8 text-xs">
+                      <Button className="flex-1 h-8 text-xs bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                         <Plus className="w-3 h-3 mr-1" />
                         Create News
                       </Button>
-                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="h-8 text-xs">
+                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="h-8 text-xs border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                         Cancel
                       </Button>
                     </div>
@@ -766,11 +766,11 @@ export default function IndustryHubPage() {
                     </div>
 
                     <div className="flex gap-2 pt-4">
-                      <Button className="flex-1">
+                      <Button className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Event
                       </Button>
-                      <Button variant="outline" onClick={() => setShowCreatePopup(false)}>
+                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                         Cancel
                       </Button>
                     </div>
@@ -828,11 +828,11 @@ export default function IndustryHubPage() {
                     </div>
 
                     <div className="flex gap-2 pt-4">
-                      <Button className="flex-1">
+                      <Button className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Course
                       </Button>
-                      <Button variant="outline" onClick={() => setShowCreatePopup(false)}>
+                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                         Cancel
                       </Button>
                     </div>
@@ -876,11 +876,11 @@ export default function IndustryHubPage() {
                 </div>
                 
                 <div className="flex gap-3 mt-6">
-                  <Button className="flex-1">
+                  <Button className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                     <Bookmark className="w-4 h-4 mr-2" />
                     Save
                   </Button>
@@ -935,11 +935,11 @@ export default function IndustryHubPage() {
                 </div>
                 
                 <div className="flex gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-primary to-accent">
+                  <Button className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Calendar className="w-4 h-4 mr-2" />
                     Book Now
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
                   </Button>
@@ -993,11 +993,11 @@ export default function IndustryHubPage() {
                 </div>
                 
                 <div className="flex gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-primary to-accent">
+                  <Button className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Bookmark className="w-4 h-4 mr-2" />
                     Register Now
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
                   </Button>

@@ -422,10 +422,10 @@ export default function DiscoverPage() {
       }
 
       // Simulate connection request
-      toast({
-        title: "Connection Request Sent",
-        description: `Connection request sent to ${userName}`,
-      });
+        toast({
+          title: "Connection Request Sent",
+          description: `Connection request sent to ${userName}`,
+        });
     } catch (error) {
       console.error('Error sending connection request:', error);
       toast({
@@ -469,7 +469,7 @@ export default function DiscoverPage() {
 
       const currentUser = users.find(u => u.id === userId);
       const isCurrentlyLiked = currentUser?.is_liked || false;
-
+      
       // Update local state
       setUsers(prevUsers => 
         prevUsers.map(u => 
@@ -513,7 +513,7 @@ export default function DiscoverPage() {
 
       const currentUser = users.find(u => u.id === userId);
       const isCurrentlySaved = currentUser?.is_saved || false;
-
+      
       // Update local state
       setUsers(prevUsers => 
         prevUsers.map(u => 
@@ -571,7 +571,7 @@ export default function DiscoverPage() {
       case "Senior":
         return "bg-green-100 text-green-800 border-green-200";
       case "Mid":
-        return "bg-blue-100 text-blue-800 border-blue-200";
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "Entry":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default:
@@ -584,17 +584,17 @@ export default function DiscoverPage() {
     
     // Film & Media Projects
     if (category.includes("Film") || category.includes("Series") || category.includes("Documentaries")) {
-      return <Award className="w-4 h-4" />;
+        return <Award className="w-4 h-4" />;
     }
     
     // Direction & Production
     if (category.includes("Director") || category.includes("Producer")) {
-      return <UserIcon className="w-4 h-4" />;
+        return <UserIcon className="w-4 h-4" />;
     }
     
     // Cinematography & Camera
     if (category.includes("Cinematographer") || category.includes("Camera") || category.includes("Gaffer")) {
-      return <Heart className="w-4 h-4" />;
+        return <Heart className="w-4 h-4" />;
     }
     
     // Actors & Performers
@@ -604,7 +604,7 @@ export default function DiscoverPage() {
     
     // Writing & Creative
     if (category.includes("Writer") || category.includes("Lyricist")) {
-      return <GraduationCap className="w-4 h-4" />;
+        return <GraduationCap className="w-4 h-4" />;
     }
     
     // Music & Sound
@@ -624,7 +624,7 @@ export default function DiscoverPage() {
     
     // Marketing & Distribution
     if (category.includes("Marketer") || category.includes("PR") || category.includes("Social")) {
-      return <Briefcase className="w-4 h-4" />;
+        return <Briefcase className="w-4 h-4" />;
     }
     
     // Film Community & Support
@@ -637,9 +637,9 @@ export default function DiscoverPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 bg-gray-50 min-h-screen p-6 -m-6">
+      <div className="space-y-6 bg-yellow-50 min-h-screen p-6 -m-6">
         {/* Header */}
-        <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="bg-white p-6 rounded-lg shadow-sm border-yellow-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Discover Creators</h1>
@@ -649,18 +649,18 @@ export default function DiscoverPage() {
             </div>
             <div className="flex items-center gap-4 w-full lg:w-auto">
               <div className="relative w-full max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
                 <Input
                   placeholder="Search by name, skills, or location..."
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); resetPaging(); }}
-                  className="pl-10 h-11 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
+                  className="pl-10 h-11 border-yellow-200 rounded-lg focus:border-yellow-500 focus:ring-yellow-500"
                 />
               </div>
               <Button
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
-                className="h-11 px-4 border-gray-300 hover:bg-gray-50"
+                className="h-11 px-4 border-yellow-200 hover:bg-yellow-50"
               >
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
@@ -671,12 +671,12 @@ export default function DiscoverPage() {
 
         {/* Filters */}
         {showFilters && (
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg shadow-sm border-yellow-200">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Type</label>
                 <Select value={filterType} onValueChange={(value) => { setFilterType(value as FilterType); resetPaging(); }}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full border-yellow-200 focus:border-yellow-500">
                     <SelectValue placeholder="Select filter" />
                   </SelectTrigger>
                   <SelectContent>
@@ -690,7 +690,7 @@ export default function DiscoverPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value as CategoryFilter); resetPaging(); }}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full border-yellow-200 focus:border-yellow-500">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -785,7 +785,7 @@ export default function DiscoverPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
                 <Select value={sortType} onValueChange={(value) => { setSortType(value as SortType); resetPaging(); }}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full border-yellow-200 focus:border-yellow-500">
                     <SelectValue placeholder="Select sort" />
                   </SelectTrigger>
                   <SelectContent>
@@ -803,7 +803,7 @@ export default function DiscoverPage() {
         <div className="bg-white rounded-lg shadow-sm p-6">
           {loading ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto mb-4"></div>
               <p className="text-gray-600">Loading creators...</p>
             </div>
           ) : pageItems.length === 0 ? (
@@ -821,7 +821,7 @@ export default function DiscoverPage() {
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={user.avatar_url} alt={user.full_name} />
-                          <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                          <AvatarFallback className="bg-yellow-100 text-yellow-600 font-semibold">
                             {user.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -889,7 +889,7 @@ export default function DiscoverPage() {
                     {user.skills && user.skills.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {user.skills.slice(0, 2).map((skill, index) => (
-                          <Badge key={index} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          <Badge key={index} variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
                             {skill}
                           </Badge>
                         ))}
@@ -905,7 +905,7 @@ export default function DiscoverPage() {
                     <div className="flex gap-2 pt-2">
                       <Button
                         onClick={() => handleConnect(user.id, user.full_name)}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                        className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                         size="sm"
                       >
                         <UserPlus className="w-4 h-4 mr-2" />

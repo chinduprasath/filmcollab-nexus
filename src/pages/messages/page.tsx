@@ -204,15 +204,15 @@ export default function MessagesPage() {
                     key={c.id}
                     onClick={() => selectConversation(c.id)}
                     className={`w-full text-left p-3 flex items-start gap-3 hover:bg-gray-50 transition-colors ${
-                      isActive ? "bg-purple-50" : ""
+                      isActive ? "bg-yellow-50" : ""
                     }`}
                   >
                     <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white flex items-center justify-center text-sm font-semibold">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center text-sm font-semibold">
                         {c.avatar}
                       </div>
                       {c.unread > 0 && (
-                        <div className="absolute -right-1 -bottom-1 text-[10px] bg-purple-600 text-white rounded-full px-1.5">
+                        <div className="absolute -right-1 -bottom-1 text-[10px] bg-yellow-600 text-white rounded-full px-1.5">
                           {c.unread}
                         </div>
                       )}
@@ -241,7 +241,7 @@ export default function MessagesPage() {
             <>
               <div className="border-b border-gray-200 p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white flex items-center justify-center text-sm font-semibold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center text-sm font-semibold">
                     {activeConv.avatar}
                   </div>
                   <div>
@@ -262,7 +262,7 @@ export default function MessagesPage() {
                     <div
                       className={`max-w-[80%] rounded-lg px-3 py-2 text-sm shadow-sm border ${
                         m.sender === "me"
-                          ? "bg-purple-600 text-white border-transparent"
+                          ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-transparent"
                           : "bg-white text-gray-900 border-gray-200"
                       }`}
                     >
@@ -321,7 +321,7 @@ export default function MessagesPage() {
                   <Button variant="outline" onClick={() => setAttachMenuOpen((s) => !s)} className="border-gray-300 text-gray-700 hover:bg-gray-50">
                     <Paperclip className="w-4 h-4" />
                   </Button>
-                  <Button onClick={() => sendMessage()} disabled={!input.trim()} className="bg-purple-600 hover:bg-purple-700 text-white">
+                  <Button onClick={() => sendMessage()} disabled={!input.trim()} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>

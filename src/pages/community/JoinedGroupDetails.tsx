@@ -199,9 +199,9 @@ export default function JoinedGroupDetails() {
 
   return (
     <AppLayout>
-      <div className="h-screen bg-gray-50 flex flex-col">
+      <div className="h-screen bg-yellow-50 flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-4">
+        <div className="bg-white border-b border-yellow-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" onClick={() => navigate('/community')}>
@@ -241,7 +241,7 @@ export default function JoinedGroupDetails() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {chatMessages.map((message) => (
                 <div key={message.id} className="flex gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
                     {message.userAvatar}
                   </div>
                   <div className="flex-1">
@@ -251,7 +251,7 @@ export default function JoinedGroupDetails() {
                       {message.isModerator && <Shield className="w-3 h-3 text-blue-500" />}
                       <span className="text-xs text-gray-500">{message.timestamp}</span>
                     </div>
-                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-yellow-200">
                       <p className="text-sm text-gray-800">{message.message}</p>
                     </div>
                   </div>
@@ -261,7 +261,7 @@ export default function JoinedGroupDetails() {
             </div>
 
             {/* Message Input */}
-            <div className="bg-white border-t border-gray-200 p-4">
+            <div className="bg-white border-t border-yellow-200 p-4">
               <div className="flex gap-2">
                 <div className="flex-1 relative">
                   <Input
@@ -280,7 +280,7 @@ export default function JoinedGroupDetails() {
                     </Button>
                   </div>
                 </div>
-                <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
+                <Button className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white" onClick={handleSendMessage} disabled={!newMessage.trim()}>
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
@@ -288,7 +288,7 @@ export default function JoinedGroupDetails() {
           </div>
 
           {/* Sidebar */}
-          <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
+          <div className="w-80 bg-white border-l border-yellow-200 overflow-y-auto">
             <div className="p-4 space-y-6">
               {/* Group Info */}
               <div>
@@ -342,9 +342,9 @@ export default function JoinedGroupDetails() {
                 </div>
                 <div className="space-y-2">
                   {members.map((member) => (
-                    <div key={member.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+                    <div key={member.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-yellow-50">
                       <div className="relative">
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                        <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
                           {member.avatar}
                         </div>
                         {member.online && (

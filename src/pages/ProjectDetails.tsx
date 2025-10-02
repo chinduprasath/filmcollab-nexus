@@ -815,7 +815,7 @@ export default function ProjectDetails() {
           <Button 
             variant="outline" 
             onClick={() => navigate("/projects")}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Projects
@@ -823,50 +823,50 @@ export default function ProjectDetails() {
         </div>
 
         {/* Project Header */}
-        <Card>
+        <Card className="border-yellow-200">
           <CardHeader>
             <div className="flex justify-between items-start">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <CardTitle className="text-2xl font-bold text-foreground">
+                  <CardTitle className="text-2xl font-bold text-gray-900">
                     {project.title}
                   </CardTitle>
                   {project.featured && (
-                    <Badge variant="outline" className="border-primary text-primary">
+                    <Badge variant="outline" className="border-yellow-500 text-yellow-600">
                       <Star className="h-3 w-3 mr-1" />
                       Featured
                     </Badge>
                   )}
                   {project.popular && (
-                    <Badge variant="outline" className="border-primary text-primary">
+                    <Badge variant="outline" className="border-yellow-500 text-yellow-600">
                       <Star className="h-3 w-3 mr-1" />
                       Popular
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-gray-600">
                   {getTypeIcon(project.project_type)}
                   <span className="font-medium">{project.project_type} • {project.category}</span>
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-gray-600">
                   <MapPin className="h-4 w-4" />
                   <span>{project.location}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`}></div>
-                  <span className="text-sm text-muted-foreground capitalize">{project.status}</span>
+                  <span className="text-sm text-gray-600 capitalize">{project.status}</span>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={handleLike}>
+                <Button variant="outline" onClick={handleLike} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current text-red-500' : ''}`} />
                   {isLiked ? 'Liked' : 'Like'}
                 </Button>
-                <Button variant="outline" onClick={handleSave}>
+                <Button variant="outline" onClick={handleSave} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
                   {isSaved ? 'Saved' : 'Save'}
                 </Button>
-                <Button variant="outline" onClick={handleShare}>
+                <Button variant="outline" onClick={handleShare} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
@@ -877,13 +877,13 @@ export default function ProjectDetails() {
 
         {/* Project Details with Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full ${sourceTab === 'created' ? 'grid-cols-5' : 'grid-cols-4'}`}>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            <TabsTrigger value="chat">Chat</TabsTrigger>
-            <TabsTrigger value="team">Team Members</TabsTrigger>
+          <TabsList className={`grid w-full ${sourceTab === 'created' ? 'grid-cols-5' : 'grid-cols-4'} bg-yellow-50 border-yellow-200`}>
+            <TabsTrigger value="overview" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Overview</TabsTrigger>
+            <TabsTrigger value="tasks" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Tasks</TabsTrigger>
+            <TabsTrigger value="chat" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Chat</TabsTrigger>
+            <TabsTrigger value="team" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Team Members</TabsTrigger>
             {sourceTab === 'created' && (
-              <TabsTrigger value="applicants">Applicants</TabsTrigger>
+              <TabsTrigger value="applicants" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Applicants</TabsTrigger>
             )}
           </TabsList>
 
@@ -892,15 +892,15 @@ export default function ProjectDetails() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
                 {/* Project Description */}
-                <Card>
+                <Card className="border-yellow-200">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Briefcase className="h-5 w-5" />
+                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                      <Briefcase className="h-5 w-5 text-yellow-600" />
                       Project Description
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap">
+                    <p className="text-gray-600 whitespace-pre-wrap">
                       {project?.full_description || project?.description}
                     </p>
                   </CardContent>
@@ -908,12 +908,12 @@ export default function ProjectDetails() {
 
                 {/* Production Notes */}
                 {project?.production_notes && (
-                  <Card>
+                  <Card className="border-yellow-200">
                     <CardHeader>
-                      <CardTitle>Production Notes</CardTitle>
+                      <CardTitle className="text-gray-900">Production Notes</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground whitespace-pre-wrap">
+                      <p className="text-gray-600 whitespace-pre-wrap">
                         {project.production_notes}
                       </p>
                     </CardContent>
@@ -922,12 +922,12 @@ export default function ProjectDetails() {
 
                 {/* Target Audience */}
                 {project?.target_audience && (
-                  <Card>
+                  <Card className="border-yellow-200">
                     <CardHeader>
-                      <CardTitle>Target Audience</CardTitle>
+                      <CardTitle className="text-gray-900">Target Audience</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground whitespace-pre-wrap">
+                      <p className="text-gray-600 whitespace-pre-wrap">
                         {project.target_audience}
                       </p>
                     </CardContent>
@@ -936,12 +936,12 @@ export default function ProjectDetails() {
 
                 {/* Distribution Plan */}
                 {project?.distribution_plan && (
-                  <Card>
+                  <Card className="border-yellow-200">
                     <CardHeader>
-                      <CardTitle>Distribution Plan</CardTitle>
+                      <CardTitle className="text-gray-900">Distribution Plan</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground whitespace-pre-wrap">
+                      <p className="text-gray-600 whitespace-pre-wrap">
                         {project.distribution_plan}
                       </p>
                     </CardContent>
@@ -950,12 +950,12 @@ export default function ProjectDetails() {
 
                 {/* Timeline */}
                 {project?.timeline && (
-                  <Card>
+                  <Card className="border-yellow-200">
                     <CardHeader>
-                      <CardTitle>Timeline</CardTitle>
+                      <CardTitle className="text-gray-900">Timeline</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground whitespace-pre-wrap">
+                      <p className="text-gray-600 whitespace-pre-wrap">
                         {project.timeline}
                       </p>
                     </CardContent>
@@ -964,12 +964,12 @@ export default function ProjectDetails() {
 
                 {/* Requirements */}
                 {project?.requirements && (
-                  <Card>
+                  <Card className="border-yellow-200">
                     <CardHeader>
-                      <CardTitle>Requirements</CardTitle>
+                      <CardTitle className="text-gray-900">Requirements</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground whitespace-pre-wrap">
+                      <p className="text-gray-600 whitespace-pre-wrap">
                         {project.requirements}
                       </p>
                     </CardContent>
@@ -978,12 +978,12 @@ export default function ProjectDetails() {
 
                 {/* Benefits */}
                 {project?.benefits && (
-                  <Card>
+                  <Card className="border-yellow-200">
                     <CardHeader>
-                      <CardTitle>Benefits</CardTitle>
+                      <CardTitle className="text-gray-900">Benefits</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground whitespace-pre-wrap">
+                      <p className="text-gray-600 whitespace-pre-wrap">
                         {project.benefits}
                       </p>
                     </CardContent>
@@ -993,16 +993,16 @@ export default function ProjectDetails() {
 
               <div className="space-y-6">
                 {/* Project Info */}
-                <Card>
+                <Card className="border-yellow-200">
                   <CardHeader>
-                    <CardTitle>Project Information</CardTitle>
+                    <CardTitle className="text-gray-900">Project Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <DollarSign className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Budget Range</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm font-medium text-gray-900">Budget Range</p>
+                        <p className="text-sm text-gray-600">
                           {formatBudget(project?.budget_min, project?.budget_max, project?.budget_currency || "₹")}
                         </p>
                       </div>
@@ -1011,10 +1011,10 @@ export default function ProjectDetails() {
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <Clock className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Duration</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm font-medium text-gray-900">Duration</p>
+                        <p className="text-sm text-gray-600">
                           {project?.duration_minutes ? `${project.duration_minutes} minutes` : 
                            project?.episodes ? `${project.episodes} episodes` : 'Not specified'}
                         </p>
@@ -1024,20 +1024,20 @@ export default function ProjectDetails() {
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <Users className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Team Size</p>
-                        <p className="text-sm text-muted-foreground">{project?.team_size} members</p>
+                        <p className="text-sm font-medium text-gray-900">Team Size</p>
+                        <p className="text-sm text-gray-600">{project?.team_size} members</p>
                       </div>
                     </div>
 
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <Calendar className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Created Date</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm font-medium text-gray-900">Created Date</p>
+                        <p className="text-sm text-gray-600">
                           {formatDate(project?.created_at || "")}
                         </p>
                       </div>
@@ -1046,10 +1046,10 @@ export default function ProjectDetails() {
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Heart className="h-4 w-4 text-muted-foreground" />
+                      <Heart className="h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="text-sm font-medium">Likes</p>
-                        <p className="text-sm text-muted-foreground">{project?.likes_count}</p>
+                        <p className="text-sm font-medium text-gray-900">Likes</p>
+                        <p className="text-sm text-gray-600">{project?.likes_count}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -1057,12 +1057,12 @@ export default function ProjectDetails() {
 
                 {/* Contact Information */}
                 {project?.contact_info && (
-                  <Card>
+                  <Card className="border-yellow-200">
                     <CardHeader>
-                      <CardTitle>Contact Information</CardTitle>
+                      <CardTitle className="text-gray-900">Contact Information</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap">
                         {project.contact_info}
                       </p>
                     </CardContent>
@@ -1070,19 +1070,19 @@ export default function ProjectDetails() {
                 )}
 
                 {/* Action Buttons */}
-                <Card>
+                <Card className="border-yellow-200">
                   <CardContent className="pt-6">
                     {isMember ? (
                       <Button 
                         variant="outline" 
-                        className="w-full" 
+                        className="w-full border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50" 
                         onClick={handleLeaveProject}
                       >
                         Leave Project
                       </Button>
                     ) : (
                       <Button 
-                        className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground" 
+                        className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white" 
                         onClick={handleJoinProject}
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
@@ -1098,39 +1098,41 @@ export default function ProjectDetails() {
           {/* Tasks Tab */}
           <TabsContent value="tasks" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Project Tasks</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Project Tasks</h3>
               <Dialog open={showCreateTask} onOpenChange={setShowCreateTask}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="h-4 w-4 mr-2" />
                     Create Task
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Create New Task</DialogTitle>
+                    <DialogTitle className="text-gray-900">Create New Task</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium">Task Title</label>
+                      <label className="text-sm font-medium text-gray-700">Task Title</label>
                       <Input
                         value={newTask.title}
                         onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
                         placeholder="Enter task title"
+                        className="border-yellow-200 focus:border-yellow-500"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Description</label>
+                      <label className="text-sm font-medium text-gray-700">Description</label>
                       <Textarea
                         value={newTask.description}
                         onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Enter task description"
+                        className="border-yellow-200 focus:border-yellow-500"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Assign To</label>
+                      <label className="text-sm font-medium text-gray-700">Assign To</label>
                       <Select value={newTask.assigned_to} onValueChange={(value) => setNewTask(prev => ({ ...prev, assigned_to: value }))}>
-                        <SelectTrigger>
+                        <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
                           <SelectValue placeholder="Select team member" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1143,9 +1145,9 @@ export default function ProjectDetails() {
                       </Select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Priority</label>
+                      <label className="text-sm font-medium text-gray-700">Priority</label>
                       <Select value={newTask.priority} onValueChange={(value: any) => setNewTask(prev => ({ ...prev, priority: value }))}>
-                        <SelectTrigger>
+                        <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1156,18 +1158,19 @@ export default function ProjectDetails() {
                       </Select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Due Date</label>
+                      <label className="text-sm font-medium text-gray-700">Due Date</label>
                       <Input
                         type="date"
                         value={newTask.due_date}
                         onChange={(e) => setNewTask(prev => ({ ...prev, due_date: e.target.value }))}
+                        className="border-yellow-200 focus:border-yellow-500"
                       />
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setShowCreateTask(false)}>
+                      <Button variant="outline" onClick={() => setShowCreateTask(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                         Cancel
                       </Button>
-                      <Button onClick={handleCreateTask}>
+                      <Button onClick={handleCreateTask} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                         Create Task
                       </Button>
                     </div>
@@ -1178,28 +1181,31 @@ export default function ProjectDetails() {
 
             <div className="space-y-4">
               {tasks.map((task) => (
-                <Card key={task.id}>
+                <Card key={task.id} className="border-yellow-200">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-semibold">{task.title}</h4>
+                          <h4 className="font-semibold text-gray-900">{task.title}</h4>
                           <Badge variant={
                             task.priority === 'high' ? 'destructive' :
                             task.priority === 'medium' ? 'default' : 'secondary'
+                          } className={
+                            task.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
                           }>
                             {task.priority}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
                           <span>Assigned to: {task.assigned_to}</span>
                           <span>Due: {formatDate(task.due_date)}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Select value={task.status} onValueChange={(value: any) => handleUpdateTaskStatus(task.id, value)}>
-                          <SelectTrigger className="w-32">
+                          <SelectTrigger className="w-32 border-yellow-200 focus:border-yellow-500">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -1233,10 +1239,10 @@ export default function ProjectDetails() {
 
           {/* Chat Tab */}
           <TabsContent value="chat" className="space-y-6">
-            <Card>
+            <Card className="border-yellow-200">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <MessageCircle className="h-5 w-5 text-yellow-600" />
                   Team Chat
                 </CardTitle>
               </CardHeader>
@@ -1244,19 +1250,19 @@ export default function ProjectDetails() {
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {chatMessages.map((message) => (
                     <div key={message.id} className="flex gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center">
                         <span className="text-white font-semibold text-xs">
                           {message.user_avatar}
                         </span>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">{message.user_name}</span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="font-medium text-sm text-gray-900">{message.user_name}</span>
+                          <span className="text-xs text-gray-500">
                             {formatDate(message.timestamp)}
                           </span>
                         </div>
-                        <p className="text-sm">{message.message}</p>
+                        <p className="text-sm text-gray-600">{message.message}</p>
                       </div>
                     </div>
                   ))}
@@ -1267,8 +1273,9 @@ export default function ProjectDetails() {
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    className="border-yellow-200 focus:border-yellow-500"
                   />
-                  <Button onClick={handleSendMessage}>
+                  <Button onClick={handleSendMessage} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
@@ -1278,28 +1285,28 @@ export default function ProjectDetails() {
 
           {/* Team Members Tab */}
           <TabsContent value="team" className="space-y-6">
-            <Card>
+            <Card className="border-yellow-200">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <Users className="h-5 w-5 text-yellow-600" />
                   Team Members
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {projectMembers.map((member) => (
-                    <div key={member.id} className="flex items-center gap-4 p-3 border rounded-lg">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                    <div key={member.id} className="flex items-center gap-4 p-3 border rounded-lg border-yellow-200">
+                      <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center">
                         <span className="text-white font-semibold">
                           {member.avatar}
                         </span>
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold">{member.name}</h4>
-                        <p className="text-sm text-muted-foreground">{member.role}</p>
-                        <p className="text-xs text-muted-foreground">Joined: {formatDate(member.joined_date)}</p>
+                        <h4 className="font-semibold text-gray-900">{member.name}</h4>
+                        <p className="text-sm text-gray-600">{member.role}</p>
+                        <p className="text-xs text-gray-500">Joined: {formatDate(member.joined_date)}</p>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                         <MessageCircle className="h-4 w-4 mr-2" />
                         Message
                       </Button>
@@ -1313,33 +1320,33 @@ export default function ProjectDetails() {
           {/* Applicants Tab (Only for created projects) */}
           {sourceTab === 'created' && (
             <TabsContent value="applicants" className="space-y-6">
-              <Card>
+              <Card className="border-yellow-200">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <UserPlus className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <UserPlus className="h-5 w-5 text-yellow-600" />
                     Project Applicants
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {applicants.map((applicant) => (
-                      <div key={applicant.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                      <div key={applicant.id} className="flex items-center gap-4 p-4 border rounded-lg border-yellow-200">
+                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center">
                           <span className="text-white font-semibold">
                             {applicant.avatar}
                           </span>
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-semibold">{applicant.name}</h4>
-                          <p className="text-sm text-muted-foreground">{applicant.email}</p>
-                          <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                          <h4 className="font-semibold text-gray-900">{applicant.name}</h4>
+                          <p className="text-sm text-gray-600">{applicant.email}</p>
+                          <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
                             <span>Role: {applicant.role}</span>
                             <span>Experience: {applicant.experience}</span>
                             <span>Applied: {formatDate(applicant.applied_date)}</span>
                           </div>
                           <div className="flex flex-wrap gap-2 mt-2">
                             {applicant.skills.map((skill, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
+                              <Badge key={index} variant="outline" className="text-xs border-yellow-200 bg-yellow-100 text-yellow-800">
                                 {skill}
                               </Badge>
                             ))}
@@ -1349,15 +1356,18 @@ export default function ProjectDetails() {
                           <Badge variant={
                             applicant.status === "accepted" ? "default" :
                             applicant.status === "rejected" ? "destructive" : "secondary"
+                          } className={
+                            applicant.status === "accepted" ? "bg-green-100 text-green-800" :
+                            applicant.status === "rejected" ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"
                           }>
                             {applicant.status}
                           </Badge>
                           {applicant.status === "pending" && (
                             <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleAcceptApplicant(applicant.id)}>
+                              <Button size="sm" onClick={() => handleAcceptApplicant(applicant.id)} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                                 Accept
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => handleRejectApplicant(applicant.id)}>
+                              <Button size="sm" variant="outline" onClick={() => handleRejectApplicant(applicant.id)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                                 Reject
                               </Button>
                             </div>

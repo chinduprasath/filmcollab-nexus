@@ -157,9 +157,9 @@ export default function DirectoryPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 bg-gray-50 min-h-screen p-4 -m-4">
+      <div className="space-y-4 bg-yellow-50 min-h-screen p-4 -m-4">
         {/* Header */}
-        <div className="bg-white p-4 rounded-lg shadow-sm">
+        <div className="bg-white p-4 rounded-lg shadow-sm border-yellow-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">Directory</h1>
@@ -169,18 +169,18 @@ export default function DirectoryPage() {
             </div>
             <div className="flex items-center gap-3 w-full lg:w-auto">
               <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                 <Input
                   placeholder="Search by title, username, or tags"
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); resetPaging(); }}
-                  className="pl-9 h-9 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-purple-500 text-sm"
+                  className="pl-9 h-9 border-yellow-200 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 text-sm"
                 />
               </div>
               <select
                 value={dateFilter}
                 onChange={(e) => { setDateFilter(e.target.value as any); resetPaging(); }}
-                className="px-2 py-1 border border-gray-300 rounded-lg text-xs bg-white focus:border-purple-500 focus:ring-purple-500 h-8"
+                className="px-2 py-1 border border-yellow-200 rounded-lg text-xs bg-white focus:border-yellow-500 focus:ring-yellow-500 h-8"
               >
                 <option value="all">All Dates</option>
                 <option value="7d">Last 7 days</option>
@@ -197,7 +197,7 @@ export default function DirectoryPage() {
               </select>
               <Button 
                 onClick={() => setShowUpload(true)}
-                className="h-9 px-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm"
+                className="h-9 px-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-lg text-sm"
               >
                 <Upload className="w-4 h-4 mr-1" />
                 Upload
@@ -220,7 +220,7 @@ export default function DirectoryPage() {
                 onClick={() => handleTabChange(tab.id as DirType)}
                 className={`px-4 py-3 border-b-2 font-medium transition-colors flex items-center gap-1 text-sm ${
                   activeTab === tab.id
-                    ? "border-purple-600 text-purple-600"
+                    ? "border-yellow-600 text-yellow-600"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -358,8 +358,8 @@ export default function DirectoryPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-2 pt-1">
-                  <Button variant="outline" onClick={() => setShowUpload(false)} className="border-gray-300 text-gray-700 hover:bg-gray-50 h-8 text-xs">Cancel</Button>
-                  <Button disabled={!canUpload} onClick={handleUpload} className="bg-purple-600 hover:bg-purple-700 text-white h-8 text-xs">Upload</Button>
+                  <Button variant="outline" onClick={() => setShowUpload(false)} className="border-yellow-200 text-gray-700 hover:bg-yellow-50 h-8 text-xs">Cancel</Button>
+                  <Button disabled={!canUpload} onClick={handleUpload} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white h-8 text-xs">Upload</Button>
                 </div>
               </div>
             </div>

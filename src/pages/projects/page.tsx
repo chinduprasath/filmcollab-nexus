@@ -825,13 +825,13 @@ export default function ProjectsPage() {
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Projects</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+            <p className="text-gray-600 mt-1">
               Discover and collaborate on film and entertainment projects
             </p>
           </div>
           <Button 
-            className="bg-gradient-to-r from-primary to-accent text-primary-foreground"
+            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
             onClick={() => setIsCreateDialogOpen(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -842,16 +842,16 @@ export default function ProjectsPage() {
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
             <Input
               placeholder="Search projects, titles, or keywords..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 border-yellow-200 focus:border-yellow-500"
             />
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+            <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50" onClick={() => setShowFilters(!showFilters)}>
               <Filter className="h-4 w-4 mr-2" />
               Filters
             </Button>
@@ -871,16 +871,16 @@ export default function ProjectsPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">All Projects ({projects.length})</TabsTrigger>
-            <TabsTrigger value="joined">Joined ({projects.filter(p => p.is_member).length})</TabsTrigger>
-            <TabsTrigger value="created">Created ({projects.filter(p => p.created_by === user?.id).length})</TabsTrigger>
-            <TabsTrigger value="saved">Saved ({savedProjects.length})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 bg-yellow-50 border-yellow-200">
+            <TabsTrigger value="all" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">All Projects ({projects.length})</TabsTrigger>
+            <TabsTrigger value="joined" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Joined ({projects.filter(p => p.is_member).length})</TabsTrigger>
+            <TabsTrigger value="created" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Created ({projects.filter(p => p.created_by === user?.id).length})</TabsTrigger>
+            <TabsTrigger value="saved" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Saved ({savedProjects.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="space-y-4">
             <div className="flex justify-between items-center">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-600">
                 Showing {filteredProjects.length} of {projects.length} projects
               </p>
             </div>
@@ -1025,14 +1025,14 @@ export default function ProjectsPage() {
               // Card format for "All Projects" tab
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProjects.map((project) => (
-                  <Card key={project.id} className="hover:shadow-md transition-shadow">
+                  <Card key={project.id} className="hover:shadow-md transition-shadow border-yellow-200">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <CardTitle className="text-lg line-clamp-1">{project.title}</CardTitle>
+                          <CardTitle className="text-lg line-clamp-1 text-gray-900">{project.title}</CardTitle>
                           <div className="flex items-center gap-2 mt-1">
                             {getTypeIcon(project.project_type)}
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-sm text-gray-600">
                               {project.project_type} • {project.category}
                             </span>
                           </div>
@@ -1110,7 +1110,7 @@ export default function ProjectsPage() {
                       <div className="flex gap-2 pt-2">
                         <Button 
                           size="sm" 
-                          className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                          className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                           onClick={() => handleViewProjectDetails(project)}
                         >
                           <Eye className="h-4 w-4 mr-2" />
@@ -1120,6 +1120,10 @@ export default function ProjectsPage() {
                           <Button 
                             variant={appliedProjects.includes(project.id) ? "default" : "outline"}
                             size="sm"
+                            className={appliedProjects.includes(project.id) 
+                              ? "bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white" 
+                              : "border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                            }
                             onClick={() => handleJoinProject(project.id)}
                             disabled={appliedProjects.includes(project.id)}
                           >
@@ -1154,9 +1158,9 @@ export default function ProjectsPage() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Project Title</FormLabel>
+                        <FormLabel className="text-gray-700">Project Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. The Silent..." {...field} />
+                          <Input placeholder="e.g. The Silent..." className="border-yellow-200 focus:border-yellow-500" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1168,10 +1172,10 @@ export default function ProjectsPage() {
                     name="project_type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Project Type</FormLabel>
+                        <FormLabel className="text-gray-700">Project Type</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
                               <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                           </FormControl>
@@ -1194,11 +1198,11 @@ export default function ProjectsPage() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel className="text-gray-700">Description</FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="Describe your project, its vision, and what you're looking for in collaborators..."
-                          className="min-h-[100px]"
+                          className="min-h-[100px] border-yellow-200 focus:border-yellow-500"
                           {...field}
                         />
                       </FormControl>
@@ -1213,10 +1217,10 @@ export default function ProjectsPage() {
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Category</FormLabel>
+                        <FormLabel className="text-gray-700">Category</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
                               <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                           </FormControl>
@@ -1239,10 +1243,10 @@ export default function ProjectsPage() {
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Status</FormLabel>
+                        <FormLabel className="text-gray-700">Status</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
                               <SelectValue placeholder="Select status" />
                             </SelectTrigger>
                           </FormControl>
@@ -1265,9 +1269,9 @@ export default function ProjectsPage() {
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location</FormLabel>
+                      <FormLabel className="text-gray-700">Location</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Los Angeles, CA" {...field} />
+                          <Input placeholder="e.g. Los Angeles, CA" className="border-yellow-200 focus:border-yellow-500" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1280,11 +1284,12 @@ export default function ProjectsPage() {
                     name="budget_min"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Budget Min (₹)</FormLabel>
+                        <FormLabel className="text-gray-700">Budget Min (₹)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="e.g. 1000000"
+                            className="border-yellow-200 focus:border-yellow-500"
                             value={field.value === 0 ? "" : field.value || ""}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -1302,11 +1307,12 @@ export default function ProjectsPage() {
                     name="budget_max"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Budget Max (₹)</FormLabel>
+                        <FormLabel className="text-gray-700">Budget Max (₹)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="e.g. 5000000"
+                            className="border-yellow-200 focus:border-yellow-500"
                             value={field.value === 0 ? "" : field.value || ""}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -1326,11 +1332,12 @@ export default function ProjectsPage() {
                     name="duration_minutes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Duration (minutes)</FormLabel>
+                        <FormLabel className="text-gray-700">Duration (minutes)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="e.g. 120"
+                            className="border-yellow-200 focus:border-yellow-500"
                             value={field.value === 0 ? "" : field.value || ""}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -1348,11 +1355,12 @@ export default function ProjectsPage() {
                     name="episodes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Episodes (for series)</FormLabel>
+                        <FormLabel className="text-gray-700">Episodes (for series)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="e.g. 8"
+                            className="border-yellow-200 focus:border-yellow-500"
                             value={field.value === 0 ? "" : field.value || ""}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -1371,9 +1379,9 @@ export default function ProjectsPage() {
                   name="skills_required"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Skills Required (comma-separated)</FormLabel>
+                      <FormLabel className="text-gray-700">Skills Required (comma-separated)</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Director, Cinematographer, Editor" {...field} />
+                        <Input placeholder="e.g. Director, Cinematographer, Editor" className="border-yellow-200 focus:border-yellow-500" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1384,13 +1392,14 @@ export default function ProjectsPage() {
                   <Button 
                     type="button" 
                     variant="outline" 
+                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
                     onClick={() => setIsCreateDialogOpen(false)}
                   >
                     Cancel
                   </Button>
                   <Button 
                     type="submit" 
-                    className="bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                   >
                     Create Project
                   </Button>
@@ -1867,13 +1876,13 @@ export default function ProjectsPage() {
 
                     <div className="flex gap-2 pt-4">
                       <Button 
-                        className="flex-1"
+                        className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                         onClick={() => handleJoinProject(selectedProject.id)}
                       >
                         <UserPlus className="w-4 h-4 mr-2" />
                         Join Project
                       </Button>
-                      <Button variant="outline" onClick={() => handleShareProject(selectedProject)}>
+                      <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50" onClick={() => handleShareProject(selectedProject)}>
                         <Share2 className="w-4 h-4 mr-2" />
                         Share Project
                       </Button>

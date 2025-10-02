@@ -87,15 +87,15 @@ export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarPro
   };
 
   return (
-    <div className={cn("flex h-full w-64 flex-col bg-slate-900 border-r border-slate-700", isCollapsed && "w-16", className)}>
+    <div className={cn("flex h-full w-64 flex-col bg-white border-r border-yellow-200", isCollapsed && "w-16", className)}>
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-6 border-b border-slate-700">
+      <div className="flex h-16 items-center justify-between px-6 border-b border-yellow-200">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
             <div className="h-4 w-4 bg-white rounded-sm opacity-90"></div>
           </div>
           {!isCollapsed && (
-            <span className="text-xl font-bold text-white">FilmCollab</span>
+            <span className="text-xl font-bold text-gray-900">FilmCollab</span>
           )}
         </div>
         {onToggle && (
@@ -103,7 +103,7 @@ export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarPro
             variant="ghost"
             size="sm"
             onClick={onToggle}
-            className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-800"
+            className="h-8 w-8 p-0 text-gray-500 hover:text-gray-900 hover:bg-yellow-50"
           >
             {isCollapsed ? (
               <ChevronRight className="h-4 w-4" />
@@ -120,7 +120,7 @@ export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarPro
           {navigationItems.map((section) => (
             <div key={section.section}>
               {!isCollapsed && (
-                <h3 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <h3 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
                   {section.section}
                 </h3>
               )}
@@ -130,8 +130,8 @@ export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarPro
                     key={item.name}
                     variant="ghost"
                     className={cn(
-                      "w-full justify-start h-10 px-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors",
-                      isActive(item.href) && "bg-purple-600 text-white hover:bg-purple-600",
+                      "w-full justify-start h-10 px-3 text-gray-700 hover:bg-yellow-50 hover:text-gray-900 transition-colors",
+                      isActive(item.href) && "bg-yellow-500 text-white hover:bg-yellow-500",
                       isCollapsed && "justify-center px-2"
                     )}
                     onClick={() => handleNavigation(item.href)}
@@ -147,11 +147,11 @@ export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarPro
       </ScrollArea>
 
       {/* Theme section */}
-      <div className="border-t border-slate-700 p-4">
+      <div className="border-t border-yellow-200 p-4">
         <div className="space-y-3">
           {!isCollapsed && (
             <div className="px-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Theme</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Theme</p>
             </div>
           )}
           
@@ -160,8 +160,8 @@ export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarPro
               variant="ghost"
               size="sm"
               className={cn(
-                "h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-800",
-                theme === "light" && "bg-slate-800 text-white"
+                "h-8 w-8 p-0 text-gray-500 hover:text-gray-900 hover:bg-yellow-50",
+                theme === "light" && "bg-yellow-100 text-gray-900"
               )}
               onClick={() => setTheme("light")}
             >
@@ -172,8 +172,8 @@ export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarPro
               variant="ghost"
               size="sm"
               className={cn(
-                "h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-800",
-                theme === "dark" && "bg-purple-600 text-white hover:bg-purple-600"
+                "h-8 w-8 p-0 text-gray-500 hover:text-gray-900 hover:bg-yellow-50",
+                theme === "dark" && "bg-yellow-500 text-white hover:bg-yellow-500"
               )}
               onClick={() => setTheme("dark")}
             >
@@ -184,8 +184,8 @@ export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarPro
               variant="ghost"
               size="sm"
               className={cn(
-                "h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-800",
-                theme === "system" && "bg-slate-800 text-white"
+                "h-8 w-8 p-0 text-gray-500 hover:text-gray-900 hover:bg-yellow-50",
+                theme === "system" && "bg-yellow-100 text-gray-900"
               )}
               onClick={() => setTheme("system")}
             >

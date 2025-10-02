@@ -826,24 +826,24 @@ const PostsPage = () => {
         <div className="mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Posts</h1>
-              <p className="text-muted-foreground mt-1">
+              <h1 className="text-2xl font-bold text-gray-900">Posts</h1>
+              <p className="text-gray-600 mt-1">
                 Share updates, work-in-progress, and ideas with the community
               </p>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
                   <Input
                     placeholder="Search posts or #hashtag"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-64"
+                    className="pl-10 w-64 border-yellow-200 focus:border-yellow-500"
                   />
                 </div>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 border-yellow-200 focus:border-yellow-500">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -863,7 +863,7 @@ const PostsPage = () => {
                 </Button>
                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-primary hover:bg-primary/90">
+                    <Button className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                       <Plus className="h-4 w-4 mr-2" />
                       Create Post
                     </Button>
@@ -879,6 +879,7 @@ const PostsPage = () => {
                     <div>
                       <Input
                         placeholder="Post title (optional)"
+                        className="border-yellow-200 focus:border-yellow-500"
                         value={newPost.title}
                         onChange={(e) => setNewPost(prev => ({ ...prev, title: e.target.value }))}
                       />
@@ -888,7 +889,7 @@ const PostsPage = () => {
                         placeholder="What's on your mind? Use #hashtags to categorize your post..."
                         value={newPost.content}
                         onChange={(e) => setNewPost(prev => ({ ...prev, content: e.target.value }))}
-                        className="min-h-32"
+                        className="min-h-32 border-yellow-200 focus:border-yellow-500"
                       />
                     </div>
                     
@@ -942,11 +943,13 @@ const PostsPage = () => {
                     <div className="flex justify-end gap-2">
                       <Button
                         variant="outline"
+                        className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
                         onClick={() => setIsCreateDialogOpen(false)}
                       >
                         Cancel
                       </Button>
                       <Button
+                        className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                         onClick={handleCreatePost}
                         disabled={isUploading || !newPost.content.trim()}
                       >
@@ -963,11 +966,11 @@ const PostsPage = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">All Posts</TabsTrigger>
-            <TabsTrigger value="trending">Trending Posts</TabsTrigger>
-            <TabsTrigger value="published">Published Posts</TabsTrigger>
-            <TabsTrigger value="saved">Saved Posts</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 bg-yellow-50 border-yellow-200">
+            <TabsTrigger value="all" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">All Posts</TabsTrigger>
+            <TabsTrigger value="trending" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Trending Posts</TabsTrigger>
+            <TabsTrigger value="published" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Published Posts</TabsTrigger>
+            <TabsTrigger value="saved" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Saved Posts</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -985,20 +988,20 @@ const PostsPage = () => {
             </div>
           ) : (
             filteredPosts.map((post) => (
-              <Card key={post.id} className="overflow-hidden">
+              <Card key={post.id} className="overflow-hidden border-yellow-200">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
                           {post.author?.full_name?.charAt(0) || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="font-semibold text-sm">
+                        <h3 className="font-semibold text-sm text-gray-900">
                           {post.author?.full_name || "Unknown User"}
                         </h3>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <p className="text-xs text-gray-600 flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {formatTimeAgo(post.created_at)}
                         </p>
@@ -1064,7 +1067,7 @@ const PostsPage = () => {
                         size="sm"
                         onClick={() => handleLikePost(post.id, post.is_liked || false)}
                         disabled={loadingActions[`like-${post.id}`]}
-                        className={`flex items-center gap-2 transition-colors ${post.is_liked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`flex items-center gap-2 transition-colors ${post.is_liked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-yellow-600'}`}
                       >
                         <Heart className={`h-4 w-4 transition-all ${post.is_liked ? 'fill-current scale-110' : 'hover:scale-110'}`} />
                         <span className="font-medium">{post.likes_count}</span>
@@ -1077,7 +1080,7 @@ const PostsPage = () => {
                           setIsCommentsDialogOpen(true);
                           fetchComments(post.id);
                         }}
-                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                        className="flex items-center gap-2 text-muted-foreground hover:text-yellow-600 transition-colors"
                       >
                         <MessageCircle className="h-4 w-4 hover:scale-110 transition-transform" />
                         <span className="font-medium">{post.comments_count}</span>
@@ -1086,7 +1089,7 @@ const PostsPage = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleSharePost(post)}
-                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                        className="flex items-center gap-2 text-muted-foreground hover:text-yellow-600 transition-colors"
                       >
                         <Share2 className="h-4 w-4 hover:scale-110 transition-transform" />
                         <span className="font-medium">{post.shares_count}</span>
@@ -1096,7 +1099,7 @@ const PostsPage = () => {
                         size="sm"
                         onClick={() => handleSavePost(post.id, post.is_saved || false)}
                         disabled={loadingActions[`save-${post.id}`]}
-                        className={`flex items-center gap-2 transition-colors ${post.is_saved ? 'text-primary hover:text-primary/80' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`flex items-center gap-2 transition-colors ${post.is_saved ? 'text-yellow-600 hover:text-yellow-700' : 'text-muted-foreground hover:text-yellow-600'}`}
                       >
                         <Bookmark className={`h-4 w-4 transition-all ${post.is_saved ? 'fill-current scale-110' : 'hover:scale-110'}`} />
                       </Button>

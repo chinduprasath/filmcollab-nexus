@@ -202,9 +202,9 @@ export default function GroupDetails() {
 
   return (
     <AppLayout>
-      <div className="h-screen bg-gray-50 flex flex-col">
+      <div className="h-screen bg-yellow-50 flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-4">
+        <div className="bg-white border-b border-yellow-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" onClick={() => navigate('/community')}>
@@ -240,7 +240,7 @@ export default function GroupDetails() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {chatMessages.map((message) => (
                 <div key={message.id} className="flex gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
                     {message.userAvatar}
                   </div>
                   <div className="flex-1">
@@ -250,7 +250,7 @@ export default function GroupDetails() {
                       {message.isModerator && <Shield className="w-3 h-3 text-blue-500" />}
                       <span className="text-xs text-gray-500">{message.timestamp}</span>
                     </div>
-                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-yellow-200">
                       <p className="text-sm text-gray-800">{message.message}</p>
                     </div>
                   </div>
@@ -260,7 +260,7 @@ export default function GroupDetails() {
             </div>
 
             {/* Message Input */}
-            <div className="bg-white border-t border-gray-200 p-4">
+            <div className="bg-white border-t border-yellow-200 p-4">
               <div className="flex gap-2">
                 <div className="flex-1 relative">
                   <Input
@@ -279,7 +279,7 @@ export default function GroupDetails() {
                     </Button>
                   </div>
                 </div>
-                <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
+                <Button className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white" onClick={handleSendMessage} disabled={!newMessage.trim()}>
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
@@ -287,7 +287,7 @@ export default function GroupDetails() {
           </div>
 
           {/* Sidebar */}
-          <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
+          <div className="w-80 bg-white border-l border-yellow-200 overflow-y-auto">
             <div className="p-4 space-y-6">
               {/* Group Info */}
               <div>
@@ -331,9 +331,9 @@ export default function GroupDetails() {
                 </div>
                 <div className="space-y-2">
                   {members.map((member) => (
-                    <div key={member.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+                    <div key={member.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-yellow-50">
                       <div className="relative">
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                        <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
                           {member.avatar}
                         </div>
                         {member.online && (
@@ -418,7 +418,7 @@ export default function GroupDetails() {
                         <textarea
                           value={groupSettings.description}
                           onChange={(e) => setGroupSettings(prev => ({ ...prev, description: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-purple-500 text-sm"
+                          className="w-full px-3 py-2 border border-yellow-200 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 text-sm"
                           rows={3}
                         />
                       </div>
@@ -483,7 +483,7 @@ export default function GroupDetails() {
                             onChange={(e) => setGroupSettings(prev => ({ ...prev, allowMemberInvites: e.target.checked }))}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
                         </label>
                       </div>
                       <div className="flex items-center justify-between">
@@ -498,7 +498,7 @@ export default function GroupDetails() {
                             onChange={(e) => setGroupSettings(prev => ({ ...prev, allowMemberPosts: e.target.checked }))}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
                         </label>
                       </div>
                       <div className="flex items-center justify-between">
@@ -513,7 +513,7 @@ export default function GroupDetails() {
                             onChange={(e) => setGroupSettings(prev => ({ ...prev, requireApproval: e.target.checked }))}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
                         </label>
                       </div>
                     </div>
@@ -538,7 +538,7 @@ export default function GroupDetails() {
                             onChange={(e) => setGroupSettings(prev => ({ ...prev, notifications: e.target.checked }))}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
                         </label>
                       </div>
                     </div>
@@ -563,7 +563,7 @@ export default function GroupDetails() {
                             onChange={(e) => setGroupSettings(prev => ({ ...prev, autoDeleteMessages: e.target.checked }))}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
                         </label>
                       </div>
                       {groupSettings.autoDeleteMessages && (
@@ -583,7 +583,7 @@ export default function GroupDetails() {
                   </div>
 
                   {/* Danger Zone */}
-                  <div className="border-t border-gray-200 pt-6">
+                  <div className="border-t border-yellow-200 pt-6">
                     <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-red-600">
                       <AlertTriangle className="w-4 h-4" />
                       Danger Zone
@@ -603,9 +603,9 @@ export default function GroupDetails() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <div className="flex gap-3 pt-4 border-t border-yellow-200">
                     <Button 
-                      className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                      className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                       onClick={() => {
                         // Save settings logic here
                         console.log("Saving settings:", groupSettings);

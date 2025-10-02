@@ -24,28 +24,56 @@ export default function AdminDashboard() {
       value: "1,247",
       icon: Users,
       description: "+12% from last month",
-      color: "text-blue-600"
+      color: "text-yellow-600"
     },
     {
-      title: "Active Jobs",
+      title: "Total Jobs",
       value: "89",
       icon: FileText,
-      description: "15 posted today",
-      color: "text-green-600"
+      description: "15 active jobs",
+      color: "text-yellow-600"
     },
     {
-      title: "Reports",
-      value: "23",
-      icon: BarChart3,
-      description: "5 pending review",
-      color: "text-orange-600"
+      title: "Total Communities",
+      value: "156",
+      icon: Users,
+      description: "25 created this month",
+      color: "text-yellow-600"
     },
     {
-      title: "System Health",
-      value: "99.9%",
+      title: "Total Posts",
+      value: "2,389",
+      icon: FileText,
+      description: "+18% from last month",
+      color: "text-yellow-600"
+    },
+    {
+      title: "Total Projects",
+      value: "347",
+      icon: FileText,
+      description: "45 active projects",
+      color: "text-yellow-600"
+    },
+    {
+      title: "Total Tickets",
+      value: "78",
       icon: Shield,
-      description: "All systems operational",
-      color: "text-green-600"
+      description: "12 pending tickets",
+      color: "text-yellow-600"
+    },
+    {
+      title: "Total Team Members",
+      value: "24",
+      icon: Users,
+      description: "8 active admins",
+      color: "text-yellow-600"
+    },
+    {
+      title: "Total Categories",
+      value: "32",
+      icon: FileText,
+      description: "Across all sections",
+      color: "text-yellow-600"
     }
   ];
 
@@ -55,28 +83,28 @@ export default function AdminDashboard() {
       description: "View and manage user accounts",
       icon: Users,
       href: "/admin-dashboard/users",
-      color: "bg-blue-500"
+      color: "bg-gradient-to-r from-yellow-500 to-yellow-600"
     },
     {
       title: "Content Reports",
       description: "Review flagged content",
       icon: AlertTriangle,
       href: "/admin-dashboard/reports",
-      color: "bg-orange-500"
+      color: "bg-gradient-to-r from-yellow-500 to-yellow-600"
     },
     {
       title: "System Settings",
       description: "Configure system parameters",
       icon: Shield,
       href: "/admin-dashboard/settings",
-      color: "bg-purple-500"
+      color: "bg-gradient-to-r from-yellow-500 to-yellow-600"
     },
     {
       title: "Analytics",
       description: "View detailed analytics",
       icon: BarChart3,
       href: "/admin-dashboard/analytics",
-      color: "bg-green-500"
+      color: "bg-gradient-to-r from-yellow-500 to-yellow-600"
     }
   ];
 
@@ -113,10 +141,10 @@ export default function AdminDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'success': return 'text-green-600';
-      case 'warning': return 'text-orange-600';
-      case 'error': return 'text-red-600';
-      default: return 'text-blue-600';
+      case 'success': return 'text-yellow-600';
+      case 'warning': return 'text-yellow-600';
+      case 'error': return 'text-yellow-800';
+      default: return 'text-yellow-600';
     }
   };
 
@@ -143,16 +171,6 @@ export default function AdminDashboard() {
             </p>
           </div>
           
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="border-destructive/20 text-destructive hover:bg-destructive/5">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Generate Report
-            </Button>
-            <Button size="sm" className="bg-gradient-to-r from-destructive to-orange-500 text-primary-foreground">
-              <Shield className="h-4 w-4 mr-2" />
-              System Status
-            </Button>
-          </div>
         </div>
 
         {/* Stats Grid */}
@@ -215,7 +233,7 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-destructive" />
+                <Clock className="h-5 w-5 text-yellow-600" />
                 Recent Activity
               </CardTitle>
               <CardDescription>
@@ -227,7 +245,7 @@ export default function AdminDashboard() {
                 {recentActivity.map((activity, index) => {
                   const StatusIcon = getStatusIcon(activity.status);
                   return (
-                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-destructive/5 transition-colors">
+                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-yellow-50 transition-colors">
                       <StatusIcon className={`h-4 w-4 mt-1 ${getStatusColor(activity.status)}`} />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-foreground">

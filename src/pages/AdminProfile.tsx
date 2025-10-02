@@ -104,13 +104,13 @@ const AdminProfile = () => {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "approval":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-yellow-600" />;
       case "moderation":
-        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
       case "configuration":
-        return <Settings className="h-4 w-4 text-blue-500" />;
+        return <Settings className="h-4 w-4 text-yellow-600" />;
       case "analytics":
-        return <BarChart3 className="h-4 w-4 text-purple-500" />;
+        return <BarChart3 className="h-4 w-4 text-yellow-600" />;
       default:
         return <Activity className="h-4 w-4 text-gray-500" />;
     }
@@ -126,7 +126,7 @@ const AdminProfile = () => {
             <p className="text-sm text-gray-600">Manage your admin account and preferences</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+            <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
               <Shield className="h-3 w-3 mr-1" />
               {adminData.role}
             </Badge>
@@ -157,7 +157,7 @@ const AdminProfile = () => {
               <div className="relative">
                 <Avatar className="h-24 w-24">
                   <AvatarImage src={adminData.avatar} alt={adminData.fullName} />
-                  <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white text-xl">
+                  <AvatarFallback className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white text-xl">
                     {adminData.fullName.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
@@ -214,7 +214,7 @@ const AdminProfile = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
-                      ? "border-purple-500 text-purple-600"
+                      ? "border-yellow-500 text-yellow-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
@@ -292,31 +292,31 @@ const AdminProfile = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-blue-500" />
+                      <Users className="h-4 w-4 text-yellow-600" />
                       <span className="text-sm text-gray-600">Total Users</span>
                     </div>
                     <span className="font-semibold">{adminData.stats.totalUsers.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-orange-500" />
+                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
                       <span className="text-sm text-gray-600">Moderated Posts</span>
                     </div>
                     <span className="font-semibold">{adminData.stats.moderatedPosts.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <CheckCircle className="h-4 w-4 text-yellow-600" />
                       <span className="text-sm text-gray-600">Resolved Reports</span>
                     </div>
                     <span className="font-semibold">{adminData.stats.resolvedReports.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-purple-500" />
+                      <Activity className="h-4 w-4 text-yellow-600" />
                       <span className="text-sm text-gray-600">System Uptime</span>
                     </div>
-                    <span className="font-semibold text-green-600">{adminData.stats.systemUptime}</span>
+                    <span className="font-semibold text-yellow-600">{adminData.stats.systemUptime}</span>
                   </div>
                 </div>
               </CardContent>
@@ -418,7 +418,7 @@ const AdminProfile = () => {
                       <p className="text-sm font-medium">Two-Factor Authentication</p>
                       <p className="text-xs text-gray-500">Add an extra layer of security</p>
                     </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
                       Enabled
                     </Badge>
                   </div>
@@ -428,7 +428,7 @@ const AdminProfile = () => {
                       <p className="text-sm font-medium">Login Notifications</p>
                       <p className="text-xs text-gray-500">Get notified of new logins</p>
                     </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
                       Enabled
                     </Badge>
                   </div>
@@ -438,7 +438,7 @@ const AdminProfile = () => {
                       <p className="text-sm font-medium">Session Timeout</p>
                       <p className="text-xs text-gray-500">Auto-logout after inactivity</p>
                     </div>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
                       30 minutes
                     </Badge>
                   </div>
@@ -464,7 +464,7 @@ const AdminProfile = () => {
                       <p className="text-sm font-medium">Email Notifications</p>
                       <p className="text-xs text-gray-500">Receive updates via email</p>
                     </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
                       Enabled
                     </Badge>
                   </div>
@@ -474,7 +474,7 @@ const AdminProfile = () => {
                       <p className="text-sm font-medium">System Alerts</p>
                       <p className="text-xs text-gray-500">Critical system notifications</p>
                     </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
                       Enabled
                     </Badge>
                   </div>
@@ -484,7 +484,7 @@ const AdminProfile = () => {
                       <p className="text-sm font-medium">Weekly Reports</p>
                       <p className="text-xs text-gray-500">Platform performance summaries</p>
                     </div>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
                       Enabled
                     </Badge>
                   </div>

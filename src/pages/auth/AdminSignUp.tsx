@@ -56,30 +56,30 @@ export default function AdminSignUp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back button */}
         <Button
           variant="ghost"
-          className="mb-4 text-muted-foreground hover:text-foreground"
+          className="mb-4 text-gray-600 hover:text-yellow-600"
           onClick={() => navigate("/")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Button>
 
-        <Card className="shadow-elegant border-border/50">
+        <Card className="shadow-elegant border-yellow-200 bg-white">
           <CardHeader className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-destructive to-orange-500 flex items-center justify-center">
-                <Shield className="h-5 w-5 text-primary-foreground" />
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
+                <Shield className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-destructive to-orange-500 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-800 bg-clip-text text-transparent">
                 Admin Portal
               </h1>
             </div>
-            <CardTitle>Create Admin Account</CardTitle>
-            <CardDescription>Set up administrator access</CardDescription>
+            <CardTitle className="text-gray-900">Create Admin Account</CardTitle>
+            <CardDescription className="text-gray-600">Set up administrator access</CardDescription>
           </CardHeader>
           
           <CardContent>
@@ -91,9 +91,9 @@ export default function AdminSignUp() {
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name</FormLabel>
+                        <FormLabel className="text-gray-700">First Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="John" {...field} />
+                          <Input placeholder="John" className="border-yellow-200 focus:border-yellow-500" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -105,9 +105,9 @@ export default function AdminSignUp() {
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Name</FormLabel>
+                        <FormLabel className="text-gray-700">Last Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Doe" {...field} />
+                          <Input placeholder="Doe" className="border-yellow-200 focus:border-yellow-500" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -120,11 +120,12 @@ export default function AdminSignUp() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Admin Email</FormLabel>
+                      <FormLabel className="text-gray-700">Admin Email</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
                           placeholder="admin@filmcollab.com"
+                          className="border-yellow-200 focus:border-yellow-500"
                           {...field}
                         />
                       </FormControl>
@@ -138,12 +139,13 @@ export default function AdminSignUp() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel className="text-gray-700">Password</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input
                             type={showPassword ? "text" : "password"}
                             placeholder="Create a secure password"
+                            className="border-yellow-200 focus:border-yellow-500"
                             {...field}
                           />
                           <Button
@@ -154,9 +156,9 @@ export default function AdminSignUp() {
                             onClick={() => setShowPassword(!showPassword)}
                           >
                             {showPassword ? (
-                              <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              <EyeOff className="h-4 w-4 text-gray-500" />
                             ) : (
-                              <Eye className="h-4 w-4 text-muted-foreground" />
+                              <Eye className="h-4 w-4 text-gray-500" />
                             )}
                           </Button>
                         </div>
@@ -171,12 +173,13 @@ export default function AdminSignUp() {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
+                      <FormLabel className="text-gray-700">Confirm Password</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input
                             type={showConfirmPassword ? "text" : "password"}
                             placeholder="Confirm your password"
+                            className="border-yellow-200 focus:border-yellow-500"
                             {...field}
                           />
                           <Button
@@ -187,9 +190,9 @@ export default function AdminSignUp() {
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           >
                             {showConfirmPassword ? (
-                              <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              <EyeOff className="h-4 w-4 text-gray-500" />
                             ) : (
-                              <Eye className="h-4 w-4 text-muted-foreground" />
+                              <Eye className="h-4 w-4 text-gray-500" />
                             )}
                           </Button>
                         </div>
@@ -201,7 +204,7 @@ export default function AdminSignUp() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-destructive to-orange-500 hover:opacity-90 text-primary-foreground"
+                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                   disabled={loading}
                 >
                   {loading ? "Creating admin account..." : "Create Admin Account"}
@@ -210,11 +213,11 @@ export default function AdminSignUp() {
             </Form>
 
             <div className="mt-6 text-center">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-gray-600">
                 Already have admin access?{" "}
                 <Button
                   variant="link"
-                  className="p-0 h-auto text-destructive hover:text-orange-500"
+                  className="p-0 h-auto text-yellow-600 hover:text-yellow-700"
                   onClick={() => navigate("/admin-signin")}
                 >
                   Sign in

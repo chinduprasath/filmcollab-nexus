@@ -156,14 +156,14 @@ export function DashboardTopbar({
   const unreadCount = mockNotifications.filter(n => n.unread).length;
 
   return (
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-yellow-200">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           {/* Mobile menu toggle */}
           <Button
             variant="ghost"
             size="sm"
-            className="md:hidden"
+            className="md:hidden text-gray-600 hover:text-gray-900 hover:bg-yellow-50"
             onClick={onMenuToggle}
           >
             {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -179,7 +179,7 @@ export function DashboardTopbar({
                 variant="outline" 
                 size="sm" 
                 onClick={handleLinkVFXProfile}
-                className="text-xs"
+                className="text-xs border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
               >
                 Link VFX Profile
               </Button>
@@ -209,7 +209,7 @@ export function DashboardTopbar({
                     console.error('Error updating profile:', err);
                   }
                 }}
-                className="text-xs"
+                className="text-xs bg-yellow-500 hover:bg-yellow-600 text-white"
               >
                 Set as VFX
               </Button>
@@ -220,12 +220,12 @@ export function DashboardTopbar({
           {/* Notifications */}
           <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="relative">
+              <Button variant="ghost" size="sm" className="relative text-gray-600 hover:text-gray-900 hover:bg-yellow-50">
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center"
+                    className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center bg-yellow-500 hover:bg-yellow-600"
                   >
                     {unreadCount}
                   </Badge>
@@ -235,8 +235,8 @@ export function DashboardTopbar({
             <PopoverContent className="w-80" align="end">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">Notifications</h3>
-                  <Button variant="ghost" size="sm" className="text-xs">
+                  <h3 className="font-semibold text-gray-900">Notifications</h3>
+                  <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-gray-900 hover:bg-yellow-50">
                     Mark all read
                   </Button>
                 </div>
@@ -244,24 +244,24 @@ export function DashboardTopbar({
                   {mockNotifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors ${
-                        notification.unread ? 'bg-primary/5 border-primary/20' : 'bg-background'
+                      className={`p-3 rounded-lg border cursor-pointer hover:bg-yellow-50 transition-colors ${
+                        notification.unread ? 'bg-yellow-50 border-yellow-200' : 'bg-white'
                       }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
-                          <p className="text-sm font-medium">{notification.title}</p>
-                          <p className="text-xs text-muted-foreground">{notification.description}</p>
-                          <p className="text-xs text-muted-foreground">{notification.time}</p>
+                          <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                          <p className="text-xs text-gray-600">{notification.description}</p>
+                          <p className="text-xs text-gray-500">{notification.time}</p>
                         </div>
                         {notification.unread && (
-                          <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+                          <div className="h-2 w-2 rounded-full bg-yellow-500 flex-shrink-0 mt-1" />
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
-                <Button variant="outline" className="w-full" size="sm" onClick={() => navigate("/notifications")}>
+                <Button variant="outline" className="w-full" size="sm" onClick={() => navigate("/notifications")} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   View all notifications
                 </Button>
               </div>
@@ -271,49 +271,49 @@ export function DashboardTopbar({
           {/* User Profile Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-3 h-auto p-2 hover:bg-accent/50">
+              <Button variant="ghost" className="flex items-center gap-3 h-auto p-2 hover:bg-yellow-50">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="" alt="Alex Rodriguez" />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
+                  <AvatarFallback className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
                     A
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:flex flex-col items-start">
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-sm font-medium text-gray-900">
                     Alex Rodriguez
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-gray-600">
                     Director
                   </span>
                 </div>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <ChevronDown className="h-4 w-4 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
+                  <p className="text-sm font-medium leading-none text-gray-900">
                     Alex Rodriguez
                   </p>
-                  <p className="text-xs leading-none text-muted-foreground">
+                  <p className="text-xs leading-none text-gray-600">
                     Director
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/profile")}>
+              <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer hover:bg-yellow-50">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/settings")}>
+              <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer hover:bg-yellow-50">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/billing")}>
+              <DropdownMenuItem onClick={() => navigate("/billing")} className="cursor-pointer hover:bg-yellow-50">
                 <CreditCard className="mr-2 h-4 w-4" />
                 <span>Billing</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/support")}>
+              <DropdownMenuItem onClick={() => navigate("/support")} className="cursor-pointer hover:bg-yellow-50">
                 <HelpCircle className="mr-2 h-4 w-4" />
                 <span>Support</span>
               </DropdownMenuItem>

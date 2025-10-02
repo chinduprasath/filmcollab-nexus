@@ -424,15 +424,15 @@ export default function ProfilePage() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 bg-gray-50 min-h-screen p-4 -m-4">
+      <div className="space-y-4 bg-yellow-50 min-h-screen p-4 -m-4">
         {/* Profile Header */}
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden border-yellow-200">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1">
                 <Avatar className="w-24 h-24 border-4 border-white shadow-lg flex-shrink-0">
                   <AvatarImage src={profile.avatar} alt={profile.name} />
-                  <AvatarFallback className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                  <AvatarFallback className="text-xl font-semibold bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
                     {profile.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
@@ -473,7 +473,7 @@ export default function ProfilePage() {
                   <Edit className="w-4 h-4 mr-1" />
                   Edit Profile
                 </Button>
-                <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                   <UserPlus className="w-4 h-4 mr-1" />
                   Connect
                 </Button>
@@ -507,34 +507,34 @@ export default function ProfilePage() {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 bg-gray-100">
+              <TabsList className="grid w-full grid-cols-5 bg-yellow-50 border-yellow-200">
                 <TabsTrigger 
                   value="overview" 
-                  className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                  className="text-xs data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
                 >
                   Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="experience" 
-                  className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                  className="text-xs data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
                 >
                   Experience
                 </TabsTrigger>
                 <TabsTrigger 
                   value="portfolio" 
-                  className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                  className="text-xs data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
                 >
                   Portfolio
                 </TabsTrigger>
                 <TabsTrigger 
                   value="achievements" 
-                  className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                  className="text-xs data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
                 >
                   Achievements
                 </TabsTrigger>
                 <TabsTrigger 
                   value="education" 
-                  className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                  className="text-xs data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
                 >
                   Education
                 </TabsTrigger>
@@ -606,7 +606,7 @@ export default function ProfilePage() {
                     <div className="space-y-4">
                       {profile.experience.map((exp) => (
                         <div key={exp.id} className="flex gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
                             <Briefcase className="w-5 h-5 text-white" />
                           </div>
                           <div className="flex-1">
@@ -675,11 +675,11 @@ export default function ProfilePage() {
                       {profile.achievements.map((achievement) => (
                         <div key={achievement.id} className="border border-gray-200 rounded-lg p-4">
                           <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                              {achievement.type === 'award' && <Award className="w-4 h-4 text-purple-600" />}
-                              {achievement.type === 'certification' && <GraduationCap className="w-4 h-4 text-purple-600" />}
-                              {achievement.type === 'publication' && <FileText className="w-4 h-4 text-purple-600" />}
-                              {achievement.type === 'recognition' && <Star className="w-4 h-4 text-purple-600" />}
+                            <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              {achievement.type === 'award' && <Award className="w-4 h-4 text-yellow-600" />}
+                              {achievement.type === 'certification' && <GraduationCap className="w-4 h-4 text-yellow-600" />}
+                              {achievement.type === 'publication' && <FileText className="w-4 h-4 text-yellow-600" />}
+                              {achievement.type === 'recognition' && <Star className="w-4 h-4 text-yellow-600" />}
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
@@ -708,7 +708,7 @@ export default function ProfilePage() {
                     <div className="space-y-4">
                       {profile.education.map((edu) => (
                         <div key={edu.id} className="flex gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
                             <GraduationCap className="w-5 h-5 text-white" />
                           </div>
                           <div className="flex-1">
@@ -803,19 +803,19 @@ export default function ProfilePage() {
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" size="sm" className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50">
+                <Button variant="outline" size="sm" className="w-full justify-start border-yellow-200 text-gray-700 hover:bg-yellow-50">
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Send Message
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50">
+                <Button variant="outline" size="sm" className="w-full justify-start border-yellow-200 text-gray-700 hover:bg-yellow-50">
                   <UserPlus className="w-4 h-4 mr-2" />
                   Connect
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50">
+                <Button variant="outline" size="sm" className="w-full justify-start border-yellow-200 text-gray-700 hover:bg-yellow-50">
                   <Share2 className="w-4 h-4 mr-2" />
                   Share Profile
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50">
+                <Button variant="outline" size="sm" className="w-full justify-start border-yellow-200 text-gray-700 hover:bg-yellow-50">
                   <Download className="w-4 h-4 mr-2" />
                   Download CV
                 </Button>
@@ -836,31 +836,31 @@ export default function ProfilePage() {
             <TabsList className="grid w-full grid-cols-5 bg-gray-100">
               <TabsTrigger 
                 value="profile" 
-                className="text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                className="text-sm data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
               >
                 Profile
               </TabsTrigger>
               <TabsTrigger 
                 value="experience" 
-                className="text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                className="text-sm data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
               >
                 Experience
               </TabsTrigger>
               <TabsTrigger 
                 value="achievements" 
-                className="text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                className="text-sm data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
               >
                 Achievements
               </TabsTrigger>
               <TabsTrigger 
                 value="portfolio" 
-                className="text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                className="text-sm data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
               >
                 Portfolio
               </TabsTrigger>
               <TabsTrigger 
                 value="education" 
-                className="text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                className="text-sm data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
               >
                 Education
               </TabsTrigger>
@@ -1052,7 +1052,7 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Work Experience</h3>
-                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                  <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Experience
                   </Button>
@@ -1068,7 +1068,7 @@ export default function ProfilePage() {
                             onClick={() => toggleEditExperienceExpansion(exp.id)}
                           >
                             <div className="flex gap-3 flex-1">
-                              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
+                              <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
                                 <Briefcase className="w-5 h-5 text-white" />
                               </div>
                               <div className="flex-1">
@@ -1117,7 +1117,7 @@ export default function ProfilePage() {
                                 <Textarea value={exp.description} rows={3} placeholder="Describe your role and responsibilities" />
                               </div>
                               <div className="flex justify-end gap-2 mt-4">
-                                <Button size="sm" variant="outline">Edit</Button>
+                                <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Edit</Button>
                                 <Button size="sm" variant="destructive">Delete</Button>
                               </div>
                             </div>
@@ -1135,7 +1135,7 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Achievements & Awards</h3>
-                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                  <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Achievement
                   </Button>
@@ -1151,7 +1151,7 @@ export default function ProfilePage() {
                             onClick={() => toggleEditAchievementExpansion(achievement.id)}
                           >
                             <div className="flex gap-3 flex-1">
-                              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
                                 {achievement.type === 'award' && <Award className="w-4 h-4 text-purple-600" />}
                                 {achievement.type === 'certification' && <GraduationCap className="w-4 h-4 text-purple-600" />}
                                 {achievement.type === 'publication' && <FileText className="w-4 h-4 text-purple-600" />}
@@ -1202,7 +1202,7 @@ export default function ProfilePage() {
                                 <Textarea value={achievement.description} rows={3} placeholder="Describe the achievement" />
                               </div>
                               <div className="flex justify-end gap-2 mt-4">
-                                <Button size="sm" variant="outline">Edit</Button>
+                                <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Edit</Button>
                                 <Button size="sm" variant="destructive">Delete</Button>
                               </div>
                             </div>
@@ -1220,7 +1220,7 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Portfolio Items</h3>
-                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                  <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Portfolio Item
                   </Button>
@@ -1231,7 +1231,7 @@ export default function ProfilePage() {
                       <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                         {item.type === "video" && (
                           <div className="text-center">
-                            <Video className="w-12 h-12 text-purple-600 mx-auto mb-2" />
+                            <Video className="w-12 h-12 text-yellow-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-gray-700">Video</p>
                           </div>
                         )}
@@ -1265,7 +1265,7 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="flex-1">Edit</Button>
+                          <Button size="sm" variant="outline" className="flex-1 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Edit</Button>
                           <Button size="sm" variant="destructive" className="flex-1">Delete</Button>
                         </div>
                       </CardContent>
@@ -1280,7 +1280,7 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Education</h3>
-                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                  <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Education
                   </Button>
@@ -1296,7 +1296,7 @@ export default function ProfilePage() {
                             onClick={() => toggleEditEducationExpansion(edu.id)}
                           >
                             <div className="flex gap-3 flex-1">
-                              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                              <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
                                 <GraduationCap className="w-5 h-5 text-white" />
                               </div>
                               <div className="flex-1">
@@ -1345,7 +1345,7 @@ export default function ProfilePage() {
                                 <Textarea value={edu.description || ''} rows={3} placeholder="Describe your education" />
                               </div>
                               <div className="flex justify-end gap-2 mt-4">
-                                <Button size="sm" variant="outline">Edit</Button>
+                                <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Edit</Button>
                                 <Button size="sm" variant="destructive">Delete</Button>
                               </div>
                             </div>
@@ -1360,10 +1360,10 @@ export default function ProfilePage() {
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
-              <Button variant="outline" onClick={handleCancelEdit}>
+              <Button variant="outline" onClick={handleCancelEdit} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                 Cancel
               </Button>
-              <Button onClick={handleSaveProfile} className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Button onClick={handleSaveProfile} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                 Save Changes
               </Button>
             </div>

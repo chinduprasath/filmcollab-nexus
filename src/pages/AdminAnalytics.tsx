@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,25 +15,468 @@ import {
   UserCheck,
   Download,
   BarChart3,
-  LineChart,
+  LineChart as LineChartIcon,
   Image,
   Eye,
   Heart,
   Share2,
   UserPlus,
   Target,
-  Zap
+  Zap,
+  PieChart,
+  Calendar,
+  CalendarDays,
+  CalendarRange
 } from "lucide-react";
 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar
+} from 'recharts';
+
+// User categories data
+const CHART_COLORS = {
+  yellow: {
+    primary: '#eab308', // yellow-500
+    secondary: '#facc15', // yellow-400
+    tertiary: '#fbbf24', // yellow-400/yellow-500 mix
+    light: '#fef9c3', // yellow-100
+    dark: '#ca8a04', // yellow-600
+  }
+};
+
+const CHART_STYLES = {
+  lineChart: {
+    totalUsers: CHART_COLORS.yellow.primary,
+    newUsers: CHART_COLORS.yellow.secondary,
+    activeUsers: CHART_COLORS.yellow.tertiary,
+  },
+  pieChart: [
+    CHART_COLORS.yellow.primary,
+    CHART_COLORS.yellow.secondary,
+    CHART_COLORS.yellow.tertiary,
+    CHART_COLORS.yellow.dark,
+    '#fcd34d', // yellow-300
+    '#fde047', // yellow-300/yellow-400 mix
+    '#facc15', // yellow-400
+    '#eab308', // yellow-500
+  ]
+};
+
+// Generate mock data for projects analytics
+const generateProjectsData = () => {
+  const now = new Date();
+  const dailyData = [];
+  const monthlyData = [];
+  const yearlyData = [];
+
+  // Generate daily data for last 30 days
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    dailyData.push({
+      date: date.toISOString().split('T')[0],
+      projects: Math.floor(Math.random() * 30) + 10,
+      uniqueUsers: Math.floor(Math.random() * 20) + 5
+    });
+  }
+
+  // Generate monthly data for last 12 months
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(now);
+    date.setMonth(date.getMonth() - i);
+    monthlyData.push({
+      date: date.toISOString().slice(0, 7),
+      projects: Math.floor(Math.random() * 500) + 200,
+      uniqueUsers: Math.floor(Math.random() * 300) + 100
+    });
+  }
+
+  // Generate yearly data for last 5 years
+  for (let i = 4; i >= 0; i--) {
+    const date = new Date(now);
+    date.setFullYear(date.getFullYear() - i);
+    yearlyData.push({
+      date: date.getFullYear().toString(),
+      projects: Math.floor(Math.random() * 5000) + 2000,
+      uniqueUsers: Math.floor(Math.random() * 2000) + 1000
+    });
+  }
+
+  return { dailyData, monthlyData, yearlyData };
+};
+
+// Generate mock data for jobs analytics
+const generateJobsData = () => {
+  const now = new Date();
+  const dailyData = [];
+  const monthlyData = [];
+  const yearlyData = [];
+
+  // Generate daily data for last 30 days
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    dailyData.push({
+      date: date.toISOString().split('T')[0],
+      jobs: Math.floor(Math.random() * 20) + 5,
+      uniqueUsers: Math.floor(Math.random() * 15) + 3
+    });
+  }
+
+  // Generate monthly data for last 12 months
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(now);
+    date.setMonth(date.getMonth() - i);
+    monthlyData.push({
+      date: date.toISOString().slice(0, 7),
+      jobs: Math.floor(Math.random() * 300) + 100,
+      uniqueUsers: Math.floor(Math.random() * 200) + 50
+    });
+  }
+
+  // Generate yearly data for last 5 years
+  for (let i = 4; i >= 0; i--) {
+    const date = new Date(now);
+    date.setFullYear(date.getFullYear() - i);
+    yearlyData.push({
+      date: date.getFullYear().toString(),
+      jobs: Math.floor(Math.random() * 3000) + 1000,
+      uniqueUsers: Math.floor(Math.random() * 1500) + 500
+    });
+  }
+
+  return { dailyData, monthlyData, yearlyData };
+};
+
+// Generate mock data for directory analytics
+const generateDirectoryData = () => {
+  const now = new Date();
+  const dailyData = [];
+  const monthlyData = [];
+  const yearlyData = [];
+
+  // Generate daily data for last 30 days
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    dailyData.push({
+      date: date.toISOString().split('T')[0],
+      images: Math.floor(Math.random() * 100) + 50,
+      videos: Math.floor(Math.random() * 50) + 20,
+      audios: Math.floor(Math.random() * 30) + 10,
+      documents: Math.floor(Math.random() * 40) + 15
+    });
+  }
+
+  // Generate monthly data for last 12 months
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(now);
+    date.setMonth(date.getMonth() - i);
+    monthlyData.push({
+      date: date.toISOString().slice(0, 7),
+      images: Math.floor(Math.random() * 3000) + 1500,
+      videos: Math.floor(Math.random() * 1500) + 600,
+      audios: Math.floor(Math.random() * 900) + 300,
+      documents: Math.floor(Math.random() * 1200) + 450
+    });
+  }
+
+  // Generate yearly data for last 5 years
+  for (let i = 4; i >= 0; i--) {
+    const date = new Date(now);
+    date.setFullYear(date.getFullYear() - i);
+    yearlyData.push({
+      date: date.getFullYear().toString(),
+      images: Math.floor(Math.random() * 30000) + 15000,
+      videos: Math.floor(Math.random() * 15000) + 6000,
+      audios: Math.floor(Math.random() * 9000) + 3000,
+      documents: Math.floor(Math.random() * 12000) + 4500
+    });
+  }
+
+  const totalFiles = {
+    images: monthlyData.reduce((acc, curr) => acc + curr.images, 0),
+    videos: monthlyData.reduce((acc, curr) => acc + curr.videos, 0),
+    audios: monthlyData.reduce((acc, curr) => acc + curr.audios, 0),
+    documents: monthlyData.reduce((acc, curr) => acc + curr.documents, 0)
+  };
+
+  return { dailyData, monthlyData, yearlyData, totalFiles };
+};
+
+// Generate mock data for community analytics
+const generateCommunityData = () => {
+  const now = new Date();
+  const dailyData = [];
+  const monthlyData = [];
+  const yearlyData = [];
+
+  // Generate daily data for last 30 days
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    dailyData.push({
+      date: date.toISOString().split('T')[0],
+      communities: Math.floor(Math.random() * 15) + 5,
+      uniqueUsers: Math.floor(Math.random() * 10) + 3
+    });
+  }
+
+  // Generate monthly data for last 12 months
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(now);
+    date.setMonth(date.getMonth() - i);
+    monthlyData.push({
+      date: date.toISOString().slice(0, 7),
+      communities: Math.floor(Math.random() * 200) + 50,
+      uniqueUsers: Math.floor(Math.random() * 150) + 30
+    });
+  }
+
+  // Generate yearly data for last 5 years
+  for (let i = 4; i >= 0; i--) {
+    const date = new Date(now);
+    date.setFullYear(date.getFullYear() - i);
+    yearlyData.push({
+      date: date.getFullYear().toString(),
+      communities: Math.floor(Math.random() * 2000) + 500,
+      uniqueUsers: Math.floor(Math.random() * 1500) + 300
+    });
+  }
+
+  return { dailyData, monthlyData, yearlyData };
+};
+
+// Generate mock data for posts analytics
+const generatePostsData = () => {
+  const now = new Date();
+  const dailyData = [];
+  const monthlyData = [];
+  const yearlyData = [];
+
+  // Generate daily data for last 30 days
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    dailyData.push({
+      date: date.toISOString().split('T')[0],
+      posts: Math.floor(Math.random() * 50) + 20,
+      uniqueUsers: Math.floor(Math.random() * 30) + 10
+    });
+  }
+
+  // Generate monthly data for last 12 months
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(now);
+    date.setMonth(date.getMonth() - i);
+    monthlyData.push({
+      date: date.toISOString().slice(0, 7),
+      posts: Math.floor(Math.random() * 1000) + 500,
+      uniqueUsers: Math.floor(Math.random() * 500) + 200
+    });
+  }
+
+  // Generate yearly data for last 5 years
+  for (let i = 4; i >= 0; i--) {
+    const date = new Date(now);
+    date.setFullYear(date.getFullYear() - i);
+    yearlyData.push({
+      date: date.getFullYear().toString(),
+      posts: Math.floor(Math.random() * 10000) + 5000,
+      uniqueUsers: Math.floor(Math.random() * 5000) + 2000
+    });
+  }
+
+  return { dailyData, monthlyData, yearlyData };
+};
+
+const postsAnalyticsData = generatePostsData();
+const projectsAnalyticsData = generateProjectsData();
+const jobsAnalyticsData = generateJobsData();
+const directoryAnalyticsData = generateDirectoryData();
+const communityAnalyticsData = generateCommunityData();
+
+const userRolesData = [
+    { name: "Direction & Production", value: 15, details: [
+      { name: "Director", value: 4 },
+      { name: "Assistant Director", value: 3 },
+      { name: "Producer", value: 2 },
+      { name: "Executive Producer", value: 1 },
+      { name: "Line Producer", value: 2 },
+      { name: "Production Manager", value: 2 },
+      { name: "Production Assistant", value: 1 }
+    ]},
+    { name: "Cinematography & Camera", value: 12, details: [
+      { name: "Cinematographer", value: 3 },
+      { name: "Assistant Cameraman", value: 2 },
+      { name: "Camera Operator", value: 2 },
+      { name: "Steadicam Operator", value: 1 },
+      { name: "Drone Operator", value: 1 },
+      { name: "Gaffer", value: 2 },
+      { name: "Lighting Technician", value: 1 }
+    ]},
+    { name: "Actors & Performers", value: 20, details: [
+      { name: "Lead Actor/Actress", value: 5 },
+      { name: "Supporting Actor/Actress", value: 6 },
+      { name: "Child Artist", value: 2 },
+      { name: "Theatre Artist", value: 3 },
+      { name: "Voice Over Artist", value: 2 },
+      { name: "Dancer", value: 1 },
+      { name: "Stunt Artist", value: 1 }
+    ]},
+    { name: "Writing & Creative", value: 10, details: [
+      { name: "Script Writer", value: 3 },
+      { name: "Screenplay Writer", value: 2 },
+      { name: "Dialogue Writer", value: 2 },
+      { name: "Lyricist", value: 1 },
+      { name: "Storyboard Artist", value: 2 }
+    ]},
+    { name: "Music & Sound", value: 8, details: [
+      { name: "Music Director", value: 1 },
+      { name: "Background Score Composer", value: 1 },
+      { name: "Singer", value: 2 },
+      { name: "Instrumentalist", value: 1 },
+      { name: "Sound Engineer", value: 1 },
+      { name: "Foley Artist", value: 1 },
+      { name: "Dubbing Artist", value: 1 }
+    ]},
+    { name: "Art & Design", value: 12, details: [
+      { name: "Art Director", value: 2 },
+      { name: "Set Designer", value: 2 },
+      { name: "Costume Designer", value: 2 },
+      { name: "Stylist", value: 1 },
+      { name: "Makeup Artist", value: 2 },
+      { name: "Hair Stylist", value: 1 },
+      { name: "Graphic Designer", value: 1 },
+      { name: "Poster Designer", value: 1 }
+    ]},
+    { name: "Editing & Post Production", value: 15, details: [
+      { name: "Video Editor", value: 4 },
+      { name: "VFX Artist", value: 3 },
+      { name: "Motion Graphics Designer", value: 3 },
+      { name: "Colorist", value: 2 },
+      { name: "DI Supervisor", value: 1 },
+      { name: "Sound Editor", value: 2 }
+    ]},
+    { name: "Marketing & Distribution", value: 8, details: [
+      { name: "Digital Marketer", value: 3 },
+      { name: "PR", value: 2 },
+      { name: "Social Media Manager", value: 2 },
+      { name: "Film Distributor", value: 1 }
+    ]    }
+];
+
 export default function AdminAnalytics() {
+  // Time period state for posts analytics
+  const [postsTimeView, setPostsTimeView] = useState('monthly'); // daily, monthly, yearly
+  const [postsDateRange, setPostsDateRange] = useState('30d'); // 7d, 30d, 6m, 1y
+
+  // Time period state for projects analytics
+  const [projectsTimeView, setProjectsTimeView] = useState('monthly');
+  const [projectsDateRange, setProjectsDateRange] = useState('30d');
+
+  // Time period state for jobs analytics
+  const [jobsTimeView, setJobsTimeView] = useState('monthly');
+  const [jobsDateRange, setJobsDateRange] = useState('30d');
+
+  // Time period state for directory analytics
+  const [directoryTimeView, setDirectoryTimeView] = useState('monthly');
+  const [directoryDateRange, setDirectoryDateRange] = useState('30d');
+
+  // Time period state for community analytics
+  const [communityTimeView, setCommunityTimeView] = useState('monthly');
+  const [communityDateRange, setCommunityDateRange] = useState('30d');
+
+  // Get posts data based on current view
+  const getPostsData = () => {
+    switch (postsTimeView) {
+      case 'daily':
+        return postsAnalyticsData.dailyData;
+      case 'monthly':
+        return postsAnalyticsData.monthlyData;
+      case 'yearly':
+        return postsAnalyticsData.yearlyData;
+      default:
+        return postsAnalyticsData.monthlyData;
+    }
+  };
+
+  // Get projects data based on current view
+  const getProjectsData = () => {
+    switch (projectsTimeView) {
+      case 'daily':
+        return projectsAnalyticsData.dailyData;
+      case 'monthly':
+        return projectsAnalyticsData.monthlyData;
+      case 'yearly':
+        return projectsAnalyticsData.yearlyData;
+      default:
+        return projectsAnalyticsData.monthlyData;
+    }
+  };
+
+  // Get jobs data based on current view
+  const getJobsData = () => {
+    switch (jobsTimeView) {
+      case 'daily':
+        return jobsAnalyticsData.dailyData;
+      case 'monthly':
+        return jobsAnalyticsData.monthlyData;
+      case 'yearly':
+        return jobsAnalyticsData.yearlyData;
+      default:
+        return jobsAnalyticsData.monthlyData;
+    }
+  };
+
+  // Get directory data based on current view
+  const getDirectoryData = () => {
+    switch (directoryTimeView) {
+      case 'daily':
+        return directoryAnalyticsData.dailyData;
+      case 'monthly':
+        return directoryAnalyticsData.monthlyData;
+      case 'yearly':
+        return directoryAnalyticsData.yearlyData;
+      default:
+        return directoryAnalyticsData.monthlyData;
+    }
+  };
+
+  // Get community data based on current view
+  const getCommunityData = () => {
+    switch (communityTimeView) {
+      case 'daily':
+        return communityAnalyticsData.dailyData;
+      case 'monthly':
+        return communityAnalyticsData.monthlyData;
+      case 'yearly':
+        return communityAnalyticsData.yearlyData;
+      default:
+        return communityAnalyticsData.monthlyData;
+    }
+  };
+
   // Platform-specific analytics data
   const platformData = {
     users: {
       metrics: [
-        { title: "Total Users", value: "15,420", change: "+12.5%", icon: Users, color: "text-blue-600" },
-        { title: "New Users (30d)", value: "1,284", change: "+8.3%", icon: UserPlus, color: "text-green-600" },
-        { title: "Active Users", value: "8,932", change: "+15.2%", icon: Activity, color: "text-purple-600" },
-        { title: "User Retention", value: "78.5%", change: "+2.1%", icon: Target, color: "text-orange-600" }
+        { title: "Total Users", value: "15,420", change: "+12.5%", icon: Users, color: "text-yellow-600" },
+        { title: "New Users (30d)", value: "1,284", change: "+8.3%", icon: UserPlus, color: "text-yellow-600" },
+        { title: "Active Users", value: "8,932", change: "+15.2%", icon: Activity, color: "text-yellow-600" },
+        { title: "User Retention", value: "78.5%", change: "+2.1%", icon: Target, color: "text-yellow-600" }
       ],
       chartData: [
         { month: 'Jan', total: 1200, new: 120, active: 800 },
@@ -52,8 +496,8 @@ export default function AdminAnalytics() {
     posts: {
       metrics: [
         { title: "Total Posts", value: "24,508", change: "+18.7%", icon: FileText, color: "text-indigo-600" },
-        { title: "Posts (30d)", value: "2,847", change: "+22.1%", icon: FileText, color: "text-blue-500" },
-        { title: "Post Engagement", value: "4.2k", change: "+31.5%", icon: Heart, color: "text-red-500" },
+        { title: "Posts (30d)", value: "2,847", change: "+22.1%", icon: FileText, color: "text-yellow-600" },
+        { title: "Post Engagement", value: "4.2k", change: "+31.5%", icon: Heart, color: "text-yellow-600" },
         { title: "Content Views", value: "156.7k", change: "+25.8%", icon: Eye, color: "text-teal-600" }
       ],
       chartData: [
@@ -73,10 +517,10 @@ export default function AdminAnalytics() {
     },
     projects: {
       metrics: [
-        { title: "Total Projects", value: "3,247", change: "+14.2%", icon: FolderOpen, color: "text-purple-600" },
+        { title: "Total Projects", value: "3,247", change: "+14.2%", icon: FolderOpen, color: "text-yellow-600" },
         { title: "Active Projects", value: "1,892", change: "+9.8%", icon: Zap, color: "text-yellow-600" },
-        { title: "Completed", value: "1,355", change: "+16.3%", icon: Target, color: "text-green-600" },
-        { title: "Project Views", value: "89.3k", change: "+19.4%", icon: Eye, color: "text-blue-600" }
+        { title: "Completed", value: "1,355", change: "+16.3%", icon: Target, color: "text-yellow-600" },
+        { title: "Project Views", value: "89.3k", change: "+19.4%", icon: Eye, color: "text-yellow-600" }
       ],
       chartData: [
         { month: 'Jan', total: 240, active: 180, completed: 60, views: 5000 },
@@ -95,10 +539,10 @@ export default function AdminAnalytics() {
     },
     jobs: {
       metrics: [
-        { title: "Total Jobs", value: "1,247", change: "+21.3%", icon: Briefcase, color: "text-orange-600" },
-        { title: "Active Jobs", value: "456", change: "+12.7%", icon: Briefcase, color: "text-green-600" },
-        { title: "Applications", value: "8,932", change: "+28.9%", icon: UserCheck, color: "text-blue-600" },
-        { title: "Job Views", value: "67.4k", change: "+33.1%", icon: Eye, color: "text-purple-600" }
+        { title: "Total Jobs", value: "1,247", change: "+21.3%", icon: Briefcase, color: "text-yellow-600" },
+        { title: "Active Jobs", value: "456", change: "+12.7%", icon: Briefcase, color: "text-yellow-600" },
+        { title: "Applications", value: "8,932", change: "+28.9%", icon: UserCheck, color: "text-yellow-600" },
+        { title: "Job Views", value: "67.4k", change: "+33.1%", icon: Eye, color: "text-yellow-600" }
       ],
       chartData: [
         { month: 'Jan', total: 89, active: 65, applications: 450, views: 3000 },
@@ -118,9 +562,9 @@ export default function AdminAnalytics() {
     directory: {
       metrics: [
         { title: "Total Files", value: "45,678", change: "+17.6%", icon: Image, color: "text-pink-600" },
-        { title: "Images", value: "32,456", change: "+15.2%", icon: Image, color: "text-blue-500" },
-        { title: "Videos", value: "8,234", change: "+24.7%", icon: FileText, color: "text-red-500" },
-        { title: "Downloads", value: "234.5k", change: "+29.3%", icon: Download, color: "text-green-600" }
+        { title: "Images", value: "32,456", change: "+15.2%", icon: Image, color: "text-yellow-600" },
+        { title: "Videos", value: "8,234", change: "+24.7%", icon: FileText, color: "text-yellow-600" },
+        { title: "Downloads", value: "234.5k", change: "+29.3%", icon: Download, color: "text-yellow-600" }
       ],
       chartData: [
         { month: 'Jan', total: 3200, images: 2400, videos: 600, downloads: 15000 },
@@ -140,9 +584,9 @@ export default function AdminAnalytics() {
     community: {
       metrics: [
         { title: "Messages", value: "124,508", change: "+35.2%", icon: MessageCircle, color: "text-teal-600" },
-        { title: "Connections", value: "18,347", change: "+22.8%", icon: UserCheck, color: "text-purple-600" },
+        { title: "Connections", value: "18,347", change: "+22.8%", icon: UserCheck, color: "text-yellow-600" },
         { title: "Groups", value: "892", change: "+11.4%", icon: Users, color: "text-indigo-600" },
-        { title: "Shares", value: "45,678", change: "+41.7%", icon: Share2, color: "text-orange-600" }
+        { title: "Shares", value: "45,678", change: "+41.7%", icon: Share2, color: "text-yellow-600" }
       ],
       chartData: [
         { month: 'Jan', messages: 8000, connections: 1200, groups: 60, shares: 3000 },
@@ -235,71 +679,154 @@ export default function AdminAnalytics() {
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{metric.value}</div>
                     <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                      <span className="text-xs text-green-600 font-medium">{metric.change}</span>
+                      <TrendingUp className="h-3 w-3 text-yellow-600" />
+                      <span className="text-xs text-yellow-600 font-medium">{metric.change}</span>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
 
-            {/* Users Chart */}
+            {/* User Analytics Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* User Growth Chart */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
-                  User Growth Over Time
-                </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium flex items-center gap-2">
+                        <LineChartIcon className="h-5 w-5 text-yellow-600" />
+                        User Growth
+                      </h3>
                 <p className="text-sm text-muted-foreground">Total, new, and active users by month</p>
+                    </div>
+                  </div>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-end justify-between gap-1">
-                  {platformData.users.chartData.map((data, index) => {
-                    const maxValue = Math.max(...platformData.users.chartData.map(d => d.total));
-                    const totalHeight = (data.total / maxValue) * 180;
-                    const newHeight = (data.new / maxValue) * 180;
-                    const activeHeight = (data.active / maxValue) * 180;
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                        <div className="flex flex-col gap-1 w-full h-48">
-                          <div 
-                            className="w-full bg-blue-600 rounded-t-sm transition-all duration-300 hover:bg-blue-700"
-                            style={{ height: `${totalHeight}px` }}
-                            title={`${data.month} Total: ${data.total}`}
-                          />
-                          <div 
-                            className="w-full bg-green-600 transition-all duration-300 hover:bg-green-700"
-                            style={{ height: `${newHeight}px` }}
-                            title={`${data.month} New: ${data.new}`}
-                          />
-                          <div 
-                            className="w-full bg-purple-600 rounded-b-sm transition-all duration-300 hover:bg-purple-700"
-                            style={{ height: `${activeHeight}px` }}
-                            title={`${data.month} Active: ${data.active}`}
-                          />
+                  <div className="h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={platformData.users.chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis 
+                          dataKey="month" 
+                          stroke="#6b7280"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          stroke="#6b7280"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(value) => `${value}k`}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '0.5rem',
+                            boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                          }}
+                          itemStyle={{ color: '#374151' }}
+                          labelStyle={{ color: '#6b7280', marginBottom: '0.5rem' }}
+                        />
+                        <Legend 
+                          verticalAlign="top"
+                          height={36}
+                          iconType="circle"
+                          formatter={(value) => (
+                            <span style={{ color: '#374151', fontSize: '0.875rem' }}>{value}</span>
+                          )}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="total"
+                          name="Total Users"
+                          stroke={CHART_STYLES.lineChart.totalUsers}
+                          strokeWidth={2}
+                          dot={false}
+                          activeDot={{ r: 4, fill: CHART_STYLES.lineChart.totalUsers }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="new"
+                          name="New Users"
+                          stroke={CHART_STYLES.lineChart.newUsers}
+                          strokeWidth={2}
+                          dot={false}
+                          activeDot={{ r: 4, fill: CHART_STYLES.lineChart.newUsers }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="active"
+                          name="Active Users"
+                          stroke={CHART_STYLES.lineChart.activeUsers}
+                          strokeWidth={2}
+                          dot={false}
+                          activeDot={{ r: 4, fill: CHART_STYLES.lineChart.activeUsers }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
                         </div>
-                        <span className="text-xs text-muted-foreground">{data.month}</span>
+                </CardContent>
+              </Card>
+
+              {/* User Roles Distribution */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium flex items-center gap-2">
+                        <PieChart className="h-5 w-5 text-yellow-600" />
+                        User Roles Distribution
+                      </h3>
+                      <p className="text-sm text-muted-foreground">Distribution across professional roles</p>
                       </div>
-                    );
-                  })}
                 </div>
-                <div className="flex justify-center gap-6 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Total Users</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">New Users</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-purple-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Active Users</span>
-                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPieChart>
+                        <Pie
+                          data={userRolesData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={150}
+                          fill="#8884d8"
+                          dataKey="value"
+                          nameKey="name"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {userRolesData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={CHART_STYLES.pieChart[index % CHART_STYLES.pieChart.length]} 
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '0.5rem',
+                            boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                          }}
+                          itemStyle={{ color: '#374151' }}
+                          formatter={(value, name) => [
+                            `${value}%`,
+                            name,
+                            `(${userRolesData.find(r => r.name === name)?.details.length || 0} sub-roles)`
+                          ]}
+                        />
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
+            </div>
           </TabsContent>
 
           {/* Posts Analytics */}
@@ -317,71 +844,176 @@ export default function AdminAnalytics() {
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{metric.value}</div>
                     <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                      <span className="text-xs text-green-600 font-medium">{metric.change}</span>
+                      <TrendingUp className="h-3 w-3 text-yellow-600" />
+                      <span className="text-xs text-yellow-600 font-medium">{metric.change}</span>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
 
-            {/* Posts Chart */}
+            {/* Posts Analytics Graphs */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Total Posts Graph */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LineChart className="h-5 w-5 text-indigo-600" />
-                  Posts Performance Over Time
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">Total posts, new posts, and views by month</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5 text-yellow-600" />
+                        Total Posts
+                      </h3>
+                      <p className="text-sm text-muted-foreground">Number of posts over time</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Select value={postsTimeView} onValueChange={setPostsTimeView}>
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="View" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">
+                            <span className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4" />
+                              Daily
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="monthly">
+                            <span className="flex items-center gap-2">
+                              <CalendarDays className="h-4 w-4" />
+                              Monthly
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="yearly">
+                            <span className="flex items-center gap-2">
+                              <CalendarRange className="h-4 w-4" />
+                              Yearly
+                            </span>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={postsDateRange} onValueChange={setPostsDateRange}>
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Date Range" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="7d">Last 7 days</SelectItem>
+                          <SelectItem value="30d">Last 30 days</SelectItem>
+                          <SelectItem value="6m">Last 6 months</SelectItem>
+                          <SelectItem value="1y">Last 1 year</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-end justify-between gap-1">
-                  {platformData.posts.chartData.map((data, index) => {
-                    const maxValue = Math.max(...platformData.posts.chartData.map(d => d.total));
-                    const totalHeight = (data.total / maxValue) * 180;
-                    const newHeight = (data.new / maxValue) * 180;
-                    const viewsHeight = (data.views / maxValue) * 180;
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                        <div className="flex flex-col gap-1 w-full h-48">
-                          <div 
-                            className="w-full bg-indigo-600 rounded-t-sm transition-all duration-300 hover:bg-indigo-700"
-                            style={{ height: `${totalHeight}px` }}
-                            title={`${data.month} Total: ${data.total}`}
-                          />
-                          <div 
-                            className="w-full bg-blue-500 transition-all duration-300 hover:bg-blue-600"
-                            style={{ height: `${newHeight}px` }}
-                            title={`${data.month} New: ${data.new}`}
-                          />
-                          <div 
-                            className="w-full bg-teal-600 rounded-b-sm transition-all duration-300 hover:bg-teal-700"
-                            style={{ height: `${viewsHeight}px` }}
-                            title={`${data.month} Views: ${data.views.toLocaleString()}`}
-                          />
+                  <div className="h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={getPostsData()}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis 
+                          dataKey="date" 
+                          stroke="#6b7280"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          stroke="#6b7280"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(value) => value.toLocaleString()}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '0.5rem',
+                            boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                          }}
+                          itemStyle={{ color: '#374151' }}
+                          labelStyle={{ color: '#6b7280', marginBottom: '0.5rem' }}
+                          formatter={(value) => [value.toLocaleString(), 'Posts']}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="posts"
+                          name="Total Posts"
+                          stroke={CHART_STYLES.lineChart.totalUsers}
+                          strokeWidth={2}
+                          dot={false}
+                          activeDot={{ r: 4, fill: CHART_STYLES.lineChart.totalUsers }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
                         </div>
-                        <span className="text-xs text-muted-foreground">{data.month}</span>
+                </CardContent>
+              </Card>
+
+              {/* Users Posting Graph */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium flex items-center gap-2">
+                        <Users className="h-5 w-5 text-yellow-600" />
+                        Users Posting
+                      </h3>
+                      <p className="text-sm text-muted-foreground">Unique users creating posts</p>
                       </div>
-                    );
-                  })}
                 </div>
-                <div className="flex justify-center gap-6 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-indigo-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Total Posts</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                    <span className="text-xs text-muted-foreground">New Posts</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-teal-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Views</span>
-                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={getPostsData()}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis 
+                          dataKey="date" 
+                          stroke="#6b7280"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          stroke="#6b7280"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(value) => value.toLocaleString()}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '0.5rem',
+                            boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                          }}
+                          itemStyle={{ color: '#374151' }}
+                          labelStyle={{ color: '#6b7280', marginBottom: '0.5rem' }}
+                          formatter={(value) => [value.toLocaleString(), 'Users']}
+                        />
+                        <Bar
+                          dataKey="uniqueUsers"
+                          name="Unique Users"
+                          fill={CHART_STYLES.lineChart.activeUsers}
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="uniqueUsers"
+                          name="Trend"
+                          stroke={CHART_STYLES.lineChart.totalUsers}
+                          strokeWidth={2}
+                          dot={false}
+                          activeDot={false}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
+            </div>
           </TabsContent>
 
           {/* Projects Analytics */}
@@ -399,81 +1031,167 @@ export default function AdminAnalytics() {
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{metric.value}</div>
                     <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                      <span className="text-xs text-green-600 font-medium">{metric.change}</span>
+                      <TrendingUp className="h-3 w-3 text-yellow-600" />
+                      <span className="text-xs text-yellow-600 font-medium">{metric.change}</span>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
 
-            {/* Projects Chart */}
+             {/* Projects Analytics Graphs */}
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+               {/* Total Projects Graph */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-purple-600" />
-                  Projects Status Over Time
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">Total, active, completed projects and views by month</p>
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <h3 className="text-lg font-medium flex items-center gap-2">
+                         <BarChart3 className="h-5 w-5 text-yellow-600" />
+                         Total Projects
+                       </h3>
+                       <p className="text-sm text-muted-foreground">Number of projects over time</p>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <Select value={projectsTimeView} onValueChange={setProjectsTimeView}>
+                         <SelectTrigger className="w-[120px]">
+                           <SelectValue placeholder="View" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="daily">
+                             <span className="flex items-center gap-2">
+                               <Calendar className="h-4 w-4" />
+                               Daily
+                             </span>
+                           </SelectItem>
+                           <SelectItem value="monthly">
+                             <span className="flex items-center gap-2">
+                               <CalendarDays className="h-4 w-4" />
+                               Monthly
+                             </span>
+                           </SelectItem>
+                           <SelectItem value="yearly">
+                             <span className="flex items-center gap-2">
+                               <CalendarRange className="h-4 w-4" />
+                               Yearly
+                             </span>
+                           </SelectItem>
+                         </SelectContent>
+                       </Select>
+                       <Select value={projectsDateRange} onValueChange={setProjectsDateRange}>
+                         <SelectTrigger className="w-[140px]">
+                           <SelectValue placeholder="Date Range" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="7d">Last 7 days</SelectItem>
+                           <SelectItem value="30d">Last 30 days</SelectItem>
+                           <SelectItem value="6m">Last 6 months</SelectItem>
+                           <SelectItem value="1y">Last 1 year</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                   </div>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-end justify-between gap-1">
-                  {platformData.projects.chartData.map((data, index) => {
-                    const maxValue = Math.max(...platformData.projects.chartData.map(d => d.total));
-                    const totalHeight = (data.total / maxValue) * 180;
-                    const activeHeight = (data.active / maxValue) * 180;
-                    const completedHeight = (data.completed / maxValue) * 180;
-                    const viewsHeight = (data.views / maxValue) * 180;
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                        <div className="flex flex-col gap-1 w-full h-48">
-                          <div 
-                            className="w-full bg-purple-600 rounded-t-sm transition-all duration-300 hover:bg-purple-700"
-                            style={{ height: `${totalHeight}px` }}
-                            title={`${data.month} Total: ${data.total}`}
-                          />
-                          <div 
-                            className="w-full bg-yellow-600 transition-all duration-300 hover:bg-yellow-700"
-                            style={{ height: `${activeHeight}px` }}
-                            title={`${data.month} Active: ${data.active}`}
-                          />
-                          <div 
-                            className="w-full bg-green-600 transition-all duration-300 hover:bg-green-700"
-                            style={{ height: `${completedHeight}px` }}
-                            title={`${data.month} Completed: ${data.completed}`}
-                          />
-                          <div 
-                            className="w-full bg-blue-600 rounded-b-sm transition-all duration-300 hover:bg-blue-700"
-                            style={{ height: `${viewsHeight}px` }}
-                            title={`${data.month} Views: ${data.views.toLocaleString()}`}
-                          />
+                   <div className="h-[400px] w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                       <LineChart data={getProjectsData()}>
+                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                         <XAxis 
+                           dataKey="date" 
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                         />
+                         <YAxis
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                           tickFormatter={(value) => value.toLocaleString()}
+                         />
+                         <Tooltip
+                           contentStyle={{
+                             backgroundColor: 'white',
+                             border: '1px solid #e5e7eb',
+                             borderRadius: '0.5rem',
+                             boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                           }}
+                           itemStyle={{ color: '#374151' }}
+                           labelStyle={{ color: '#6b7280', marginBottom: '0.5rem' }}
+                           formatter={(value) => [value.toLocaleString(), 'Projects']}
+                         />
+                         <Line
+                           type="monotone"
+                           dataKey="projects"
+                           name="Total Projects"
+                           stroke={CHART_STYLES.lineChart.totalUsers}
+                           strokeWidth={2}
+                           dot={false}
+                           activeDot={{ r: 4, fill: CHART_STYLES.lineChart.totalUsers }}
+                         />
+                       </LineChart>
+                     </ResponsiveContainer>
                         </div>
-                        <span className="text-xs text-muted-foreground">{data.month}</span>
+                 </CardContent>
+               </Card>
+
+               {/* Project Creators Graph */}
+               <Card>
+                 <CardHeader>
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <h3 className="text-lg font-medium flex items-center gap-2">
+                         <Users className="h-5 w-5 text-yellow-600" />
+                         Project Creators
+                       </h3>
+                       <p className="text-sm text-muted-foreground">Users creating projects</p>
                       </div>
-                    );
-                  })}
                 </div>
-                <div className="flex justify-center gap-4 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-purple-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Total</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-yellow-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Active</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Completed</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Views</span>
-                  </div>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="h-[400px] w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                       <BarChart data={getProjectsData()}>
+                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                         <XAxis 
+                           dataKey="date" 
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                         />
+                         <YAxis
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                           tickFormatter={(value) => value.toLocaleString()}
+                         />
+                         <Tooltip
+                           contentStyle={{
+                             backgroundColor: 'white',
+                             border: '1px solid #e5e7eb',
+                             borderRadius: '0.5rem',
+                             boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                           }}
+                           itemStyle={{ color: '#374151' }}
+                           labelStyle={{ color: '#6b7280', marginBottom: '0.5rem' }}
+                           formatter={(value) => [value.toLocaleString(), 'Creators']}
+                         />
+                         <Bar
+                           dataKey="uniqueUsers"
+                           name="Unique Users"
+                           fill={CHART_STYLES.lineChart.activeUsers}
+                           radius={[4, 4, 0, 0]}
+                         />
+                       </BarChart>
+                     </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
+             </div>
           </TabsContent>
 
           {/* Jobs Analytics */}
@@ -491,81 +1209,167 @@ export default function AdminAnalytics() {
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{metric.value}</div>
                     <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                      <span className="text-xs text-green-600 font-medium">{metric.change}</span>
+                      <TrendingUp className="h-3 w-3 text-yellow-600" />
+                      <span className="text-xs text-yellow-600 font-medium">{metric.change}</span>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
 
-            {/* Jobs Chart */}
+             {/* Jobs Analytics Graphs */}
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+               {/* Total Jobs Graph */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LineChart className="h-5 w-5 text-orange-600" />
-                  Jobs Performance Over Time
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">Total jobs, active jobs, applications, and views by month</p>
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <h3 className="text-lg font-medium flex items-center gap-2">
+                         <BarChart3 className="h-5 w-5 text-yellow-600" />
+                         Total Jobs
+                       </h3>
+                       <p className="text-sm text-muted-foreground">Number of jobs over time</p>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <Select value={jobsTimeView} onValueChange={setJobsTimeView}>
+                         <SelectTrigger className="w-[120px]">
+                           <SelectValue placeholder="View" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="daily">
+                             <span className="flex items-center gap-2">
+                               <Calendar className="h-4 w-4" />
+                               Daily
+                             </span>
+                           </SelectItem>
+                           <SelectItem value="monthly">
+                             <span className="flex items-center gap-2">
+                               <CalendarDays className="h-4 w-4" />
+                               Monthly
+                             </span>
+                           </SelectItem>
+                           <SelectItem value="yearly">
+                             <span className="flex items-center gap-2">
+                               <CalendarRange className="h-4 w-4" />
+                               Yearly
+                             </span>
+                           </SelectItem>
+                         </SelectContent>
+                       </Select>
+                       <Select value={jobsDateRange} onValueChange={setJobsDateRange}>
+                         <SelectTrigger className="w-[140px]">
+                           <SelectValue placeholder="Date Range" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="7d">Last 7 days</SelectItem>
+                           <SelectItem value="30d">Last 30 days</SelectItem>
+                           <SelectItem value="6m">Last 6 months</SelectItem>
+                           <SelectItem value="1y">Last 1 year</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                   </div>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-end justify-between gap-1">
-                  {platformData.jobs.chartData.map((data, index) => {
-                    const maxValue = Math.max(...platformData.jobs.chartData.map(d => d.total));
-                    const totalHeight = (data.total / maxValue) * 180;
-                    const activeHeight = (data.active / maxValue) * 180;
-                    const applicationsHeight = (data.applications / maxValue) * 180;
-                    const viewsHeight = (data.views / maxValue) * 180;
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                        <div className="flex flex-col gap-1 w-full h-48">
-                          <div 
-                            className="w-full bg-orange-600 rounded-t-sm transition-all duration-300 hover:bg-orange-700"
-                            style={{ height: `${totalHeight}px` }}
-                            title={`${data.month} Total: ${data.total}`}
-                          />
-                          <div 
-                            className="w-full bg-green-600 transition-all duration-300 hover:bg-green-700"
-                            style={{ height: `${activeHeight}px` }}
-                            title={`${data.month} Active: ${data.active}`}
-                          />
-                          <div 
-                            className="w-full bg-blue-600 transition-all duration-300 hover:bg-blue-700"
-                            style={{ height: `${applicationsHeight}px` }}
-                            title={`${data.month} Applications: ${data.applications}`}
-                          />
-                          <div 
-                            className="w-full bg-purple-600 rounded-b-sm transition-all duration-300 hover:bg-purple-700"
-                            style={{ height: `${viewsHeight}px` }}
-                            title={`${data.month} Views: ${data.views.toLocaleString()}`}
-                          />
+                   <div className="h-[400px] w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                       <LineChart data={getJobsData()}>
+                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                         <XAxis 
+                           dataKey="date" 
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                         />
+                         <YAxis
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                           tickFormatter={(value) => value.toLocaleString()}
+                         />
+                         <Tooltip
+                           contentStyle={{
+                             backgroundColor: 'white',
+                             border: '1px solid #e5e7eb',
+                             borderRadius: '0.5rem',
+                             boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                           }}
+                           itemStyle={{ color: '#374151' }}
+                           labelStyle={{ color: '#6b7280', marginBottom: '0.5rem' }}
+                           formatter={(value) => [value.toLocaleString(), 'Jobs']}
+                         />
+                         <Line
+                           type="monotone"
+                           dataKey="jobs"
+                           name="Total Jobs"
+                           stroke={CHART_STYLES.lineChart.totalUsers}
+                           strokeWidth={2}
+                           dot={false}
+                           activeDot={{ r: 4, fill: CHART_STYLES.lineChart.totalUsers }}
+                         />
+                       </LineChart>
+                     </ResponsiveContainer>
                         </div>
-                        <span className="text-xs text-muted-foreground">{data.month}</span>
+                 </CardContent>
+               </Card>
+
+               {/* Job Creators Graph */}
+               <Card>
+                 <CardHeader>
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <h3 className="text-lg font-medium flex items-center gap-2">
+                         <Users className="h-5 w-5 text-yellow-600" />
+                         Job Creators
+                       </h3>
+                       <p className="text-sm text-muted-foreground">Users creating jobs</p>
                       </div>
-                    );
-                  })}
                 </div>
-                <div className="flex justify-center gap-4 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-orange-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Total Jobs</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Active</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Applications</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-purple-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Views</span>
-                  </div>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="h-[400px] w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                       <BarChart data={getJobsData()}>
+                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                         <XAxis 
+                           dataKey="date" 
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                         />
+                         <YAxis
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                           tickFormatter={(value) => value.toLocaleString()}
+                         />
+                         <Tooltip
+                           contentStyle={{
+                             backgroundColor: 'white',
+                             border: '1px solid #e5e7eb',
+                             borderRadius: '0.5rem',
+                             boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                           }}
+                           itemStyle={{ color: '#374151' }}
+                           labelStyle={{ color: '#6b7280', marginBottom: '0.5rem' }}
+                           formatter={(value) => [value.toLocaleString(), 'Creators']}
+                         />
+                         <Bar
+                           dataKey="uniqueUsers"
+                           name="Unique Users"
+                           fill={CHART_STYLES.lineChart.activeUsers}
+                           radius={[4, 4, 0, 0]}
+                         />
+                       </BarChart>
+                     </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
+             </div>
           </TabsContent>
 
           {/* Directory Analytics */}
@@ -583,81 +1387,197 @@ export default function AdminAnalytics() {
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{metric.value}</div>
                     <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                      <span className="text-xs text-green-600 font-medium">{metric.change}</span>
+                      <TrendingUp className="h-3 w-3 text-yellow-600" />
+                      <span className="text-xs text-yellow-600 font-medium">{metric.change}</span>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
 
-            {/* Directory Chart */}
+             {/* Directory Analytics Graphs */}
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+               {/* Total Media Files Graph */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-pink-600" />
-                  Directory Content Over Time
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">Total files, images, videos, and downloads by month</p>
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <h3 className="text-lg font-medium flex items-center gap-2">
+                         <BarChart3 className="h-5 w-5 text-yellow-600" />
+                         Total Media Files
+                       </h3>
+                       <p className="text-sm text-muted-foreground">Media files by type over time</p>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <Select value={directoryTimeView} onValueChange={setDirectoryTimeView}>
+                         <SelectTrigger className="w-[120px]">
+                           <SelectValue placeholder="View" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="daily">
+                             <span className="flex items-center gap-2">
+                               <Calendar className="h-4 w-4" />
+                               Daily
+                             </span>
+                           </SelectItem>
+                           <SelectItem value="monthly">
+                             <span className="flex items-center gap-2">
+                               <CalendarDays className="h-4 w-4" />
+                               Monthly
+                             </span>
+                           </SelectItem>
+                           <SelectItem value="yearly">
+                             <span className="flex items-center gap-2">
+                               <CalendarRange className="h-4 w-4" />
+                               Yearly
+                             </span>
+                           </SelectItem>
+                         </SelectContent>
+                       </Select>
+                       <Select value={directoryDateRange} onValueChange={setDirectoryDateRange}>
+                         <SelectTrigger className="w-[140px]">
+                           <SelectValue placeholder="Date Range" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="7d">Last 7 days</SelectItem>
+                           <SelectItem value="30d">Last 30 days</SelectItem>
+                           <SelectItem value="6m">Last 6 months</SelectItem>
+                           <SelectItem value="1y">Last 1 year</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                   </div>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-end justify-between gap-1">
-                  {platformData.directory.chartData.map((data, index) => {
-                    const maxValue = Math.max(...platformData.directory.chartData.map(d => d.total));
-                    const totalHeight = (data.total / maxValue) * 180;
-                    const imagesHeight = (data.images / maxValue) * 180;
-                    const videosHeight = (data.videos / maxValue) * 180;
-                    const downloadsHeight = (data.downloads / maxValue) * 180;
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                        <div className="flex flex-col gap-1 w-full h-48">
-                          <div 
-                            className="w-full bg-pink-600 rounded-t-sm transition-all duration-300 hover:bg-pink-700"
-                            style={{ height: `${totalHeight}px` }}
-                            title={`${data.month} Total: ${data.total.toLocaleString()}`}
-                          />
-                          <div 
-                            className="w-full bg-blue-500 transition-all duration-300 hover:bg-blue-600"
-                            style={{ height: `${imagesHeight}px` }}
-                            title={`${data.month} Images: ${data.images.toLocaleString()}`}
-                          />
-                          <div 
-                            className="w-full bg-red-500 transition-all duration-300 hover:bg-red-600"
-                            style={{ height: `${videosHeight}px` }}
-                            title={`${data.month} Videos: ${data.videos.toLocaleString()}`}
-                          />
-                          <div 
-                            className="w-full bg-green-600 rounded-b-sm transition-all duration-300 hover:bg-green-700"
-                            style={{ height: `${downloadsHeight}px` }}
-                            title={`${data.month} Downloads: ${data.downloads.toLocaleString()}`}
-                          />
+                   <div className="h-[400px] w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                       <BarChart data={getDirectoryData()}>
+                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                         <XAxis 
+                           dataKey="date" 
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                         />
+                         <YAxis
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                           tickFormatter={(value) => value.toLocaleString()}
+                         />
+                         <Tooltip
+                           contentStyle={{
+                             backgroundColor: 'white',
+                             border: '1px solid #e5e7eb',
+                             borderRadius: '0.5rem',
+                             boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                           }}
+                           itemStyle={{ color: '#374151' }}
+                           labelStyle={{ color: '#6b7280', marginBottom: '0.5rem' }}
+                           formatter={(value) => [value.toLocaleString(), 'Files']}
+                         />
+                         <Legend 
+                           verticalAlign="top"
+                           height={36}
+                           iconType="circle"
+                           formatter={(value) => (
+                             <span style={{ color: '#374151', fontSize: '0.875rem' }}>{value}</span>
+                           )}
+                         />
+                         <Bar
+                           dataKey="images"
+                           name="Images"
+                           stackId="a"
+                           fill={CHART_STYLES.lineChart.totalUsers}
+                           radius={[0, 0, 0, 0]}
+                         />
+                         <Bar
+                           dataKey="videos"
+                           name="Videos"
+                           stackId="a"
+                           fill={CHART_STYLES.lineChart.newUsers}
+                           radius={[0, 0, 0, 0]}
+                         />
+                         <Bar
+                           dataKey="audios"
+                           name="Audios"
+                           stackId="a"
+                           fill={CHART_STYLES.lineChart.activeUsers}
+                           radius={[0, 0, 0, 0]}
+                         />
+                         <Bar
+                           dataKey="documents"
+                           name="Documents"
+                           stackId="a"
+                           fill={CHART_COLORS.yellow.dark}
+                           radius={[4, 4, 0, 0]}
+                         />
+                       </BarChart>
+                     </ResponsiveContainer>
                         </div>
-                        <span className="text-xs text-muted-foreground">{data.month}</span>
+                 </CardContent>
+               </Card>
+
+               {/* File Type Distribution */}
+               <Card>
+                 <CardHeader>
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <h3 className="text-lg font-medium flex items-center gap-2">
+                         <PieChart className="h-5 w-5 text-yellow-600" />
+                         File Type Distribution
+                       </h3>
+                       <p className="text-sm text-muted-foreground">Distribution of media files by type</p>
                       </div>
-                    );
-                  })}
                 </div>
-                <div className="flex justify-center gap-4 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-pink-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Total Files</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Images</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Videos</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Downloads</span>
-                  </div>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="h-[400px] w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                       <RechartsPieChart>
+                         <Pie
+                           data={[
+                             { name: 'Images', value: directoryAnalyticsData.totalFiles.images },
+                             { name: 'Videos', value: directoryAnalyticsData.totalFiles.videos },
+                             { name: 'Audios', value: directoryAnalyticsData.totalFiles.audios },
+                             { name: 'Documents', value: directoryAnalyticsData.totalFiles.documents }
+                           ]}
+                           cx="50%"
+                           cy="50%"
+                           labelLine={false}
+                           outerRadius={150}
+                           fill="#8884d8"
+                           dataKey="value"
+                           nameKey="name"
+                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                         >
+                           {[
+                             CHART_STYLES.lineChart.totalUsers,
+                             CHART_STYLES.lineChart.newUsers,
+                             CHART_STYLES.lineChart.activeUsers,
+                             CHART_COLORS.yellow.dark
+                           ].map((color, index) => (
+                             <Cell key={`cell-${index}`} fill={color} />
+                           ))}
+                         </Pie>
+                         <Tooltip
+                           contentStyle={{
+                             backgroundColor: 'white',
+                             border: '1px solid #e5e7eb',
+                             borderRadius: '0.5rem',
+                             boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                           }}
+                           itemStyle={{ color: '#374151' }}
+                           formatter={(value) => [value.toLocaleString(), 'Files']}
+                         />
+                       </RechartsPieChart>
+                     </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
+             </div>
           </TabsContent>
 
           {/* Community Analytics */}
@@ -675,81 +1595,167 @@ export default function AdminAnalytics() {
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{metric.value}</div>
                     <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                      <span className="text-xs text-green-600 font-medium">{metric.change}</span>
+                      <TrendingUp className="h-3 w-3 text-yellow-600" />
+                      <span className="text-xs text-yellow-600 font-medium">{metric.change}</span>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
 
-            {/* Community Chart */}
+             {/* Community Analytics Graphs */}
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+               {/* Total Communities Graph */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LineChart className="h-5 w-5 text-teal-600" />
-                  Community Engagement Over Time
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">Messages, connections, groups, and shares by month</p>
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <h3 className="text-lg font-medium flex items-center gap-2">
+                         <BarChart3 className="h-5 w-5 text-yellow-600" />
+                         Total Communities
+                       </h3>
+                       <p className="text-sm text-muted-foreground">Number of communities over time</p>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <Select value={communityTimeView} onValueChange={setCommunityTimeView}>
+                         <SelectTrigger className="w-[120px]">
+                           <SelectValue placeholder="View" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="daily">
+                             <span className="flex items-center gap-2">
+                               <Calendar className="h-4 w-4" />
+                               Daily
+                             </span>
+                           </SelectItem>
+                           <SelectItem value="monthly">
+                             <span className="flex items-center gap-2">
+                               <CalendarDays className="h-4 w-4" />
+                               Monthly
+                             </span>
+                           </SelectItem>
+                           <SelectItem value="yearly">
+                             <span className="flex items-center gap-2">
+                               <CalendarRange className="h-4 w-4" />
+                               Yearly
+                             </span>
+                           </SelectItem>
+                         </SelectContent>
+                       </Select>
+                       <Select value={communityDateRange} onValueChange={setCommunityDateRange}>
+                         <SelectTrigger className="w-[140px]">
+                           <SelectValue placeholder="Date Range" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="7d">Last 7 days</SelectItem>
+                           <SelectItem value="30d">Last 30 days</SelectItem>
+                           <SelectItem value="6m">Last 6 months</SelectItem>
+                           <SelectItem value="1y">Last 1 year</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                   </div>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-end justify-between gap-1">
-                  {platformData.community.chartData.map((data, index) => {
-                    const maxValue = Math.max(...platformData.community.chartData.map(d => d.messages));
-                    const messagesHeight = (data.messages / maxValue) * 180;
-                    const connectionsHeight = (data.connections / maxValue) * 180;
-                    const groupsHeight = (data.groups / maxValue) * 180;
-                    const sharesHeight = (data.shares / maxValue) * 180;
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                        <div className="flex flex-col gap-1 w-full h-48">
-                          <div 
-                            className="w-full bg-teal-600 rounded-t-sm transition-all duration-300 hover:bg-teal-700"
-                            style={{ height: `${messagesHeight}px` }}
-                            title={`${data.month} Messages: ${data.messages.toLocaleString()}`}
-                          />
-                          <div 
-                            className="w-full bg-purple-600 transition-all duration-300 hover:bg-purple-700"
-                            style={{ height: `${connectionsHeight}px` }}
-                            title={`${data.month} Connections: ${data.connections.toLocaleString()}`}
-                          />
-                          <div 
-                            className="w-full bg-indigo-600 transition-all duration-300 hover:bg-indigo-700"
-                            style={{ height: `${groupsHeight}px` }}
-                            title={`${data.month} Groups: ${data.groups}`}
-                          />
-                          <div 
-                            className="w-full bg-orange-600 rounded-b-sm transition-all duration-300 hover:bg-orange-700"
-                            style={{ height: `${sharesHeight}px` }}
-                            title={`${data.month} Shares: ${data.shares.toLocaleString()}`}
-                          />
+                   <div className="h-[400px] w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                       <LineChart data={getCommunityData()}>
+                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                         <XAxis 
+                           dataKey="date" 
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                         />
+                         <YAxis
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                           tickFormatter={(value) => value.toLocaleString()}
+                         />
+                         <Tooltip
+                           contentStyle={{
+                             backgroundColor: 'white',
+                             border: '1px solid #e5e7eb',
+                             borderRadius: '0.5rem',
+                             boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                           }}
+                           itemStyle={{ color: '#374151' }}
+                           labelStyle={{ color: '#6b7280', marginBottom: '0.5rem' }}
+                           formatter={(value) => [value.toLocaleString(), 'Communities']}
+                         />
+                         <Line
+                           type="monotone"
+                           dataKey="communities"
+                           name="Total Communities"
+                           stroke={CHART_STYLES.lineChart.totalUsers}
+                           strokeWidth={2}
+                           dot={false}
+                           activeDot={{ r: 4, fill: CHART_STYLES.lineChart.totalUsers }}
+                         />
+                       </LineChart>
+                     </ResponsiveContainer>
                         </div>
-                        <span className="text-xs text-muted-foreground">{data.month}</span>
+                 </CardContent>
+               </Card>
+
+               {/* Community Creators Graph */}
+               <Card>
+                 <CardHeader>
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <h3 className="text-lg font-medium flex items-center gap-2">
+                         <Users className="h-5 w-5 text-yellow-600" />
+                         Community Creators
+                       </h3>
+                       <p className="text-sm text-muted-foreground">Users creating communities</p>
                       </div>
-                    );
-                  })}
                 </div>
-                <div className="flex justify-center gap-4 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-teal-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Messages</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-purple-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Connections</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-indigo-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Groups</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-orange-600 rounded"></div>
-                    <span className="text-xs text-muted-foreground">Shares</span>
-                  </div>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="h-[400px] w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                       <BarChart data={getCommunityData()}>
+                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                         <XAxis 
+                           dataKey="date" 
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                         />
+                         <YAxis
+                           stroke="#6b7280"
+                           fontSize={12}
+                           tickLine={false}
+                           axisLine={false}
+                           tickFormatter={(value) => value.toLocaleString()}
+                         />
+                         <Tooltip
+                           contentStyle={{
+                             backgroundColor: 'white',
+                             border: '1px solid #e5e7eb',
+                             borderRadius: '0.5rem',
+                             boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                           }}
+                           itemStyle={{ color: '#374151' }}
+                           labelStyle={{ color: '#6b7280', marginBottom: '0.5rem' }}
+                           formatter={(value) => [value.toLocaleString(), 'Creators']}
+                         />
+                         <Bar
+                           dataKey="uniqueUsers"
+                           name="Unique Users"
+                           fill={CHART_STYLES.lineChart.activeUsers}
+                           radius={[4, 4, 0, 0]}
+                         />
+                       </BarChart>
+                     </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
+             </div>
           </TabsContent>
         </Tabs>
       </div>

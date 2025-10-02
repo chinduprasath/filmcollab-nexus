@@ -46,9 +46,13 @@ export function AdminTopbar({
   const [searchValue, setSearchValue] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
+  const handleSignOut = () => {
+    // Clear any admin session
+    localStorage.removeItem("admin-session");
+    // Clear any auth state
+    signOut();
+    // Navigate to landing page
+    navigate("/", { replace: true });
   };
 
   const mockAdminNotifications = [
@@ -81,7 +85,7 @@ export function AdminTopbar({
   const unreadCount = mockAdminNotifications.filter(n => n.unread).length;
 
   return (
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-destructive/20">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-yellow-200">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           {/* Mobile menu toggle */}
@@ -116,7 +120,7 @@ export function AdminTopbar({
                 {unreadCount > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center"
+                    className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center bg-yellow-600"
                   >
                     {unreadCount}
                   </Badge>
@@ -135,8 +139,8 @@ export function AdminTopbar({
                   {mockAdminNotifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors ${
-                        notification.unread ? 'bg-destructive/5 border-destructive/20' : 'bg-background'
+                      className={`p-3 rounded-lg border cursor-pointer hover:bg-yellow-50 transition-colors ${
+                        notification.unread ? 'bg-yellow-50 border-yellow-200' : 'bg-white'
                       }`}
                     >
                       <div className="flex items-start justify-between">
@@ -146,13 +150,21 @@ export function AdminTopbar({
                           <p className="text-xs text-muted-foreground">{notification.time}</p>
                         </div>
                         {notification.unread && (
-                          <div className="h-2 w-2 rounded-full bg-destructive flex-shrink-0 mt-1" />
+                          <div className="h-2 w-2 rounded-full bg-yellow-600 flex-shrink-0 mt-1" />
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
-                <Button variant="outline" className="w-full" size="sm">
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="sm"
+                  onClick={() => {
+                    setNotificationsOpen(false);
+                    navigate("/admin-dashboard/notifications");
+                  }}
+                >
                   View all notifications
                 </Button>
               </div>
@@ -162,10 +174,10 @@ export function AdminTopbar({
           {/* Admin Profile Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-3 h-auto p-2 hover:bg-accent/50">
+              <Button variant="ghost" className="flex items-center gap-3 h-auto p-2 hover:bg-yellow-50">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="" alt={profile?.full_name || 'Admin'} />
-                  <AvatarFallback className="bg-gradient-to-br from-destructive to-orange-500 text-primary-foreground">
+                  <AvatarFallback className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
                     {profile?.first_name?.[0] || profile?.full_name?.[0] || 'A'}
                   </AvatarFallback>
                 </Avatar>
@@ -186,7 +198,7 @@ export function AdminTopbar({
                   <p className="text-sm font-medium leading-none">
                     {profile?.full_name || 'Admin'}
                   </p>
-                  <p className="text-xs leading-none text-destructive font-semibold">
+                  <p className="text-xs leading-none text-yellow-600 font-semibold">
                     {profile?.role || 'ADMIN'}
                   </p>
                 </div>
@@ -201,7 +213,10 @@ export function AdminTopbar({
                 <span>System Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
+              <DropdownMenuItem 
+                onClick={handleSignOut}
+                className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Sign out</span>
               </DropdownMenuItem>

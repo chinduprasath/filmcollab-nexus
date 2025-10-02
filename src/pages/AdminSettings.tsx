@@ -163,11 +163,11 @@ const AdminSettings = () => {
   const getLogLevelColor = (level: string) => {
     switch (level) {
       case "INFO":
-        return "bg-blue-100 text-blue-800";
+        return "bg-yellow-100 text-yellow-800";
       case "WARNING":
         return "bg-yellow-100 text-yellow-800";
       case "ERROR":
-        return "bg-red-100 text-red-800";
+        return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -457,12 +457,12 @@ const AdminSettings = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {settingsData.security.sslEnabled ? (
-                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
                         <Lock className="h-3 w-3 mr-1" />
                         Enabled
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="bg-red-100 text-red-700">
+                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
                         <Unlock className="h-3 w-3 mr-1" />
                         Disabled
                       </Badge>

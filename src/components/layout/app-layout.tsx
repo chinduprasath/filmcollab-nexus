@@ -15,7 +15,7 @@ export function AppLayout({ children, pageTitle }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-white dark:bg-gray-900">
       {/* Sidebar - Desktop */}
       <div className="hidden md:flex">
         <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
@@ -24,7 +24,7 @@ export function AppLayout({ children, pageTitle }: AppLayoutProps) {
       {/* Sidebar - Mobile */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute inset-0 bg-black/50 dark:bg-black/70" onClick={() => setMobileMenuOpen(false)} />
           <div className="relative">
             <Sidebar />
           </div>
@@ -41,7 +41,7 @@ export function AppLayout({ children, pageTitle }: AppLayoutProps) {
         />
 
         {/* Content area */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-6 bg-white dark:bg-gray-900">
           {children}
         </main>
       </div>

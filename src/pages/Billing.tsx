@@ -220,17 +220,17 @@ const Billing = () => {
               {availablePlans.map((plan) => {
                 const IconComponent = plan.icon;
                 return (
-                  <Card key={plan.id} className={`relative ${plan.popular ? 'border-purple-500 shadow-lg' : 'border-gray-200'}`}>
+                  <Card key={plan.id} className={`relative ${plan.popular ? 'border-yellow-500 shadow-lg' : 'border-gray-200'}`}>
                     {plan.popular && (
                       <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                        <Badge className="bg-purple-600 text-white px-3 py-1">
+                        <Badge className="bg-yellow-600 text-white px-3 py-1">
                           Most Popular
                         </Badge>
                       </div>
                     )}
                     <CardHeader className="text-center pb-4">
                       <div className="flex justify-center mb-2">
-                        <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                        <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center">
                           <IconComponent className="w-6 h-6 text-white" />
                         </div>
                       </div>
@@ -263,7 +263,7 @@ const Billing = () => {
                         {plan.id === 'enterprise' ? (
                           <Button 
                             onClick={handleContactSales}
-                            className="w-full"
+                            className="w-full border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
                             variant="outline"
                           >
                             Contact Sales
@@ -272,7 +272,7 @@ const Billing = () => {
                           <Button 
                             onClick={() => handleUpgrade(plan.id)}
                             disabled={isLoading}
-                            className={`w-full ${plan.popular ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+                            className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                           >
                             {isLoading ? 'Processing...' : 'Upgrade to ' + plan.name}
                             <ArrowRight className="w-4 h-4 ml-2" />
@@ -309,7 +309,7 @@ const Billing = () => {
                       <p className="text-sm font-medium">**** **** **** 1234</p>
                       <p className="text-xs text-gray-500">Expires 12/25</p>
                     </div>
-                    <Button variant="outline" size="sm" className="ml-auto">
+                    <Button variant="outline" size="sm" className="ml-auto border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                       Update
                     </Button>
                   </div>
@@ -320,7 +320,7 @@ const Billing = () => {
                     <p className="text-sm">123 Film Street</p>
                     <p className="text-sm">Los Angeles, CA 90210</p>
                     <p className="text-sm">United States</p>
-                    <Button variant="outline" size="sm" className="mt-2">
+                    <Button variant="outline" size="sm" className="mt-2 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                       Update
                     </Button>
                   </div>
@@ -351,7 +351,7 @@ const Billing = () => {
                       </div>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="w-full mt-3">
+                  <Button variant="outline" size="sm" className="w-full mt-3 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                     View All Invoices
                   </Button>
                 </div>
@@ -374,10 +374,10 @@ const Billing = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-4 border border-gray-200 rounded-lg">
-                <Users className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                <Users className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
                 <h4 className="font-medium mb-1">Contact Support</h4>
                 <p className="text-sm text-gray-600 mb-3">Get help from our support team</p>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   Contact Us
                 </Button>
               </div>
@@ -385,7 +385,7 @@ const Billing = () => {
                 <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
                 <h4 className="font-medium mb-1">FAQ</h4>
                 <p className="text-sm text-gray-600 mb-3">Find answers to common questions</p>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   View FAQ
                 </Button>
               </div>
@@ -393,7 +393,7 @@ const Billing = () => {
                 <Star className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
                 <h4 className="font-medium mb-1">Feature Request</h4>
                 <p className="text-sm text-gray-600 mb-3">Suggest new features</p>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   Submit Request
                 </Button>
               </div>

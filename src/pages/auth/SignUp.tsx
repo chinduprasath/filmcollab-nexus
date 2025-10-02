@@ -126,30 +126,30 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back button */}
         <Button
           variant="ghost"
-          className="mb-4 text-muted-foreground hover:text-foreground"
+          className="mb-4 text-gray-600 hover:text-yellow-600"
           onClick={() => navigate("/")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Button>
 
-        <Card className="shadow-elegant border-border/50">
+        <Card className="shadow-elegant border-yellow-200 bg-white">
           <CardHeader className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Film className="h-5 w-5 text-primary-foreground" />
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
+                <Film className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-800 bg-clip-text text-transparent">
                 FilmCollab
               </h1>
             </div>
-            <CardTitle>Create Your Account</CardTitle>
-            <CardDescription>Join the film industry community</CardDescription>
+            <CardTitle className="text-gray-900">Create Your Account</CardTitle>
+            <CardDescription className="text-gray-600">Join the film industry community</CardDescription>
           </CardHeader>
           
           <CardContent>
@@ -161,9 +161,9 @@ export default function SignUp() {
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name</FormLabel>
+                        <FormLabel className="text-gray-700">First Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="John" {...field} />
+                          <Input placeholder="John" className="border-yellow-200 focus:border-yellow-500" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -175,9 +175,9 @@ export default function SignUp() {
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Name</FormLabel>
+                        <FormLabel className="text-gray-700">Last Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Doe" {...field} />
+                          <Input placeholder="Doe" className="border-yellow-200 focus:border-yellow-500" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -190,11 +190,12 @@ export default function SignUp() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="text-gray-700">Email</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
                           placeholder="john@example.com"
+                          className="border-yellow-200 focus:border-yellow-500"
                           {...field}
                         />
                       </FormControl>
@@ -208,7 +209,7 @@ export default function SignUp() {
                   name="role"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Role</FormLabel>
+                      <FormLabel className="text-gray-700">Role</FormLabel>
                       <Popover open={open} onOpenChange={setOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -216,7 +217,7 @@ export default function SignUp() {
                               variant="outline"
                               role="combobox"
                               aria-expanded={open}
-                              className="w-full justify-between"
+                              className="w-full justify-between border-yellow-200 hover:border-yellow-500"
                             >
                               {field.value
                                 ? roles.find((role) => role.value === field.value)?.label
@@ -273,12 +274,13 @@ export default function SignUp() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel className="text-gray-700">Password</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input
                             type={showPassword ? "text" : "password"}
                             placeholder="Create a password"
+                            className="border-yellow-200 focus:border-yellow-500"
                             {...field}
                           />
                           <Button
@@ -289,9 +291,9 @@ export default function SignUp() {
                             onClick={() => setShowPassword(!showPassword)}
                           >
                             {showPassword ? (
-                              <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              <EyeOff className="h-4 w-4 text-gray-500" />
                             ) : (
-                              <Eye className="h-4 w-4 text-muted-foreground" />
+                              <Eye className="h-4 w-4 text-gray-500" />
                             )}
                           </Button>
                         </div>
@@ -306,12 +308,13 @@ export default function SignUp() {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
+                      <FormLabel className="text-gray-700">Confirm Password</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input
                             type={showConfirmPassword ? "text" : "password"}
                             placeholder="Confirm your password"
+                            className="border-yellow-200 focus:border-yellow-500"
                             {...field}
                           />
                           <Button
@@ -322,9 +325,9 @@ export default function SignUp() {
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           >
                             {showConfirmPassword ? (
-                              <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              <EyeOff className="h-4 w-4 text-gray-500" />
                             ) : (
-                              <Eye className="h-4 w-4 text-muted-foreground" />
+                              <Eye className="h-4 w-4 text-gray-500" />
                             )}
                           </Button>
                         </div>
@@ -336,7 +339,7 @@ export default function SignUp() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                   disabled={loading}
                 >
                   {loading ? "Creating account..." : "Create Account"}
@@ -345,11 +348,11 @@ export default function SignUp() {
             </Form>
 
             <div className="mt-6 text-center">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-gray-600">
                 Already have an account?{" "}
                 <Button
                   variant="link"
-                  className="p-0 h-auto text-primary hover:text-accent"
+                  className="p-0 h-auto text-yellow-600 hover:text-yellow-700"
                   onClick={() => navigate("/auth/signin")}
                 >
                   Sign in

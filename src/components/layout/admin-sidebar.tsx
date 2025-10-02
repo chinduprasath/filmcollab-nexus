@@ -9,13 +9,14 @@ import {
   FolderOpen,
   Briefcase,
   Image,
-  User,
-  Settings,
   ChevronLeft,
   ChevronRight,
   Moon,
   Sun,
-  Monitor
+  Monitor,
+  UserCog,
+  TicketCheck,
+  UsersRound
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -33,9 +34,10 @@ const adminNavigationItems = [
   { name: "Posts", icon: FileText, href: "/admin-dashboard/posts" },
   { name: "Projects", icon: FolderOpen, href: "/admin-dashboard/projects" },
   { name: "Jobs", icon: Briefcase, href: "/admin-dashboard/jobs" },
+  { name: "Communities", icon: UsersRound, href: "/admin-dashboard/communities" },
   { name: "Directory", icon: Image, href: "/admin-dashboard/directory" },
-  { name: "Profile", icon: User, href: "/admin-dashboard/profile" },
-  { name: "Settings", icon: Settings, href: "/admin-dashboard/settings" }
+  { name: "Team Members", icon: UserCog, href: "/admin-dashboard/team" },
+  { name: "Tickets", icon: TicketCheck, href: "/admin-dashboard/tickets" }
 ];
 
 export function AdminSidebar({ className, isCollapsed = false, onToggle }: AdminSidebarProps) {
@@ -52,32 +54,43 @@ export function AdminSidebar({ className, isCollapsed = false, onToggle }: Admin
   };
 
   return (
-    <div className={cn("flex h-full w-64 flex-col bg-white border-r border-gray-200", isCollapsed && "w-16", className)}>
+    <div className={cn(
+        "flex h-full flex-col bg-white border-r border-gray-200 relative",
+        isCollapsed ? "w-16" : "w-64",
+        "transition-all duration-300",
+        className
+      )}>
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+      <div className="flex h-16 items-center border-b border-gray-200 px-4 relative">
+        <div className="flex items-center gap-2 pr-8">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
             <Shield className="h-4 w-4 text-white" />
           </div>
           {!isCollapsed && (
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-800 bg-clip-text text-transparent">
               Admin Portal
             </span>
           )}
         </div>
         {onToggle && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-          >
-            {isCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </Button>
+          <div className="absolute -right-4 top-1/2 -translate-y-1/2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              className={cn(
+                "h-8 w-8 rounded-full bg-gray-100 border border-gray-200 shadow-sm p-0",
+                "hover:bg-yellow-50 hover:border-yellow-200 hover:text-yellow-600",
+                "transition-all duration-200 text-gray-500"
+              )}
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -89,8 +102,8 @@ export function AdminSidebar({ className, isCollapsed = false, onToggle }: Admin
               key={item.name}
               variant="ghost"
               className={cn(
-                "w-full justify-start h-10 px-3 text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors",
-                isActive(item.href) && "bg-purple-600 text-white hover:bg-purple-600",
+                "w-full justify-start h-10 px-3 text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors",
+                isActive(item.href) && "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:bg-gradient-to-r hover:from-yellow-600 hover:to-yellow-700",
                 isCollapsed && "justify-center px-2"
               )}
               onClick={() => handleNavigation(item.href)}
@@ -115,8 +128,8 @@ export function AdminSidebar({ className, isCollapsed = false, onToggle }: Admin
               variant="ghost"
               size="sm"
               className={cn(
-                "h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100",
-                theme === "light" && "bg-gray-100 text-gray-700"
+                "h-8 w-8 p-0 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50",
+                theme === "light" && "bg-yellow-50 text-yellow-600"
               )}
               onClick={() => setTheme("light")}
             >
@@ -127,8 +140,8 @@ export function AdminSidebar({ className, isCollapsed = false, onToggle }: Admin
               variant="ghost"
               size="sm"
               className={cn(
-                "h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100",
-                theme === "dark" && "bg-gray-100 text-gray-700"
+                "h-8 w-8 p-0 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50",
+                theme === "dark" && "bg-yellow-50 text-yellow-600"
               )}
               onClick={() => setTheme("dark")}
             >
@@ -139,8 +152,8 @@ export function AdminSidebar({ className, isCollapsed = false, onToggle }: Admin
               variant="ghost"
               size="sm"
               className={cn(
-                "h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100",
-                theme === "system" && "bg-gray-100 text-gray-700"
+                "h-8 w-8 p-0 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50",
+                theme === "system" && "bg-yellow-50 text-yellow-600"
               )}
               onClick={() => setTheme("system")}
             >

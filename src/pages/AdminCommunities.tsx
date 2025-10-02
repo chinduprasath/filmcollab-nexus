@@ -1,0 +1,387 @@
+import { AdminLayout } from "@/components/layout/admin-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { 
+  Search,
+  UsersRound,
+  Tags,
+  User,
+  Check,
+  Eye,
+  Edit,
+  Trash2,
+  Shield,
+  MessageSquare,
+  Settings
+} from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+
+export default function AdminCommunities() {
+  // Available tags for communities
+  const availableTags = [
+    { value: "featured", label: "Featured", color: "purple" },
+    { value: "trending", label: "Trending", color: "orange" },
+    { value: "popular", label: "Popular", color: "green" },
+    { value: "verified", label: "Verified", color: "blue" },
+    { value: "private", label: "Private", color: "red" },
+    { value: "public", label: "Public", color: "yellow" }
+  ];
+
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [editingTags, setEditingTags] = useState<{ id: number; tags: string[] } | null>(null);
+
+  // Mock communities data
+  const communities = [
+    {
+      id: 1,
+      name: "Filmmakers Hub",
+      description: "A community for professional filmmakers",
+      totalMembers: 1245,
+      activeMembers: 856,
+      creator: {
+        id: 1,
+        name: "John Smith",
+        username: "johnsmith",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john"
+      },
+      status: "Active",
+      dateCreated: "2024-02-15",
+      lastActive: "2024-03-15",
+      tags: ["Featured", "Verified", "Popular"]
+    },
+    {
+      id: 2,
+      name: "Cinematography Masters",
+      description: "Advanced cinematography techniques and discussions",
+      totalMembers: 876,
+      activeMembers: 543,
+      creator: {
+        id: 2,
+        name: "Sarah Johnson",
+        username: "sarahj",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah"
+      },
+      status: "Active",
+      dateCreated: "2024-02-20",
+      lastActive: "2024-03-14",
+      tags: ["Trending", "Public"]
+    },
+    {
+      id: 3,
+      name: "Sound Design Network",
+      description: "For sound designers and audio engineers",
+      totalMembers: 654,
+      activeMembers: 321,
+      creator: {
+        id: 3,
+        name: "Mike Wilson",
+        username: "mikew",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike"
+      },
+      status: "Inactive",
+      dateCreated: "2024-02-25",
+      lastActive: "2024-03-10",
+      tags: ["Private"]
+    }
+  ];
+
+  const handleEditTags = (communityId: number, currentTags: string[]) => {
+    setEditingTags({ id: communityId, tags: currentTags });
+  };
+
+  const handleSaveCommunityTags = (communityId: number) => {
+    // Here you would typically make an API call to update the community's tags
+    const communityToUpdate = communities.find(c => c.id === communityId);
+    if (communityToUpdate && editingTags) {
+      communityToUpdate.tags = editingTags.tags;
+      setEditingTags(null);
+    }
+  };
+
+  const handleTagToggle = (tag: string) => {
+    if (!editingTags) return;
+
+    setEditingTags(current => {
+      if (!current) return null;
+
+      const newTags = current.tags.includes(tag)
+        ? current.tags.filter(t => t !== tag)
+        : [...current.tags, tag];
+
+      return { ...current, tags: newTags };
+    });
+  };
+
+  const getTagBadgeStyle = (tag: string) => {
+    const tagConfig = availableTags.find(t => t.label === tag);
+    if (!tagConfig) return {};
+
+    return {
+      purple: "bg-purple-50 text-purple-700 hover:bg-purple-100",
+      orange: "bg-orange-50 text-orange-700 hover:bg-orange-100",
+      green: "bg-green-50 text-green-700 hover:bg-green-100",
+      blue: "bg-blue-50 text-blue-700 hover:bg-blue-100",
+      red: "bg-red-50 text-red-700 hover:bg-red-100",
+      yellow: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+    }[tagConfig.color];
+  };
+
+  const getStatusBadgeStyle = (status: string) => {
+    return status === "Active"
+      ? "bg-green-50 text-green-700 hover:bg-green-100"
+      : "bg-red-50 text-red-700 hover:bg-red-100";
+  };
+
+  // Filter communities based on search and filters
+  const filteredCommunities = communities.filter(community => {
+    const matchesSearch = 
+      community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      community.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      community.creator.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || community.status.toLowerCase() === statusFilter.toLowerCase();
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  return (
+    <AdminLayout pageTitle="Communities Management">
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Communities Management</h1>
+          <p className="text-muted-foreground mt-1">Manage and monitor community groups</p>
+        </div>
+
+        {/* Main Content Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Communities</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search communities..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <div className="flex gap-4 items-center">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium">Status:</label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Communities Table */}
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Community</TableHead>
+                    <TableHead>Members</TableHead>
+                    <TableHead>Creator</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Tags</TableHead>
+                    <TableHead>Last Active</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCommunities.map((community) => (
+                    <TableRow key={community.id}>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{community.name}</span>
+                          <span className="text-sm text-muted-foreground truncate max-w-xs">
+                            {community.description}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{community.totalMembers.toLocaleString()}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {community.activeMembers.toLocaleString()} active
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                            <User className="h-4 w-4 text-yellow-600" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">{community.creator.name}</span>
+                            <span className="text-xs text-muted-foreground">@{community.creator.username}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={getStatusBadgeStyle(community.status)}>
+                          {community.status === "Active" ? (
+                            <Shield className="h-3 w-3 mr-1" />
+                          ) : (
+                            <Eye className="h-3 w-3 mr-1" />
+                          )}
+                          {community.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap gap-2 flex-1">
+                            {community.tags.map((tag, index) => (
+                              <Badge 
+                                key={index}
+                                variant="secondary" 
+                                className={getTagBadgeStyle(tag)}
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                          <Popover 
+                            open={editingTags?.id === community.id}
+                            onOpenChange={(open) => {
+                              if (open) {
+                                handleEditTags(community.id, community.tags);
+                              } else {
+                                setEditingTags(null);
+                              }
+                            }}
+                          >
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-yellow-50"
+                              >
+                                <Tags className="h-4 w-4 text-yellow-600" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 p-0" align="end">
+                              <Command>
+                                <CommandInput placeholder="Search tags..." />
+                                <CommandEmpty>No tags found.</CommandEmpty>
+                                <CommandGroup>
+                                  {availableTags.map((tag) => {
+                                    const isSelected = editingTags?.tags.includes(tag.label);
+                                    return (
+                                      <CommandItem
+                                        key={tag.value}
+                                        onSelect={() => handleTagToggle(tag.label)}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <div className={cn(
+                                          "flex h-4 w-4 items-center justify-center rounded border",
+                                          isSelected ? "bg-yellow-500 border-yellow-500" : "border-gray-200"
+                                        )}>
+                                          {isSelected && <Check className="h-3 w-3 text-white" />}
+                                        </div>
+                                        <Badge 
+                                          variant="secondary"
+                                          className={getTagBadgeStyle(tag.label)}
+                                        >
+                                          {tag.label}
+                                        </Badge>
+                                      </CommandItem>
+                                    );
+                                  })}
+                                </CommandGroup>
+                                <div className="border-t p-2">
+                                  <Button
+                                    size="sm"
+                                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+                                    onClick={() => handleSaveCommunityTags(community.id)}
+                                  >
+                                    Save Changes
+                                  </Button>
+                                </div>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="text-sm">{community.lastActive}</span>
+                          <span className="text-xs text-muted-foreground">
+                            Created: {community.dateCreated}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Results Summary */}
+            <div className="flex justify-between items-center mt-4 text-sm text-muted-foreground">
+              <span>Showing {filteredCommunities.length} communities</span>
+              <div className="flex items-center gap-2">
+                <span>Rows per page:</span>
+                <select className="w-16 h-8 px-2 border rounded text-sm">
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </AdminLayout>
+  );
+}

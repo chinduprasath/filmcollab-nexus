@@ -158,7 +158,7 @@ export default function ConnectionsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   placeholder="Search by name or profession"
-                  className="pl-9 h-9 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-purple-500 text-sm"
+                  className="pl-9 h-9 border-gray-300 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 text-sm"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -166,7 +166,7 @@ export default function ConnectionsPage() {
               <div className="flex items-center gap-2">
                 <label className="text-xs text-gray-700">Sort</label>
                 <select
-                  className="px-2 py-1 border border-gray-300 rounded-lg text-xs bg-white focus:border-purple-500 focus:ring-purple-500 h-8"
+                  className="px-2 py-1 border border-gray-300 rounded-lg text-xs bg-white focus:border-yellow-500 focus:ring-yellow-500 h-8"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortKey)}
                 >
@@ -184,7 +184,7 @@ export default function ConnectionsPage() {
           <div className="flex border-b border-gray-200 px-4">
             <button
               className={`px-4 py-3 border-b-2 font-medium transition-colors text-sm ${
-                activeTab === "all" ? "border-purple-600 text-purple-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                activeTab === "all" ? "border-yellow-600 text-yellow-600" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
               onClick={() => setActiveTab("all")}
             >
@@ -192,7 +192,7 @@ export default function ConnectionsPage() {
             </button>
             <button
               className={`px-4 py-3 border-b-2 font-medium transition-colors text-sm ${
-                activeTab === "pending" ? "border-purple-600 text-purple-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                activeTab === "pending" ? "border-yellow-600 text-yellow-600" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
               onClick={() => setActiveTab("pending")}
             >
@@ -200,7 +200,7 @@ export default function ConnectionsPage() {
             </button>
             <button
               className={`px-4 py-3 border-b-2 font-medium transition-colors text-sm ${
-                activeTab === "suggested" ? "border-purple-600 text-purple-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                activeTab === "suggested" ? "border-yellow-600 text-yellow-600" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
               onClick={() => setActiveTab("suggested")}
             >
@@ -213,7 +213,7 @@ export default function ConnectionsPage() {
         {activeTab === "all" && (
           <div className="bg-white rounded-lg shadow-sm p-4">
             <div className="flex items-center gap-2 mb-4">
-              <Users className="w-4 h-4 text-purple-600" />
+              <Users className="w-4 h-4 text-yellow-600" />
               <h2 className="text-lg font-semibold text-gray-900">All Connections</h2>
             </div>
             {filteredConnections.length === 0 ? (
@@ -225,7 +225,7 @@ export default function ConnectionsPage() {
                 {filteredConnections.map((c) => (
                   <div key={c.id} className="border border-gray-200 rounded-lg p-3 bg-white flex flex-col gap-2 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleOpenProfile(c.id)}>
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white flex items-center justify-center font-semibold text-sm">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center font-semibold text-sm">
                         {c.avatar}
                       </div>
                       <div className="min-w-0">
@@ -255,20 +255,20 @@ export default function ConnectionsPage() {
         {activeTab === "pending" && (
           <div className="bg-white rounded-lg shadow-sm p-4">
             <div className="flex items-center gap-2 mb-4">
-              <UserPlus className="w-4 h-4 text-purple-600" />
+              <UserPlus className="w-4 h-4 text-yellow-600" />
               <h2 className="text-lg font-semibold text-gray-900">Pending Requests</h2>
             </div>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPendingView("received")}
-                  className={`px-2 py-1 text-xs rounded-md ${pendingView === "received" ? "bg-purple-600 text-white" : "border border-gray-300 text-gray-700 hover:bg-gray-50"}`}
+                  className={`px-2 py-1 text-xs rounded-md ${pendingView === "received" ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white" : "border border-gray-300 text-gray-700 hover:bg-gray-50"}`}
                 >
                   Received
                 </button>
                 <button
                   onClick={() => setPendingView("sent")}
-                  className={`px-2 py-1 text-xs rounded-md ${pendingView === "sent" ? "bg-purple-600 text-white" : "border border-gray-300 text-gray-700 hover:bg-gray-50"}`}
+                  className={`px-2 py-1 text-xs rounded-md ${pendingView === "sent" ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white" : "border border-gray-300 text-gray-700 hover:bg-gray-50"}`}
                 >
                   Sent
                 </button>
@@ -280,7 +280,7 @@ export default function ConnectionsPage() {
                   .map((p) => (
                     <div key={p.id} className="border border-gray-200 rounded-lg p-3 bg-white flex flex-col gap-2 hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white flex items-center justify-center font-semibold text-sm">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center font-semibold text-sm">
                           {p.avatar}
                         </div>
                         <div className="min-w-0">
@@ -292,7 +292,7 @@ export default function ConnectionsPage() {
                         <div className="text-xs text-gray-500">Requested {new Date(p.requestedAt).toLocaleDateString()}</div>
                         {p.direction === "received" ? (
                           <div className="flex items-center gap-1">
-                            <Button size="sm" onClick={() => handleAccept(p.id)} className="bg-purple-600 hover:bg-purple-700 text-white h-7 text-xs">Accept</Button>
+                            <Button size="sm" onClick={() => handleAccept(p.id)} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white h-7 text-xs">Accept</Button>
                             <Button size="sm" variant="outline" onClick={() => handleDecline(p.id)} className="border-gray-300 text-gray-700 hover:bg-gray-50 h-7 text-xs">Not Interested</Button>
                           </div>
                         ) : (
@@ -313,14 +313,14 @@ export default function ConnectionsPage() {
         {activeTab === "suggested" && (
           <div className="bg-white rounded-lg shadow-sm p-4">
             <div className="flex items-center gap-2 mb-4">
-              <UserPlus className="w-4 h-4 text-purple-600" />
+              <UserPlus className="w-4 h-4 text-yellow-600" />
               <h2 className="text-lg font-semibold text-gray-900">Suggested Connections</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {suggestions.map((s) => (
                 <div key={s.id} className="border border-gray-200 rounded-lg p-3 bg-white flex flex-col gap-2 hover:shadow-md transition-shadow">
                   <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white flex items-center justify-center font-semibold text-sm">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center font-semibold text-sm">
                       {s.avatar}
                     </div>
                     <div className="min-w-0">
@@ -332,7 +332,7 @@ export default function ConnectionsPage() {
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-1">
-                    <Button size="sm" onClick={() => handleConnect(s.id)} className="bg-purple-600 hover:bg-purple-700 text-white h-7 text-xs">Connect</Button>
+                    <Button size="sm" onClick={() => handleConnect(s.id)} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white h-7 text-xs">Connect</Button>
                     <Button size="sm" variant="outline" onClick={() => handleDismissSuggestion(s.id)} className="border-gray-300 text-gray-700 hover:bg-gray-50 h-7 text-xs">Not Interested</Button>
                   </div>
                 </div>

@@ -46,11 +46,30 @@ export default function AdminSignIn() {
   const onSubmit = async (data: AdminSignInFormData) => {
     setLoading(true);
     try {
-      const { error } = await signIn(data.email, data.password);
-      if (error) {
-        console.error("Admin sign in error:", error);
+      // Hardcoded admin credentials for testing
+      if (data.email === "admin@gmail.com" && data.password === "Admin@123") {
+        // Simulate successful admin authentication
+        const mockAdminUser = {
+          id: "admin-1",
+          email: "admin@gmail.com",
+          role: "ADMIN",
+          name: "Admin User"
+        };
+        
+        // Store admin session in localStorage for demo purposes
+        localStorage.setItem("admin-session", JSON.stringify(mockAdminUser));
+        
+        // Navigate to admin dashboard
+        navigate("/admin-dashboard");
+      } else {
+        // Try regular Supabase authentication for other users
+        const { error } = await signIn(data.email, data.password);
+        if (error) {
+          console.error("Admin sign in error:", error);
+          // You might want to show an error message here
+        }
+        // Navigation will be handled by the useEffect above
       }
-      // Navigation will be handled by the useEffect above
     } catch (error) {
       console.error("Admin sign in error:", error);
     } finally {
@@ -59,30 +78,30 @@ export default function AdminSignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back button */}
         <Button
           variant="ghost"
-          className="mb-4 text-muted-foreground hover:text-foreground"
+          className="mb-4 text-gray-600 hover:text-yellow-600"
           onClick={() => navigate("/")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Button>
 
-        <Card className="shadow-elegant border-border/50">
+        <Card className="shadow-elegant border-yellow-200 bg-white">
           <CardHeader className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-destructive to-orange-500 flex items-center justify-center">
-                <Shield className="h-5 w-5 text-primary-foreground" />
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
+                <Shield className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-destructive to-orange-500 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-800 bg-clip-text text-transparent">
                 Admin Portal
               </h1>
             </div>
-            <CardTitle>Administrator Sign In</CardTitle>
-            <CardDescription>Access the admin dashboard</CardDescription>
+            <CardTitle className="text-gray-900">Administrator Sign In</CardTitle>
+            <CardDescription className="text-gray-600">Access the admin dashboard</CardDescription>
           </CardHeader>
           
           <CardContent>
@@ -93,11 +112,12 @@ export default function AdminSignIn() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Admin Email</FormLabel>
+                      <FormLabel className="text-gray-700">Admin Email</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="admin@filmcollab.com"
+                          placeholder="admin@gmail.com"
+                          className="border-yellow-200 focus:border-yellow-500"
                           {...field}
                         />
                       </FormControl>
@@ -111,12 +131,13 @@ export default function AdminSignIn() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel className="text-gray-700">Password</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input
                             type={showPassword ? "text" : "password"}
                             placeholder="Enter admin password"
+                            className="border-yellow-200 focus:border-yellow-500"
                             {...field}
                           />
                           <Button
@@ -127,9 +148,9 @@ export default function AdminSignIn() {
                             onClick={() => setShowPassword(!showPassword)}
                           >
                             {showPassword ? (
-                              <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              <EyeOff className="h-4 w-4 text-gray-500" />
                             ) : (
-                              <Eye className="h-4 w-4 text-muted-foreground" />
+                              <Eye className="h-4 w-4 text-gray-500" />
                             )}
                           </Button>
                         </div>
@@ -141,7 +162,7 @@ export default function AdminSignIn() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-destructive to-orange-500 hover:opacity-90 text-primary-foreground"
+                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                   disabled={loading}
                 >
                   {loading ? "Signing in..." : "Sign In as Admin"}
@@ -150,20 +171,20 @@ export default function AdminSignIn() {
             </Form>
 
             <div className="mt-6 text-center space-y-4">
-              <div className="text-sm text-muted-foreground">
-                Need admin access?{" "}
+              <div className="text-sm text-gray-600">
+                Use demo credentials or{" "}
                 <Button
                   variant="link"
-                  className="p-0 h-auto text-destructive hover:text-orange-500"
+                  className="p-0 h-auto text-yellow-600 hover:text-yellow-700"
                   onClick={() => navigate("/admin-signup")}
                 >
-                  Create admin account
+                  create admin account
                 </Button>
               </div>
               
-              <div className="text-xs text-muted-foreground bg-muted p-3 rounded-lg">
-                <Shield className="h-3 w-3 inline mr-1" />
-                Admin access requires special privileges
+              <div className="text-xs text-gray-500 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                <Shield className="h-3 w-3 inline mr-1 text-yellow-600" />
+                Demo credentials: admin@gmail.com | Admin@123
               </div>
             </div>
           </CardContent>

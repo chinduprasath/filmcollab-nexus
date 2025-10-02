@@ -170,31 +170,31 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-100">
+          <TabsList className="grid w-full grid-cols-4 bg-yellow-50 border-yellow-200">
             <TabsTrigger 
               value="privacy" 
-              className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              className="flex items-center gap-2 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
             >
               <Eye className="w-4 h-4" />
               Privacy
             </TabsTrigger>
             <TabsTrigger 
               value="notifications" 
-              className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              className="flex items-center gap-2 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
             >
               <Bell className="w-4 h-4" />
               Notifications
             </TabsTrigger>
             <TabsTrigger 
               value="appearance" 
-              className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              className="flex items-center gap-2 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
             >
               <Palette className="w-4 h-4" />
               Appearance
             </TabsTrigger>
             <TabsTrigger 
               value="security" 
-              className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              className="flex items-center gap-2 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
             >
               <Key className="w-4 h-4" />
               Security
@@ -361,7 +361,7 @@ const Settings = () => {
                 <Button 
                   onClick={() => handleSave('Privacy')} 
                   disabled={isLoading}
-                  className="w-full md:w-auto"
+                  className="w-full md:w-auto bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {isLoading ? 'Saving...' : 'Save Privacy Settings'}
@@ -473,7 +473,7 @@ const Settings = () => {
                 <Button 
                   onClick={() => handleSave('Notification')} 
                   disabled={isLoading}
-                  className="w-full md:w-auto"
+                  className="w-full md:w-auto bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {isLoading ? 'Saving...' : 'Save Notification Settings'}
@@ -517,7 +517,7 @@ const Settings = () => {
                 <Button 
                   onClick={() => handleSave('Appearance')} 
                   disabled={isLoading}
-                  className="w-full md:w-auto"
+                  className="w-full md:w-auto bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {isLoading ? 'Saving...' : 'Save Theme Settings'}
@@ -549,7 +549,7 @@ const Settings = () => {
                           Last changed: {new Date(securitySettings.passwordLastChanged).toLocaleDateString()}
                         </p>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                         Change Password
                       </Button>
                     </div>
@@ -559,7 +559,7 @@ const Settings = () => {
                 <Button 
                   onClick={() => handleSave('Security')} 
                   disabled={isLoading}
-                  className="w-full md:w-auto"
+                  className="w-full md:w-auto bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {isLoading ? 'Saving...' : 'Save Security Settings'}
