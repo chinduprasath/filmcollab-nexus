@@ -148,18 +148,20 @@ export default function AdminProjects() {
     });
   };
 
-  const getTagBadgeStyle = (tag: string) => {
+  const getTagBadgeStyle = (tag: string): string => {
     const tagConfig = availableTags.find(t => t.label === tag);
-    if (!tagConfig) return {};
+    if (!tagConfig) return "bg-gray-50 text-gray-700 hover:bg-gray-100";
 
-    return {
+    const styles = {
       purple: "bg-purple-50 text-purple-700 hover:bg-purple-100",
       orange: "bg-orange-50 text-orange-700 hover:bg-orange-100",
       green: "bg-green-50 text-green-700 hover:bg-green-100",
       red: "bg-red-50 text-red-700 hover:bg-red-100",
       yellow: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100",
       blue: "bg-blue-50 text-blue-700 hover:bg-blue-100"
-    }[tagConfig.color];
+    };
+
+    return styles[tagConfig.color] || "bg-gray-50 text-gray-700 hover:bg-gray-100";
   };
 
   // Filter projects based on search and filters
