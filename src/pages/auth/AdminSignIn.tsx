@@ -23,17 +23,20 @@ export default function AdminSignIn() {
   const { signIn, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
+  const { isAdmin } = useAuth();
+
   // Handle role-based redirect after successful sign in
   useEffect(() => {
-    if (user && profile && !authLoading) {
-      if (profile.role === 'ADMIN') {
+    if (user && !authLoading) {
+      if (isAdmin()) {
         navigate("/admin-dashboard");
       } else {
-        // If user is not admin, redirect to regular dashboard
+        // If user is not admin, redirect to regular dashboard with error
         navigate("/dashboard");
+        // Could add a toast here about unauthorized access
       }
     }
-  }, [user, profile, authLoading, navigate]);
+  }, [user, authLoading, navigate, isAdmin]);
 
   const form = useForm<AdminSignInFormData>({
     resolver: zodResolver(adminSignInSchema),
@@ -46,29 +49,14 @@ export default function AdminSignIn() {
   const onSubmit = async (data: AdminSignInFormData) => {
     setLoading(true);
     try {
-      // Hardcoded admin credentials for testing
-      if (data.email === "admin@gmail.com" && data.password === "Admin@123") {
-        // Simulate successful admin authentication
-        const mockAdminUser = {
-          id: "admin-1",
-          email: "admin@gmail.com",
-          role: "ADMIN",
-          name: "Admin User"
-        };
-        
-        // Store admin session in localStorage for demo purposes
-        localStorage.setItem("admin-session", JSON.stringify(mockAdminUser));
-        
-        // Navigate to admin dashboard
-        navigate("/admin-dashboard");
+      // Use Supabase authentication - no hardcoded credentials
+      const { error } = await signIn(data.email, data.password);
+      
+      if (error) {
+        console.error("Admin sign in error:", error);
       } else {
-        // Try regular Supabase authentication for other users
-        const { error } = await signIn(data.email, data.password);
-        if (error) {
-          console.error("Admin sign in error:", error);
-          // You might want to show an error message here
-        }
-        // Navigation will be handled by the useEffect above
+        // Navigation will be handled by the useEffect above after role check
+        console.log('Sign in successful, checking admin role...');
       }
     } catch (error) {
       console.error("Admin sign in error:", error);
@@ -184,7 +172,7 @@ export default function AdminSignIn() {
               
               <div className="text-xs text-gray-500 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                 <Shield className="h-3 w-3 inline mr-1 text-yellow-600" />
-                Demo credentials: admin@gmail.com | Admin@123
+                Admin accounts must be created with admin role in database
               </div>
             </div>
           </CardContent>

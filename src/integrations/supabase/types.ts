@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      connections: {
+        Row: {
+          connected_user_id: string
+          created_at: string | null
+          id: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          connected_user_id: string
+          created_at?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          connected_user_id?: string
+          created_at?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connections_connected_user_id_fkey"
+            columns: ["connected_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           benefits: string | null
@@ -27,9 +69,9 @@ export type Database = {
           job_type: string
           location: string
           posted_date: string | null
-          salary_range: string | null
-          salary_min: number | null
           salary_max: number | null
+          salary_min: number | null
+          salary_range: string | null
           skills_required: string[] | null
           status: string | null
           updated_at: string | null
@@ -47,9 +89,9 @@ export type Database = {
           job_type: string
           location: string
           posted_date?: string | null
-          salary_range?: string | null
-          salary_min?: number | null
           salary_max?: number | null
+          salary_min?: number | null
+          salary_range?: string | null
           skills_required?: string[] | null
           status?: string | null
           updated_at?: string | null
@@ -67,9 +109,9 @@ export type Database = {
           job_type?: string
           location?: string
           posted_date?: string | null
-          salary_range?: string | null
-          salary_min?: number | null
           salary_max?: number | null
+          salary_min?: number | null
+          salary_range?: string | null
           skills_required?: string[] | null
           status?: string | null
           updated_at?: string | null
@@ -77,197 +119,129 @@ export type Database = {
         }
         Relationships: []
       }
-      projects: {
+      post_comments: {
         Row: {
-          id: string
-          title: string
-          description: string | null
-          project_type: string
-          category: string
-          status: string
-          location: string | null
-          budget_min: number | null
-          budget_max: number | null
-          budget_currency: string
-          duration_minutes: number | null
-          episodes: number | null
-          team_size: number
-          tags: string[] | null
-          skills_required: string[] | null
-          created_by: string
-          featured: boolean
-          popular: boolean
+          content: string
           created_at: string
+          id: string
+          parent_id: string | null
+          post_id: string
           updated_at: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          title: string
-          description?: string | null
-          project_type: string
-          category: string
-          status?: string
-          location?: string | null
-          budget_min?: number | null
-          budget_max?: number | null
-          budget_currency?: string
-          duration_minutes?: number | null
-          episodes?: number | null
-          team_size?: number
-          tags?: string[] | null
-          skills_required?: string[] | null
-          created_by: string
-          featured?: boolean
-          popular?: boolean
+          content: string
           created_at?: string
+          id?: string
+          parent_id?: string | null
+          post_id: string
           updated_at?: string
+          user_id: string
         }
         Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          project_type?: string
-          category?: string
-          status?: string
-          location?: string | null
-          budget_min?: number | null
-          budget_max?: number | null
-          budget_currency?: string
-          duration_minutes?: number | null
-          episodes?: number | null
-          team_size?: number
-          tags?: string[] | null
-          skills_required?: string[] | null
-          created_by?: string
-          featured?: boolean
-          popular?: boolean
+          content?: string
           created_at?: string
+          id?: string
+          parent_id?: string | null
+          post_id?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      project_members: {
-        Row: {
-          id: string
-          project_id: string
-          user_id: string
-          role: string | null
-          joined_at: string
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          user_id: string
-          role?: string | null
-          joined_at?: string
-        }
-        Update: {
-          id?: string
-          project_id?: string
           user_id?: string
-          role?: string | null
-          joined_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      project_likes: {
+      post_likes: {
         Row: {
-          id: string
-          project_id: string
-          user_id: string
           created_at: string
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          user_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          user_id?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          first_name: string | null
-          full_name: string | null
           id: string
-          last_name: string | null
-          role: string | null
-          updated_at: string | null
-          user_id: string | null
-          bio: string | null
-          location: string | null
-          website: string | null
-          skills: string[] | null
-          experience_level: string | null
-          industry: string | null
-          portfolio_url: string | null
-          linkedin_url: string | null
-          github_url: string | null
-          is_verified: boolean | null
-          followers_count: number | null
-          projects_count: number | null
-          posts_count: number | null
-          likes_count: number | null
-          category: string | null
+          post_id: string
+          user_id: string
         }
         Insert: {
-          created_at?: string | null
-          first_name?: string | null
-          full_name?: string | null
+          created_at?: string
           id?: string
-          last_name?: string | null
-          role?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          bio?: string | null
-          location?: string | null
-          website?: string | null
-          skills?: string[] | null
-          experience_level?: string | null
-          industry?: string | null
-          portfolio_url?: string | null
-          linkedin_url?: string | null
-          github_url?: string | null
-          is_verified?: boolean | null
-          followers_count?: number | null
-          projects_count?: number | null
-          posts_count?: number | null
-          likes_count?: number | null
-          category?: string | null
+          post_id: string
+          user_id: string
         }
         Update: {
-          created_at?: string | null
-          first_name?: string | null
-          full_name?: string | null
+          created_at?: string
           id?: string
-          last_name?: string | null
-          role?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          bio?: string | null
-          location?: string | null
-          website?: string | null
-          skills?: string[] | null
-          experience_level?: string | null
-          industry?: string | null
-          portfolio_url?: string | null
-          linkedin_url?: string | null
-          github_url?: string | null
-          is_verified?: boolean | null
-          followers_count?: number | null
-          projects_count?: number | null
-          posts_count?: number | null
-          likes_count?: number | null
-          category?: string | null
+          post_id?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_saves: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_saves_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_saves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       posts: {
         Row: {
@@ -325,153 +299,244 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
-      post_likes: {
+      profiles: {
         Row: {
-          created_at: string
+          bio: string | null
+          category: string | null
+          created_at: string | null
+          experience_level: string | null
+          first_name: string | null
+          followers_count: number | null
+          full_name: string | null
+          github_url: string | null
           id: string
-          post_id: string
-          user_id: string
+          industry: string | null
+          is_verified: boolean | null
+          last_name: string | null
+          likes_count: number | null
+          linkedin_url: string | null
+          location: string | null
+          portfolio_url: string | null
+          posts_count: number | null
+          projects_count: number | null
+          role: string | null
+          skills: string[] | null
+          updated_at: string | null
+          user_id: string | null
+          website: string | null
         }
         Insert: {
-          created_at?: string
+          bio?: string | null
+          category?: string | null
+          created_at?: string | null
+          experience_level?: string | null
+          first_name?: string | null
+          followers_count?: number | null
+          full_name?: string | null
+          github_url?: string | null
           id?: string
-          post_id: string
-          user_id: string
+          industry?: string | null
+          is_verified?: boolean | null
+          last_name?: string | null
+          likes_count?: number | null
+          linkedin_url?: string | null
+          location?: string | null
+          portfolio_url?: string | null
+          posts_count?: number | null
+          projects_count?: number | null
+          role?: string | null
+          skills?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
         }
         Update: {
-          created_at?: string
+          bio?: string | null
+          category?: string | null
+          created_at?: string | null
+          experience_level?: string | null
+          first_name?: string | null
+          followers_count?: number | null
+          full_name?: string | null
+          github_url?: string | null
           id?: string
-          post_id?: string
-          user_id?: string
+          industry?: string | null
+          is_verified?: boolean | null
+          last_name?: string | null
+          likes_count?: number | null
+          linkedin_url?: string | null
+          location?: string | null
+          portfolio_url?: string | null
+          posts_count?: number | null
+          projects_count?: number | null
+          role?: string | null
+          skills?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      project_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          project_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          project_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          project_id?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "post_likes_post_id_fkey"
-            columns: ["post_id"]
+            foreignKeyName: "project_likes_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "posts"
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "post_likes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
         ]
       }
-      post_comments: {
+      project_members: {
         Row: {
-          content: string
-          created_at: string
           id: string
-          parent_id: string | null
-          post_id: string
-          updated_at: string
-          user_id: string
+          joined_at: string | null
+          project_id: string | null
+          role: string | null
+          user_id: string | null
         }
         Insert: {
-          content: string
-          created_at?: string
           id?: string
-          parent_id?: string | null
-          post_id: string
-          updated_at?: string
-          user_id: string
+          joined_at?: string | null
+          project_id?: string | null
+          role?: string | null
+          user_id?: string | null
         }
         Update: {
-          content?: string
-          created_at?: string
           id?: string
-          parent_id?: string | null
-          post_id?: string
-          updated_at?: string
-          user_id?: string
+          joined_at?: string | null
+          project_id?: string | null
+          role?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "post_comments_parent_id_fkey"
-            columns: ["parent_id"]
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "post_comments"
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "post_comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "post_comments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
         ]
       }
-      post_saves: {
+      projects: {
         Row: {
-          created_at: string
+          budget_currency: string | null
+          budget_max: number | null
+          budget_min: number | null
+          category: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration_minutes: number | null
+          episodes: number | null
+          featured: boolean | null
           id: string
-          post_id: string
-          user_id: string
+          location: string | null
+          popular: boolean | null
+          project_type: string
+          skills_required: string[] | null
+          status: string
+          tags: string[] | null
+          team_size: number | null
+          title: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          budget_currency?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          episodes?: number | null
+          featured?: boolean | null
           id?: string
-          post_id: string
-          user_id: string
+          location?: string | null
+          popular?: boolean | null
+          project_type: string
+          skills_required?: string[] | null
+          status?: string
+          tags?: string[] | null
+          team_size?: number | null
+          title: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          budget_currency?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          episodes?: number | null
+          featured?: boolean | null
           id?: string
-          post_id?: string
-          user_id?: string
+          location?: string | null
+          popular?: boolean | null
+          project_type?: string
+          skills_required?: string[] | null
+          status?: string
+          tags?: string[] | null
+          team_size?: number | null
+          title?: string
+          updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "post_saves_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "post_saves_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
       user_likes: {
         Row: {
+          created_at: string | null
           id: string
-          user_id: string
           liked_user_id: string
-          created_at: string
+          user_id: string
         }
         Insert: {
+          created_at?: string | null
           id?: string
-          user_id: string
           liked_user_id: string
-          created_at?: string
+          user_id: string
         }
         Update: {
+          created_at?: string | null
           id?: string
-          user_id?: string
           liked_user_id?: string
-          created_at?: string
+          user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_likes_liked_user_id_fkey"
+            columns: ["liked_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_likes_user_id_fkey"
             columns: ["user_id"]
@@ -479,35 +544,56 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "user_likes_liked_user_id_fkey"
-            columns: ["liked_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
         ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
       }
       user_saves: {
         Row: {
+          created_at: string | null
           id: string
-          user_id: string
           saved_user_id: string
-          created_at: string
+          user_id: string
         }
         Insert: {
+          created_at?: string | null
           id?: string
-          user_id: string
           saved_user_id: string
-          created_at?: string
+          user_id: string
         }
         Update: {
+          created_at?: string | null
           id?: string
-          user_id?: string
           saved_user_id?: string
-          created_at?: string
+          user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_saves_saved_user_id_fkey"
+            columns: ["saved_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_saves_user_id_fkey"
             columns: ["user_id"]
@@ -515,55 +601,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "user_saves_saved_user_id_fkey"
-            columns: ["saved_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      connections: {
-        Row: {
-          id: string
-          user_id: string
-          connected_user_id: string
-          status: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          connected_user_id: string
-          status?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          connected_user_id?: string
-          status?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "connections_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connections_connected_user_id_fkey"
-            columns: ["connected_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
         ]
       }
     }
@@ -571,10 +608,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -701,6 +748,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "admin"],
+    },
   },
 } as const

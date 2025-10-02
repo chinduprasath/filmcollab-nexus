@@ -24,20 +24,24 @@ export default function SignIn() {
   const { signIn, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Debug: Log auth state changes and handle navigation
+  const { isAdmin } = useAuth();
+
+  // Handle navigation based on role
   useEffect(() => {
-    console.log('SignIn component - auth state changed:', { user: user?.id, profile: profile?.role, authLoading });
+    console.log('SignIn component - auth state changed:', { user: user?.id, authLoading });
     
     // If user is authenticated and not loading, navigate based on role
-    if (user && profile && !authLoading) {
-      console.log('SignIn component - user authenticated, navigating based on role:', profile.role);
-      if (profile.role === 'ADMIN') {
+    if (user && !authLoading) {
+      console.log('SignIn component - user authenticated, checking admin status');
+      if (isAdmin()) {
+        console.log('User is admin, navigating to admin dashboard');
         navigate("/admin-dashboard");
       } else {
+        console.log('User is regular user, navigating to dashboard');
         navigate("/dashboard");
       }
     }
-  }, [user, profile, authLoading, navigate]);
+  }, [user, authLoading, navigate, isAdmin]);
 
   const form = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
