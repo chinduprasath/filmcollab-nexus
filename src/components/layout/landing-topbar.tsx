@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Film } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 
 interface LandingTopbarProps {
   className?: string;
@@ -8,6 +9,7 @@ interface LandingTopbarProps {
 
 export function LandingTopbar({ className }: LandingTopbarProps) {
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
 
   const navigationItems = [
     { name: "Home", href: "/" },
@@ -15,6 +17,24 @@ export function LandingTopbar({ className }: LandingTopbarProps) {
     { name: "How It Works", href: "/#how-it-works" },
     { name: "Community", href: "/#community" }
   ];
+
+  const handleSignIn = () => {
+    if (user) {
+      // If already logged in, go to appropriate dashboard
+      navigate(isAdmin() ? "/admin-dashboard" : "/dashboard");
+    } else {
+      navigate("/auth/signin");
+    }
+  };
+
+  const handleGetStarted = () => {
+    if (user) {
+      // If already logged in, go to appropriate dashboard
+      navigate(isAdmin() ? "/admin-dashboard" : "/dashboard");
+    } else {
+      navigate("/auth/signup");
+    }
+  };
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-yellow-200/50 ${className}`}>
@@ -50,16 +70,16 @@ export function LandingTopbar({ className }: LandingTopbarProps) {
           <div className="flex items-center gap-3">
             <Button 
               variant="outline" 
-              onClick={() => navigate("/auth/signin")}
+              onClick={handleSignIn}
               className="hidden sm:inline-flex border-yellow-500/30 text-gray-700 hover:bg-yellow-50 hover:border-yellow-500"
             >
-              Sign In
+              {user ? "Dashboard" : "Sign In"}
             </Button>
             <Button 
-              onClick={() => navigate("/auth/signup")}
+              onClick={handleGetStarted}
               className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-yellow-500/25"
             >
-              Get Started
+              {user ? "Go to App" : "Get Started"}
             </Button>
           </div>
         </div>

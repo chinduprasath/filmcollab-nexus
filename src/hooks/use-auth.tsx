@@ -229,6 +229,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Clear all state first
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setUserRole(null);
+      
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -238,11 +245,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           variant: "destructive",
         });
       } else {
-        setUser(null);
-        setSession(null);
-        setProfile(null);
-        setUserRole(null);
-        
         toast({
           title: "Signed out",
           description: "You have been signed out successfully.",
