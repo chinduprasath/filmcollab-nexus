@@ -38,27 +38,9 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { LandingTopbar } from "@/components/layout/landing-topbar";
-import { useAuth } from "@/hooks/use-auth";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
-
-  const handleGetStarted = () => {
-    if (user) {
-      navigate(isAdmin() ? "/admin-dashboard" : "/dashboard");
-    } else {
-      navigate("/auth/signup");
-    }
-  };
-
-  const handleSignIn = () => {
-    if (user) {
-      navigate(isAdmin() ? "/admin-dashboard" : "/dashboard");
-    } else {
-      navigate("/auth/signin");
-    }
-  };
 
   const features = [
     {
@@ -210,9 +192,9 @@ const Index = () => {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-2xl hover:shadow-yellow-500/25 transition-all duration-500 min-w-[250px] h-14 text-lg font-semibold group"
-                onClick={handleGetStarted}
+                onClick={() => navigate("/auth/signup")}
               >
-                {user ? "Go to Dashboard" : "Start Your Journey"}
+                Start Your Journey
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
               
@@ -220,10 +202,10 @@ const Index = () => {
                 variant="outline" 
                 size="lg"
                 className="min-w-[250px] h-14 text-lg border-2 border-yellow-500 text-yellow-600 hover:bg-yellow-50 group"
-                onClick={handleSignIn}
+                onClick={() => navigate("/auth/signin")}
               >
                 <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                {user ? "Open App" : "Watch Demo"}
+                Watch Demo
               </Button>
             </div>
 

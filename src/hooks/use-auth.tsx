@@ -249,6 +249,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Signed out",
           description: "You have been signed out successfully.",
         });
+        
+        // Redirect to landing page after successful signout
+        window.location.href = '/';
       }
     } catch (error) {
       console.error('Sign out error:', error);

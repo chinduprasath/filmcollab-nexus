@@ -52,22 +52,8 @@ export function DashboardTopbar({
   // Show profile selector if profile is generic
   const shouldShowProfileSelector = profile && (!profile.full_name || profile.full_name === 'User' || profile.role === 'USER');
 
-  const handleSignOut = () => {
-    console.log('Sign out button clicked!');
-    console.log('Performing immediate signout and redirect...');
-    
-    // Clear any stored auth data
-    localStorage.removeItem('supabase.auth.token');
-    sessionStorage.clear();
-    
-    // Clear any cookies if they exist
-    document.cookie.split(";").forEach(function(c) { 
-      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-    });
-    
-    // Immediate redirect to landing page
-    console.log('Redirecting to landing page...');
-    window.location.href = '/';
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   const handleLinkVFXProfile = async () => {
