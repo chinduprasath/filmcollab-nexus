@@ -1606,7 +1606,7 @@ export default function ProjectsPage() {
                           <h3 className="font-semibold mb-3 text-lg">Project Description</h3>
                           <div className="bg-gray-50 p-4 rounded-lg">
                             <p className="text-gray-700 leading-relaxed">
-                              {selectedProject.full_description || selectedProject.description}
+                              {selectedProject.description}
                             </p>
                           </div>
                         </div>
@@ -1628,12 +1628,7 @@ export default function ProjectsPage() {
                           <h3 className="font-semibold mb-3 text-lg">Requirements</h3>
                           <div className="bg-gray-50 p-4 rounded-lg">
                             <ul className="space-y-2">
-                              {selectedProject.requirements?.map((req, index) => (
-                                <li key={index} className="flex items-start gap-2 text-sm">
-                                  <span className="text-primary mt-1">•</span>
-                                  <span>{req}</span>
-                                </li>
-                              )) || <span className="text-muted-foreground">No specific requirements listed</span>}
+                              <li className="text-sm text-muted-foreground">Contact project creator for requirements</li>
                             </ul>
                           </div>
                         </div>
@@ -1642,14 +1637,7 @@ export default function ProjectsPage() {
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Benefits & Perks</h3>
                           <div className="bg-green-50 p-4 rounded-lg">
-                            <ul className="space-y-2">
-                              {selectedProject.benefits?.map((benefit, index) => (
-                                <li key={index} className="flex items-start gap-2 text-sm">
-                                  <span className="text-green-600 mt-1">✓</span>
-                                  <span>{benefit}</span>
-                                </li>
-                              )) || <span className="text-muted-foreground">Benefits will be discussed during interview</span>}
-                            </ul>
+                            <p className="text-sm text-muted-foreground">Contact project creator for benefits</p>
                           </div>
                         </div>
 
@@ -1657,12 +1645,9 @@ export default function ProjectsPage() {
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Project Timeline</h3>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {selectedProject.timeline && Object.entries(selectedProject.timeline).map(([phase, duration]) => (
-                              <div key={phase} className="bg-blue-50 p-3 rounded-lg text-center">
-                                <div className="text-sm font-medium capitalize">{phase.replace('_', ' ')}</div>
-                                <div className="text-xs text-muted-foreground mt-1">{duration}</div>
-                              </div>
-                            ))}
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <p className="text-sm text-muted-foreground">Timeline information not available</p>
+                            </div>
                           </div>
                         </div>
 
@@ -1671,13 +1656,13 @@ export default function ProjectsPage() {
                           <div>
                             <h3 className="font-semibold mb-3 text-lg">Target Audience</h3>
                             <div className="bg-gray-50 p-4 rounded-lg">
-                              <p className="text-sm text-gray-700">{selectedProject.target_audience}</p>
+                              <p className="text-sm text-muted-foreground">Target audience not specified</p>
                             </div>
                           </div>
                           <div>
                             <h3 className="font-semibold mb-3 text-lg">Distribution Plan</h3>
                             <div className="bg-gray-50 p-4 rounded-lg">
-                              <p className="text-sm text-gray-700">{selectedProject.distribution_plan}</p>
+                              <p className="text-sm text-muted-foreground">Distribution plan not specified</p>
                             </div>
                           </div>
                         </div>
@@ -1686,7 +1671,7 @@ export default function ProjectsPage() {
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Production Notes</h3>
                           <div className="bg-yellow-50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-700">{selectedProject.production_notes}</p>
+                            <p className="text-sm text-muted-foreground">No production notes available</p>
                           </div>
                         </div>
 
@@ -1697,15 +1682,7 @@ export default function ProjectsPage() {
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Email:</span>
-                                <span className="font-medium">{selectedProject.contact_info?.email}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Phone:</span>
-                                <span className="font-medium">{selectedProject.contact_info?.phone}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Preferred Contact:</span>
-                                <span className="font-medium">{selectedProject.contact_info?.preferred_contact}</span>
+                                <span className="font-medium text-muted-foreground">Contact information not available</span>
                               </div>
                             </div>
                           </div>
@@ -1769,7 +1746,7 @@ export default function ProjectsPage() {
                       <h3 className="font-semibold mb-3 text-lg">Project Description</h3>
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <p className="text-gray-700 leading-relaxed">
-                          {selectedProject.full_description || selectedProject.description}
+                          {selectedProject.description}
                         </p>
                       </div>
                     </div>
@@ -1786,91 +1763,11 @@ export default function ProjectsPage() {
                       </div>
                     </div>
 
-                    {/* Requirements */}
+                    {/* Additional Details */}
                     <div>
-                      <h3 className="font-semibold mb-3 text-lg">Requirements</h3>
+                      <h3 className="font-semibold mb-3 text-lg">Additional Information</h3>
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <ul className="space-y-2">
-                          {selectedProject.requirements?.map((req, index) => (
-                            <li key={index} className="flex items-start gap-2 text-sm">
-                              <span className="text-primary mt-1">•</span>
-                              <span>{req}</span>
-                            </li>
-                          )) || <span className="text-muted-foreground">No specific requirements listed</span>}
-                        </ul>
-                      </div>
-                    </div>
-
-                    {/* Benefits */}
-                    <div>
-                      <h3 className="font-semibold mb-3 text-lg">Benefits & Perks</h3>
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <ul className="space-y-2">
-                          {selectedProject.benefits?.map((benefit, index) => (
-                            <li key={index} className="flex items-start gap-2 text-sm">
-                              <span className="text-green-600 mt-1">✓</span>
-                              <span>{benefit}</span>
-                            </li>
-                          )) || <span className="text-muted-foreground">Benefits will be discussed during interview</span>}
-                        </ul>
-                      </div>
-                    </div>
-
-                    {/* Timeline */}
-                    <div>
-                      <h3 className="font-semibold mb-3 text-lg">Project Timeline</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {selectedProject.timeline && Object.entries(selectedProject.timeline).map(([phase, duration]) => (
-                          <div key={phase} className="bg-blue-50 p-3 rounded-lg text-center">
-                            <div className="text-sm font-medium capitalize">{phase.replace('_', ' ')}</div>
-                            <div className="text-xs text-muted-foreground mt-1">{duration}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Additional Information */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h3 className="font-semibold mb-3 text-lg">Target Audience</h3>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <p className="text-sm text-gray-700">{selectedProject.target_audience}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-3 text-lg">Distribution Plan</h3>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <p className="text-sm text-gray-700">{selectedProject.distribution_plan}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Production Notes */}
-                    <div>
-                      <h3 className="font-semibold mb-3 text-lg">Production Notes</h3>
-                      <div className="bg-yellow-50 p-4 rounded-lg">
-                        <p className="text-sm text-gray-700">{selectedProject.production_notes}</p>
-                      </div>
-                    </div>
-
-                    {/* Contact Information */}
-                    <div>
-                      <h3 className="font-semibold mb-3 text-lg">Contact Information</h3>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Email:</span>
-                            <span className="font-medium">{selectedProject.contact_info?.email}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Phone:</span>
-                            <span className="font-medium">{selectedProject.contact_info?.phone}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Preferred Contact:</span>
-                            <span className="font-medium">{selectedProject.contact_info?.preferred_contact}</span>
-                          </div>
-                        </div>
+                        <p className="text-sm text-muted-foreground">Contact the project creator for more details.</p>
                       </div>
                     </div>
 

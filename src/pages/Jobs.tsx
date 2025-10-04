@@ -60,6 +60,8 @@ interface Job {
   posted_date: string;
   user_id: string;
   status: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const jobSchema = z.object({
@@ -73,6 +75,7 @@ const jobSchema = z.object({
   salary_max: z.number().optional(),
   skills_required: z.string().optional(),
   job_description: z.string().min(10, "Job description must be at least 10 characters"),
+  requirements: z.string().optional(),
   benefits: z.string().optional()
 });
 

@@ -43,7 +43,7 @@ interface AuthContextType {
   userRole: UserRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, firstName?: string, lastName?: string, role?: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   linkProfile: (userId: string) => Promise<void>;
   isAdmin: () => boolean;
@@ -188,9 +188,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (email: string, password: string, firstName?: string, lastName?: string, role?: string) => {
     try {
       const redirectUrl = `${window.location.origin}/dashboard`;
+      const fullName = firstName && lastName ? `${firstName} ${lastName}` : (firstName || '');
 
       const { error } = await supabase.auth.signUp({
         email,
@@ -198,9 +199,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName || '',
-            first_name: fullName?.split(' ')[0] || '',
-            last_name: fullName?.split(' ').slice(1).join(' ') || '',
+            full_name: fullName,
+            first_name: firstName || '',
+            last_name: lastName || '',
+            role: role || '',
           }
         }
       });

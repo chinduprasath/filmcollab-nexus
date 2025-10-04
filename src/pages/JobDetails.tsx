@@ -41,7 +41,7 @@ interface Job {
   max_salary: number;
   description: string;
   requirements: string;
-  skills_required: string[];
+  skills_required: string[] | string;
   benefits: string;
   job_type: string;
   experience_level: string;
@@ -239,7 +239,7 @@ export default function JobDetails() {
     if (job) {
       setEditForm({
         ...job,
-        skills_required: job.skills_required.join(', ')
+        skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(', ') : job.skills_required
       });
       setShowEditDialog(true);
     }
@@ -257,10 +257,14 @@ export default function JobDetails() {
 
   const handleUpdateJob = () => {
     if (job && editForm) {
+      const skillsArray = typeof editForm.skills_required === 'string' 
+        ? editForm.skills_required.split(',').map(s => s.trim())
+        : Array.isArray(editForm.skills_required) ? editForm.skills_required : job.skills_required;
+      
       const updatedJob = {
         ...job,
         ...editForm,
-        skills_required: editForm.skills_required ? editForm.skills_required.split(',').map(s => s.trim()) : job.skills_required
+        skills_required: skillsArray
       };
       setJob(updatedJob);
       setShowEditDialog(false);
@@ -476,7 +480,7 @@ export default function JobDetails() {
                     <div className="space-y-2">
                       <h4 className="font-medium text-gray-900">Required Skills:</h4>
                       <div className="flex flex-wrap gap-2">
-                        {job.skills_required.map((skill, index) => (
+                        {(Array.isArray(job.skills_required) ? job.skills_required : [job.skills_required]).map((skill, index) => (
                           <Badge key={index} variant="secondary" className="bg-yellow-100 text-yellow-800">
                             {skill}
                           </Badge>

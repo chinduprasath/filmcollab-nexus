@@ -121,18 +121,18 @@ export default function AdminCommunities() {
     });
   };
 
-  const getTagBadgeStyle = (tag: string) => {
+  const getTagBadgeStyle = (tag: string): string => {
     const tagConfig = availableTags.find(t => t.label === tag);
-    if (!tagConfig) return {};
+    if (!tagConfig) return "";
 
-    return {
+    return ({
       purple: "bg-purple-50 text-purple-700 hover:bg-purple-100",
       orange: "bg-orange-50 text-orange-700 hover:bg-orange-100",
       green: "bg-green-50 text-green-700 hover:bg-green-100",
       blue: "bg-blue-50 text-blue-700 hover:bg-blue-100",
       red: "bg-red-50 text-red-700 hover:bg-red-100",
       yellow: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
-    }[tagConfig.color];
+    }[tagConfig.color] || "");
   };
 
   const getStatusBadgeStyle = (status: string) => {
@@ -254,13 +254,13 @@ export default function AdminCommunities() {
                         <div className="flex items-center gap-2">
                           <div className="flex flex-wrap gap-2 flex-1">
                             {community.tags.map((tag, index) => (
-                              <Badge 
-                                key={index}
-                                variant="secondary" 
-                                className={getTagBadgeStyle(tag)}
-                              >
-                                {tag}
-                              </Badge>
+                                <Badge 
+                                  key={index}
+                                  variant="secondary" 
+                                  className={getTagBadgeStyle(tag) || ""}
+                                >
+                                  {tag}
+                                </Badge>
                             ))}
                           </div>
                           <Popover 
@@ -303,7 +303,7 @@ export default function AdminCommunities() {
                                         </div>
                                         <Badge 
                                           variant="secondary"
-                                          className={getTagBadgeStyle(tag.label)}
+                                          className={getTagBadgeStyle(tag.label) || ""}
                                         >
                                           {tag.label}
                                         </Badge>

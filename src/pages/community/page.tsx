@@ -560,7 +560,7 @@ export default function CommunityPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {createdGroups.map((group) => (
+                {joinedGroups.filter(g => g.role === 'Admin').map((group) => (
                   <Card 
                     key={group.id} 
                     className="hover:shadow-lg transition-shadow border-yellow-200 rounded-lg cursor-pointer"

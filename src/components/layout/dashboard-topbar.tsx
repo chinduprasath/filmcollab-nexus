@@ -76,14 +76,14 @@ export function DashboardTopbar({
       console.log('Starting VFX profile linking...');
       
       // First, let's see all profiles
-      const { data: allProfiles, error: allError } = await supabase
+      const { data: allProfiles } = await supabase
         .from('profiles')
         .select('*');
       
       console.log('All profiles:', allProfiles);
       
       // Look for VFX profile specifically
-      const { data: vfxProfiles, error: vfxError } = await supabase
+      const { data: vfxProfiles } = await supabase
         .from('profiles')
         .select('*')
         .or('full_name.ilike.%VFX%,first_name.ilike.%VFX%');
@@ -94,20 +94,17 @@ export function DashboardTopbar({
         const vfxProfile = vfxProfiles[0];
         console.log('Linking to VFX profile:', vfxProfile);
         
-        const result = await linkProfile(vfxProfile.id);
-        if (!result.error) {
+        if (linkProfile) {
+          await linkProfile(vfxProfile.id);
           console.log('Successfully linked VFX profile');
-          // Force a page refresh to update the display
           window.location.reload();
-        } else {
-          console.error('Error linking profile:', result.error);
         }
       } else {
         console.log('No VFX profile found');
         // Let's try to create one
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data: newProfile, error: createError } = await supabase
+          const { data: newProfile } = await supabase
             .from('profiles')
             .insert({
               user_id: user.id,
@@ -118,7 +115,7 @@ export function DashboardTopbar({
             .select()
             .single();
           
-          if (newProfile && !createError) {
+          if (newProfile) {
             console.log('Created new VFX profile:', newProfile);
             window.location.reload();
           }
@@ -261,7 +258,7 @@ export function DashboardTopbar({
                     </div>
                   ))}
                 </div>
-                <Button variant="outline" className="w-full" size="sm" onClick={() => navigate("/notifications")} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                <Button variant="outline" size="sm" onClick={() => navigate("/notifications")} className="w-full border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                   View all notifications
                 </Button>
               </div>

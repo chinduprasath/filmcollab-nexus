@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   Search,
   Tags,
-  User
+  User,
+  Check
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -126,17 +127,17 @@ export default function AdminPosts() {
     }
   };
 
-  const getTagBadgeStyle = (tag: string) => {
+  const getTagBadgeStyle = (tag: string): string => {
     const tagConfig = availableTags.find(t => t.label === tag);
-    if (!tagConfig) return {};
+    if (!tagConfig) return "";
 
-    return {
+    return ({
       orange: "bg-orange-50 text-orange-700 hover:bg-orange-100",
       purple: "bg-purple-50 text-purple-700 hover:bg-purple-100",
       green: "bg-green-50 text-green-700 hover:bg-green-100",
       blue: "bg-blue-50 text-blue-700 hover:bg-blue-100",
       yellow: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
-    }[tagConfig.color];
+    }[tagConfig.color] || "");
   };
 
   // Filter posts based on search and filters
@@ -311,7 +312,7 @@ export default function AdminPosts() {
                                 <Badge 
                                   key={index}
                                   variant="secondary" 
-                                  className={getTagBadgeStyle(tag)}
+                                  className={getTagBadgeStyle(tag) || ""}
                                 >
                                   {tag}
                                 </Badge>
@@ -357,7 +358,7 @@ export default function AdminPosts() {
                                           </div>
                                           <Badge 
                                             variant="secondary"
-                                            className={getTagBadgeStyle(tag.label)}
+                                            className={getTagBadgeStyle(tag.label) || ""}
                                           >
                                             {tag.label}
                                           </Badge>

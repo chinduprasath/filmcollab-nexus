@@ -157,11 +157,11 @@ export default function AdminUsers() {
     });
   };
 
-  const getTagBadgeStyle = (tag: string) => {
+  const getTagBadgeStyle = (tag: string): string => {
     const tagConfig = availableTags.find(t => t.label === tag);
-    if (!tagConfig) return {};
+    if (!tagConfig) return "";
 
-    return {
+    return ({
       blue: "bg-blue-50 text-blue-700 hover:bg-blue-100",
       green: "bg-green-50 text-green-700 hover:bg-green-100",
       purple: "bg-purple-50 text-purple-700 hover:bg-purple-100",
@@ -170,7 +170,7 @@ export default function AdminUsers() {
       pink: "bg-pink-50 text-pink-700 hover:bg-pink-100",
       cyan: "bg-cyan-50 text-cyan-700 hover:bg-cyan-100",
       amber: "bg-amber-50 text-amber-700 hover:bg-amber-100"
-    }[tagConfig.color];
+    }[tagConfig.color] || "");
   };
 
   return (
@@ -280,7 +280,7 @@ export default function AdminUsers() {
                               <Badge 
                                 key={index}
                                 variant="secondary" 
-                                className={getTagBadgeStyle(tag)}
+                                className={getTagBadgeStyle(tag) || ""}
                               >
                                 {tag}
                               </Badge>
@@ -326,7 +326,7 @@ export default function AdminUsers() {
                                         </div>
                                         <Badge 
                                           variant="secondary"
-                                          className={getTagBadgeStyle(tag.label)}
+                                          className={getTagBadgeStyle(tag.label) || ""}
                                         >
                                           {tag.label}
                                         </Badge>
