@@ -47,7 +47,7 @@ const queryClient = new QueryClient();
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, profile } = useAuth();
+  const { user, loading } = useAuth();
   
   if (loading) {
     return (
@@ -61,13 +61,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
   
   if (!user) {
-    return <Navigate to="/auth/signin" replace />;
-  }
-
-  // Allow access even if profile is not loaded yet
-  // The profile will be loaded asynchronously and components can handle it
-  // Only redirect if profile is loaded and has invalid role
-  if (profile && profile.role !== 'USER' && profile.role !== 'ADMIN') {
     return <Navigate to="/auth/signin" replace />;
   }
   
@@ -76,21 +69,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 // Admin Route Component
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, profile } = useAuth();
-  
-  // Check for hardcoded admin session
-  const adminSession = localStorage.getItem("admin-session");
-  if (adminSession) {
-    try {
-      const adminData = JSON.parse(adminSession);
-      if (adminData.role === 'ADMIN') {
-        return <>{children}</>;
-      }
-    } catch (error) {
-      // Invalid session data, clear it
-      localStorage.removeItem("admin-session");
-    }
-  }
+  const { user, loading, isAdmin } = useAuth();
   
   if (loading) {
     return (
@@ -107,20 +86,8 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/admin-signin" replace />;
   }
 
-  // Wait for profile to load before checking role
-  if (user && !profile) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-destructive border-t-transparent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Only allow ADMIN role for admin routes
-  if (profile && profile.role !== 'ADMIN') {
+  // Check admin status using isAdmin() function
+  if (!isAdmin()) {
     return <Navigate to="/admin-signin" replace />;
   }
   
@@ -129,13 +96,9 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 // Public Route Component (redirect if already authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, profile } = useAuth();
-  
-  // Debug logging
-  console.log('PublicRoute - user:', user?.id, 'loading:', loading, 'profile:', profile?.role, 'profile exists:', !!profile);
+  const { user, loading, isAdmin } = useAuth();
   
   if (loading) {
-    console.log('PublicRoute - still loading...');
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
@@ -146,13 +109,14 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     );
   }
   
-  // If user exists, redirect to dashboard regardless of profile status
+  // If user exists, redirect based on role
   if (user) {
-    console.log('PublicRoute - user exists, redirecting to dashboard');
+    if (isAdmin()) {
+      return <Navigate to="/admin-dashboard" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
   
-  console.log('PublicRoute - no user, showing public page');
   return <>{children}</>;
 }
 
