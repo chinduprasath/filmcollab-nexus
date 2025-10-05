@@ -44,7 +44,7 @@ export default function AdminSignUp() {
   const onSubmit = async (data: AdminSignUpFormData) => {
     setLoading(true);
     try {
-      const { error } = await signUp(data.email, data.password, data.firstName, data.lastName, 'ADMIN');
+      const { error } = await signUp(data.email, data.password, data.firstName, data.lastName, 'admin');
       if (!error) {
         navigate("/admin-dashboard");
       }
