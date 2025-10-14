@@ -5,47 +5,23 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Profile {
   id: string;
-  user_id: string;
+  email: string;
   full_name?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  bio?: string | null;
-  industry?: string | null;
-  experience_level?: string | null;
-  skills?: string[] | null;
-  role?: string | null;
-  category?: string | null;
-  location?: string | null;
-  website?: string | null;
-  portfolio_url?: string | null;
-  linkedin_url?: string | null;
-  github_url?: string | null;
-  is_verified?: boolean | null;
-  followers_count?: number | null;
-  projects_count?: number | null;
-  posts_count?: number | null;
-  likes_count?: number | null;
+  avatar_url?: string | null;
+  role: 'user' | 'admin';
+  is_admin: boolean;
   created_at: string;
   updated_at: string;
-}
-
-interface UserRole {
-  id: string;
-  user_id: string;
-  role: 'user' | 'admin';
-  created_at: string;
 }
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
-  userRole: UserRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string, firstName?: string, lastName?: string, role?: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, fullName?: string, isAdmin?: boolean) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
-  linkProfile: (userId: string) => Promise<void>;
   isAdmin: () => boolean;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
 }
@@ -56,18 +32,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchProfile = async (userId: string) => {
     try {
       console.log('Fetching profile for user:', userId);
-      
+
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .maybeSingle();
 
       if (profileError) {
@@ -79,77 +54,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Profile fetched:', profileData);
         setProfile(profileData);
       }
-
-      // Fetch user role from user_roles table
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (roleError) {
-        console.error('Role fetch error:', roleError);
-        return;
-      }
-
-      if (roleData) {
-        console.log('User role fetched:', roleData);
-        setUserRole(roleData);
-      }
     } catch (error) {
       console.error('Error in fetchProfile:', error);
     }
   };
 
-  const linkProfile = async (userId: string) => {
-    await fetchProfile(userId);
-  };
-
   const isAdmin = () => {
-    return userRole?.role === 'admin';
+    return profile?.is_admin === true;
   };
 
   useEffect(() => {
     console.log('useAuth useEffect running');
 
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // Defer profile fetching
+
         if (session?.user) {
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
         } else {
           setProfile(null);
-          setUserRole(null);
         }
 
         if (event === 'SIGNED_OUT') {
           setProfile(null);
-          setUserRole(null);
         }
 
         setLoading(false);
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         fetchProfile(session.user.id);
       }
       setLoading(false);
     });
 
-    // Fallback timeout
     const timeoutId = setTimeout(() => {
       console.log('Fallback timeout - setting loading to false');
       setLoading(false);
@@ -188,24 +136,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, firstName?: string, lastName?: string, role?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, isAdmin?: boolean) => {
     try {
-      const redirectUrl = `${window.location.origin}/dashboard`;
-      const fullName = firstName && lastName ? `${firstName} ${lastName}` : (firstName || '');
+      const redirectUrl = isAdmin ? `${window.location.origin}/admin-dashboard` : `${window.location.origin}/dashboard`;
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName,
-            first_name: firstName || '',
-            last_name: lastName || '',
-            role: role || '',
+            full_name: fullName || '',
           }
         }
       });
+
+      if (!error && data.user && isAdmin) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ role: 'admin', is_admin: true })
+          .eq('id', data.user.id);
+
+        if (profileError) {
+          console.error('Error setting admin role:', profileError);
+        }
+      }
 
       if (error) {
         toast({
@@ -216,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         toast({
           title: "Account created!",
-          description: "Welcome to FilmCollab. Please check your email to verify your account.",
+          description: "Welcome to FilmCollab.",
         });
       }
 
@@ -229,15 +184,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Clear all state first
       setUser(null);
       setSession(null);
       setProfile(null);
-      setUserRole(null);
-      
-      // Sign out from Supabase
+
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         toast({
           title: "Sign out failed",
@@ -249,8 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Signed out",
           description: "You have been signed out successfully.",
         });
-        
-        // Redirect to landing page after successful signout
+
         window.location.href = '/';
       }
     } catch (error) {
@@ -290,12 +241,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         profile,
-        userRole,
         loading,
         signIn,
         signUp,
         signOut,
-        linkProfile,
         isAdmin,
         resetPassword,
       }}

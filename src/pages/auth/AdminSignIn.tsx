@@ -20,23 +20,22 @@ type AdminSignInFormData = z.infer<typeof adminSignInSchema>;
 export default function AdminSignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, user, profile, userRole, loading: authLoading, isAdmin } = useAuth();
+  const { signIn, user, profile, loading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   // Handle role-based redirect after successful sign in
   useEffect(() => {
-    if (user && !authLoading && userRole) {
-      console.log('Admin signin - checking role:', userRole);
+    if (user && !authLoading && profile) {
+      console.log('Admin signin - checking role:', profile);
       if (isAdmin()) {
         console.log('Redirecting to admin dashboard');
         navigate("/admin-dashboard");
       } else {
         console.log('Not admin, redirecting to user dashboard');
-        // If user is not admin, redirect to regular dashboard with error
         navigate("/dashboard");
       }
     }
-  }, [user, authLoading, userRole, navigate, isAdmin]);
+  }, [user, authLoading, profile, navigate, isAdmin]);
 
   const form = useForm<AdminSignInFormData>({
     resolver: zodResolver(adminSignInSchema),
