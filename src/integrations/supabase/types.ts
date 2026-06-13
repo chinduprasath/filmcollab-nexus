@@ -119,6 +119,21 @@ export type Database = {
         }
         Relationships: []
       }
+      kv_store_8c069c6b: {
+        Row: {
+          key: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       post_comments: {
         Row: {
           content: string
@@ -307,6 +322,7 @@ export type Database = {
           bio: string | null
           category: string | null
           created_at: string | null
+          email: string | null
           experience_level: string | null
           first_name: string | null
           followers_count: number | null
@@ -332,6 +348,7 @@ export type Database = {
           bio?: string | null
           category?: string | null
           created_at?: string | null
+          email?: string | null
           experience_level?: string | null
           first_name?: string | null
           followers_count?: number | null
@@ -357,6 +374,7 @@ export type Database = {
           bio?: string | null
           category?: string | null
           created_at?: string | null
+          email?: string | null
           experience_level?: string | null
           first_name?: string | null
           followers_count?: number | null
@@ -615,10 +633,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "user" | "admin"
