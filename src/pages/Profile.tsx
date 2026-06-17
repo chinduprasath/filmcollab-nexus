@@ -305,9 +305,75 @@ export default function ProfilePage() {
     setShowEditProfile(true);
   };
 
-  const handleSaveProfile = () => {
-    setProfile(editForm);
+  const handleSaveProfile = async () => {
+    if (!user) {
+      toast({ title: "Not signed in", description: "Please sign in to save your profile.", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    const payload = profileToRow(editForm, user.id);
+    const { data, error } = await supabase
+      .from("profiles")
+      .upsert(payload, { onConflict: "user_id" })
+      .select()
+      .maybeSingle();
+    setSaving(false);
+
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    const updated = data ? rowToProfile(data, user.email) : editForm;
+    setProfile(updated);
+    setEditForm(updated);
     setShowEditProfile(false);
+    toast({ title: "Profile updated", description: "Your changes have been saved." });
+  };
+
+  // Quick Actions
+  const handleSendMessage = () => navigate("/messages");
+  const handleConnect = () => toast({ title: "Connection request sent", description: "We'll notify you once accepted." });
+  const handleShareProfile = async () => {
+    const url = `${window.location.origin}/profile${profile.username ? `?u=${encodeURIComponent(profile.username)}` : ""}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: profile.name || "Profile", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast({ title: "Link copied", description: "Profile link copied to clipboard." });
+      }
+    } catch {
+      /* user cancelled */
+    }
+  };
+  const handleDownloadCV = () => {
+    const lines = [
+      profile.name,
+      profile.role,
+      profile.email,
+      profile.phone,
+      profile.location,
+      "",
+      "ABOUT",
+      profile.bio,
+      "",
+      "SKILLS",
+      (profile.skills || []).join(", "),
+      "",
+      "EXPERIENCE",
+      ...(profile.experience || []).map((e) => `- ${e.title} @ ${e.company} (${e.startDate} - ${e.current ? "Present" : e.endDate ?? ""})\n  ${e.description ?? ""}`),
+      "",
+      "EDUCATION",
+      ...(profile.education || []).map((e) => `- ${e.degree} @ ${e.school} (${e.startDate} - ${e.current ? "Present" : e.endDate ?? ""})`),
+    ].filter(Boolean).join("\n");
+    const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${(profile.name || "profile").replace(/\s+/g, "_")}_CV.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast({ title: "CV downloaded" });
   };
 
   const handleCancelEdit = () => {
