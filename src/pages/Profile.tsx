@@ -145,187 +145,149 @@ interface PortfolioItem {
   likes: number;
 }
 
-const mockProfileData: ProfileData = {
-  id: "1",
-  name: "Sarah Johnson",
-  username: "sarahj_filmmaker",
-  email: "sarah.johnson@email.com",
-  phone: "+1 (555) 123-4567",
-  location: "Los Angeles, CA",
-  bio: "Independent filmmaker and producer with over 8 years of experience in documentary and narrative filmmaking. Passionate about telling stories that matter and creating meaningful connections in the film industry.",
-  avatar: "/api/placeholder/150/150",
-  coverImage: "/api/placeholder/1200/400",
-  role: "Independent Filmmaker & Producer",
-  company: "Johnson Productions",
-  website: "https://sarahjohnsonfilms.com",
-  linkedin: "https://linkedin.com/in/sarahjohnson",
-  twitter: "https://twitter.com/sarahj_films",
-  instagram: "https://instagram.com/sarahj_films",
-  youtube: "https://youtube.com/sarahjohnsonfilms",
-  joinedDate: "2020-03-15",
-  verified: true,
+const emptyProfileData: ProfileData = {
+  id: "",
+  name: "",
+  username: "",
+  email: "",
+  phone: "",
+  location: "",
+  bio: "",
+  avatar: "",
+  coverImage: "",
+  role: "",
+  company: "",
+  website: "",
+  linkedin: "",
+  twitter: "",
+  instagram: "",
+  youtube: "",
+  joinedDate: new Date().toISOString(),
+  verified: false,
   online: true,
-  stats: {
-    connections: 1247,
-    projects: 23,
-    posts: 156,
-    followers: 2840,
-  },
-  skills: [
-    "Directing",
-    "Producing",
-    "Screenwriting",
-    "Documentary Filmmaking",
-    "Post-Production",
-    "Project Management",
-    "Crowdfunding",
-    "Film Distribution",
-  ],
-  experience: [
-    {
-      id: "1",
-      title: "Independent Filmmaker & Producer",
-      company: "Johnson Productions",
-      location: "Los Angeles, CA",
-      startDate: "2020-01",
-      current: true,
-      description: "Creating and producing independent films, documentaries, and short films. Managing all aspects of production from development to distribution.",
-    },
-    {
-      id: "2",
-      title: "Associate Producer",
-      company: "Creative Studios",
-      location: "Los Angeles, CA",
-      startDate: "2018-06",
-      endDate: "2019-12",
-      current: false,
-      description: "Assisted in production of feature films and documentaries. Managed post-production workflows and coordinated with various departments.",
-    },
-    {
-      id: "3",
-      title: "Production Assistant",
-      company: "Metro Pictures",
-      location: "New York, NY",
-      startDate: "2016-08",
-      endDate: "2018-05",
-      current: false,
-      description: "Supported production teams on various film and television projects. Gained hands-on experience in all aspects of film production.",
-    },
-  ],
-  education: [
-    {
-      id: "1",
-      degree: "Master of Fine Arts in Film Production",
-      school: "University of Southern California",
-      location: "Los Angeles, CA",
-      startDate: "2014-09",
-      endDate: "2016-05",
-      current: false,
-      description: "Specialized in documentary filmmaking and post-production techniques.",
-    },
-    {
-      id: "2",
-      degree: "Bachelor of Arts in Communications",
-      school: "New York University",
-      location: "New York, NY",
-      startDate: "2010-09",
-      endDate: "2014-05",
-      current: false,
-    },
-  ],
-  achievements: [
-    {
-      id: "1",
-      title: "Best Documentary Short",
-      description: "Sundance Film Festival 2023",
-      date: "2023-01",
-      type: "award",
-    },
-    {
-      id: "2",
-      title: "Film Independent Fellow",
-      description: "Selected for prestigious filmmaker fellowship program",
-      date: "2022-06",
-      type: "recognition",
-    },
-    {
-      id: "3",
-      title: "Adobe Certified Expert",
-      description: "Premiere Pro and After Effects",
-      date: "2021-03",
-      type: "certification",
-    },
-  ],
-  recentActivity: [
-    {
-      id: "1",
-      type: "project",
-      title: "Uploaded new project",
-      description: "Behind the Scenes: Documentary Production",
-      date: "2 hours ago",
-      icon: Camera,
-    },
-    {
-      id: "2",
-      type: "connection",
-      title: "Connected with",
-      description: "Michael Chen - Cinematographer",
-      date: "1 day ago",
-      icon: Users,
-    },
-    {
-      id: "3",
-      type: "post",
-      title: "Shared a post",
-      description: "Tips for independent filmmakers",
-      date: "3 days ago",
-      icon: MessageSquare,
-    },
-  ],
-  portfolio: [
-    {
-      id: "1",
-      title: "Behind the Scenes Documentary",
-      type: "video",
-      thumbnail: "/api/placeholder/300/200",
-      description: "A behind-the-scenes look at independent film production",
-      date: "2024-12-10",
-      views: 1240,
-      likes: 89,
-    },
-    {
-      id: "2",
-      title: "Film Festival Poster",
-      type: "image",
-      thumbnail: "/api/placeholder/300/200",
-      description: "Poster design for upcoming film festival",
-      date: "2024-12-08",
-      views: 567,
-      likes: 34,
-    },
-    {
-      id: "3",
-      title: "Script Draft v3",
-      type: "document",
-      thumbnail: "/api/placeholder/300/200",
-      description: "Latest draft of feature film script",
-      date: "2024-12-05",
-      views: 234,
-      likes: 12,
-    },
-  ],
+  stats: { connections: 0, projects: 0, posts: 0, followers: 0 },
+  skills: [],
+  experience: [],
+  education: [],
+  achievements: [],
+  recentActivity: [],
+  portfolio: [],
 };
+
+// Map DB profile row -> ProfileData
+function rowToProfile(row: any, authEmail?: string | null): ProfileData {
+  return {
+    id: row?.id ?? "",
+    name: row?.full_name ?? [row?.first_name, row?.last_name].filter(Boolean).join(" ").trim() ?? "",
+    username: row?.username ?? "",
+    email: row?.email ?? authEmail ?? "",
+    phone: row?.phone ?? "",
+    location: row?.location ?? "",
+    bio: row?.bio ?? "",
+    avatar: row?.avatar_url ?? "",
+    coverImage: row?.cover_image_url ?? "",
+    role: row?.role ?? "",
+    company: row?.company ?? "",
+    website: row?.website ?? "",
+    linkedin: row?.linkedin_url ?? "",
+    twitter: row?.twitter_url ?? "",
+    instagram: row?.instagram_url ?? "",
+    youtube: row?.youtube_url ?? "",
+    joinedDate: row?.created_at ?? new Date().toISOString(),
+    verified: !!row?.is_verified,
+    online: true,
+    stats: {
+      connections: row?.followers_count ?? 0,
+      projects: row?.projects_count ?? 0,
+      posts: row?.posts_count ?? 0,
+      followers: row?.followers_count ?? 0,
+    },
+    skills: Array.isArray(row?.skills) ? row.skills : [],
+    experience: Array.isArray(row?.experiences) ? row.experiences : [],
+    education: Array.isArray(row?.education) ? row.education : [],
+    achievements: Array.isArray(row?.achievements) ? row.achievements : [],
+    portfolio: Array.isArray(row?.portfolio) ? row.portfolio : [],
+    recentActivity: [],
+  };
+}
+
+function profileToRow(p: ProfileData, userId: string) {
+  const [first_name, ...rest] = (p.name || "").split(" ");
+  const last_name = rest.join(" ");
+  return {
+    user_id: userId,
+    full_name: p.name || null,
+    first_name: first_name || null,
+    last_name: last_name || null,
+    username: p.username || null,
+    email: p.email || null,
+    phone: p.phone || null,
+    location: p.location || null,
+    bio: p.bio || null,
+    avatar_url: p.avatar || null,
+    cover_image_url: p.coverImage || null,
+    role: p.role || null,
+    company: p.company || null,
+    website: p.website || null,
+    linkedin_url: p.linkedin || null,
+    twitter_url: p.twitter || null,
+    instagram_url: p.instagram || null,
+    youtube_url: p.youtube || null,
+    skills: p.skills ?? [],
+    experiences: p.experience ?? [],
+    education: p.education ?? [],
+    achievements: p.achievements ?? [],
+    portfolio: p.portfolio ?? [],
+    updated_at: new Date().toISOString(),
+  };
+}
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<ProfileData>(mockProfileData);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<ProfileData>(emptyProfileData);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [editForm, setEditForm] = useState<ProfileData>(mockProfileData);
+  const [editForm, setEditForm] = useState<ProfileData>(emptyProfileData);
   const [expandedEditExperience, setExpandedEditExperience] = useState<Set<string>>(new Set());
   const [expandedEditAchievements, setExpandedEditAchievements] = useState<Set<string>>(new Set());
   const [expandedEditEducation, setExpandedEditEducation] = useState<Set<string>>(new Set());
+
+  // Load profile from database
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return;
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Profile load error", error);
+        toast({ title: "Failed to load profile", description: error.message, variant: "destructive" });
+      }
+
+      if (data) {
+        const mapped = rowToProfile(data, user.email);
+        setProfile(mapped);
+        setEditForm(mapped);
+      } else {
+        // No profile yet — seed with auth email so user can edit/save
+        const seeded = { ...emptyProfileData, email: user.email ?? "", name: (user.user_metadata as any)?.full_name ?? "" };
+        setProfile(seeded);
+        setEditForm(seeded);
+      }
+      setLoading(false);
+    };
+    load();
+  }, [user, toast]);
+
 
   const roleIcons = {
     "Director": Camera,
