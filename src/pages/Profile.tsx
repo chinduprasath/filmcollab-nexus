@@ -399,6 +399,33 @@ export default function ProfilePage() {
     }));
   };
 
+  const newId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
+
+  // Generic list helpers for experience/achievements/education/portfolio
+  const addItem = <K extends "experience" | "achievements" | "education" | "portfolio">(key: K, item: any, expandSetter?: (id: string) => void) => {
+    const id = newId();
+    setEditForm(prev => ({ ...prev, [key]: [...(prev[key] as any[]), { id, ...item }] } as ProfileData));
+    expandSetter?.(id);
+  };
+  const updateItem = <K extends "experience" | "achievements" | "education" | "portfolio">(key: K, id: string, patch: any) => {
+    setEditForm(prev => ({
+      ...prev,
+      [key]: (prev[key] as any[]).map(it => it.id === id ? { ...it, ...patch } : it),
+    } as ProfileData));
+  };
+  const deleteItem = <K extends "experience" | "achievements" | "education" | "portfolio">(key: K, id: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      [key]: (prev[key] as any[]).filter(it => it.id !== id),
+    } as ProfileData));
+  };
+
+  const addExperience = () => addItem("experience", { title: "New Role", company: "", location: "", startDate: "", endDate: "", current: false, description: "" }, (id) => setExpandedEditExperience(prev => new Set(prev).add(id)));
+  const addAchievement = () => addItem("achievements", { title: "New Achievement", type: "award", date: "", description: "" }, (id) => setExpandedEditAchievements(prev => new Set(prev).add(id)));
+  const addEducation = () => addItem("education", { degree: "New Degree", school: "", location: "", startDate: "", endDate: "", current: false, description: "" }, (id) => setExpandedEditEducation(prev => new Set(prev).add(id)));
+  const addPortfolio = () => addItem("portfolio", { title: "New Portfolio Item", type: "image", thumbnail: "", description: "", date: "", views: 0, likes: 0 });
+
+
   const toggleEditExperienceExpansion = (id: string) => {
     setExpandedEditExperience(prev => {
       const newSet = new Set(prev);
