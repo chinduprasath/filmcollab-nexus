@@ -1026,11 +1026,11 @@ export default function ProfilePage() {
                 <div>
                   <Label>Skills (comma-separated)</Label>
                   <Input
-                    value={editForm.skills.join(', ')}
-                    onChange={(e) => handleSkillsChange(e.target.value.split(',').map(s => s.trim()).filter(s => s))}
+                    value={skillsInput}
+                    onChange={(e) => setSkillsInput(e.target.value)}
+                    onBlur={() => handleSkillsChange(skillsInput.split(',').map(s => s.trim()).filter(Boolean))}
                     placeholder="Enter your skills separated by commas"
                   />
-                  <p className="text-sm text-gray-500 mt-1">Example: Directing, Producing, Screenwriting, Post-Production</p>
                 </div>
               </div>
 
