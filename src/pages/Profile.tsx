@@ -1147,40 +1147,39 @@ export default function ProfilePage() {
                             </Button>
                           </div>
                           {isExpanded && (
-                            <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <Label>Job Title</Label>
-                                  <Input value={exp.title} placeholder="Enter job title" />
+                                  <Input value={exp.title} onChange={(e) => updateItem("experience", exp.id, { title: e.target.value })} placeholder="Enter job title" />
                                 </div>
                                 <div>
                                   <Label>Company</Label>
-                                  <Input value={exp.company} placeholder="Enter company name" />
+                                  <Input value={exp.company} onChange={(e) => updateItem("experience", exp.id, { company: e.target.value })} placeholder="Enter company name" />
                                 </div>
                                 <div>
                                   <Label>Location</Label>
-                                  <Input value={exp.location} placeholder="Enter location" />
+                                  <Input value={exp.location} onChange={(e) => updateItem("experience", exp.id, { location: e.target.value })} placeholder="Enter location" />
                                 </div>
                                 <div>
                                   <Label>Start Date</Label>
-                                  <Input value={exp.startDate} placeholder="MM/YYYY" />
+                                  <Input value={exp.startDate} onChange={(e) => updateItem("experience", exp.id, { startDate: e.target.value })} placeholder="MM/YYYY" />
                                 </div>
                                 <div>
                                   <Label>End Date</Label>
-                                  <Input value={exp.endDate || ''} placeholder="MM/YYYY (leave empty if current)" />
+                                  <Input value={exp.endDate || ''} onChange={(e) => updateItem("experience", exp.id, { endDate: e.target.value })} placeholder="MM/YYYY (leave empty if current)" />
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <input type="checkbox" checked={exp.current} />
+                                  <input type="checkbox" checked={exp.current} onChange={(e) => updateItem("experience", exp.id, { current: e.target.checked })} />
                                   <Label>Currently working here</Label>
                                 </div>
                               </div>
                               <div className="mt-4">
                                 <Label>Description</Label>
-                                <Textarea value={exp.description} rows={3} placeholder="Describe your role and responsibilities" />
+                                <Textarea value={exp.description} onChange={(e) => updateItem("experience", exp.id, { description: e.target.value })} rows={3} placeholder="Describe your role and responsibilities" />
                               </div>
                               <div className="flex justify-end gap-2 mt-4">
-                                <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Edit</Button>
-                                <Button size="sm" variant="destructive">Delete</Button>
+                                <Button size="sm" variant="destructive" onClick={() => deleteItem("experience", exp.id)}>Delete</Button>
                               </div>
                             </div>
                           )}
