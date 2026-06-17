@@ -399,6 +399,33 @@ export default function ProfilePage() {
     }));
   };
 
+  const newId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
+
+  // Generic list helpers for experience/achievements/education/portfolio
+  const addItem = <K extends "experience" | "achievements" | "education" | "portfolio">(key: K, item: any, expandSetter?: (id: string) => void) => {
+    const id = newId();
+    setEditForm(prev => ({ ...prev, [key]: [...(prev[key] as any[]), { id, ...item }] } as ProfileData));
+    expandSetter?.(id);
+  };
+  const updateItem = <K extends "experience" | "achievements" | "education" | "portfolio">(key: K, id: string, patch: any) => {
+    setEditForm(prev => ({
+      ...prev,
+      [key]: (prev[key] as any[]).map(it => it.id === id ? { ...it, ...patch } : it),
+    } as ProfileData));
+  };
+  const deleteItem = <K extends "experience" | "achievements" | "education" | "portfolio">(key: K, id: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      [key]: (prev[key] as any[]).filter(it => it.id !== id),
+    } as ProfileData));
+  };
+
+  const addExperience = () => addItem("experience", { title: "New Role", company: "", location: "", startDate: "", endDate: "", current: false, description: "" }, (id) => setExpandedEditExperience(prev => new Set(prev).add(id)));
+  const addAchievement = () => addItem("achievements", { title: "New Achievement", type: "award", date: "", description: "" }, (id) => setExpandedEditAchievements(prev => new Set(prev).add(id)));
+  const addEducation = () => addItem("education", { degree: "New Degree", school: "", location: "", startDate: "", endDate: "", current: false, description: "" }, (id) => setExpandedEditEducation(prev => new Set(prev).add(id)));
+  const addPortfolio = () => addItem("portfolio", { title: "New Portfolio Item", type: "image", thumbnail: "", description: "", date: "", views: 0, likes: 0 });
+
+
   const toggleEditExperienceExpansion = (id: string) => {
     setExpandedEditExperience(prev => {
       const newSet = new Set(prev);
@@ -1087,7 +1114,7 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Work Experience</h3>
-                  <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
+                  <Button size="sm" onClick={addExperience} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Experience
                   </Button>
@@ -1120,40 +1147,39 @@ export default function ProfilePage() {
                             </Button>
                           </div>
                           {isExpanded && (
-                            <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <Label>Job Title</Label>
-                                  <Input value={exp.title} placeholder="Enter job title" />
+                                  <Input value={exp.title} onChange={(e) => updateItem("experience", exp.id, { title: e.target.value })} placeholder="Enter job title" />
                                 </div>
                                 <div>
                                   <Label>Company</Label>
-                                  <Input value={exp.company} placeholder="Enter company name" />
+                                  <Input value={exp.company} onChange={(e) => updateItem("experience", exp.id, { company: e.target.value })} placeholder="Enter company name" />
                                 </div>
                                 <div>
                                   <Label>Location</Label>
-                                  <Input value={exp.location} placeholder="Enter location" />
+                                  <Input value={exp.location} onChange={(e) => updateItem("experience", exp.id, { location: e.target.value })} placeholder="Enter location" />
                                 </div>
                                 <div>
                                   <Label>Start Date</Label>
-                                  <Input value={exp.startDate} placeholder="MM/YYYY" />
+                                  <Input value={exp.startDate} onChange={(e) => updateItem("experience", exp.id, { startDate: e.target.value })} placeholder="MM/YYYY" />
                                 </div>
                                 <div>
                                   <Label>End Date</Label>
-                                  <Input value={exp.endDate || ''} placeholder="MM/YYYY (leave empty if current)" />
+                                  <Input value={exp.endDate || ''} onChange={(e) => updateItem("experience", exp.id, { endDate: e.target.value })} placeholder="MM/YYYY (leave empty if current)" />
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <input type="checkbox" checked={exp.current} />
+                                  <input type="checkbox" checked={exp.current} onChange={(e) => updateItem("experience", exp.id, { current: e.target.checked })} />
                                   <Label>Currently working here</Label>
                                 </div>
                               </div>
                               <div className="mt-4">
                                 <Label>Description</Label>
-                                <Textarea value={exp.description} rows={3} placeholder="Describe your role and responsibilities" />
+                                <Textarea value={exp.description} onChange={(e) => updateItem("experience", exp.id, { description: e.target.value })} rows={3} placeholder="Describe your role and responsibilities" />
                               </div>
                               <div className="flex justify-end gap-2 mt-4">
-                                <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Edit</Button>
-                                <Button size="sm" variant="destructive">Delete</Button>
+                                <Button size="sm" variant="destructive" onClick={() => deleteItem("experience", exp.id)}>Delete</Button>
                               </div>
                             </div>
                           )}
@@ -1170,7 +1196,7 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Achievements & Awards</h3>
-                  <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
+                  <Button size="sm" onClick={addAchievement} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Achievement
                   </Button>
@@ -1207,15 +1233,15 @@ export default function ProfilePage() {
                             </Button>
                           </div>
                           {isExpanded && (
-                            <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <Label>Achievement Title</Label>
-                                  <Input value={achievement.title} placeholder="Enter achievement title" />
+                                  <Input value={achievement.title} onChange={(e) => updateItem("achievements", achievement.id, { title: e.target.value })} placeholder="Enter achievement title" />
                                 </div>
                                 <div>
                                   <Label>Type</Label>
-                                  <Select value={achievement.type}>
+                                  <Select value={achievement.type} onValueChange={(v) => updateItem("achievements", achievement.id, { type: v })}>
                                     <SelectTrigger>
                                       <SelectValue />
                                     </SelectTrigger>
@@ -1229,16 +1255,15 @@ export default function ProfilePage() {
                                 </div>
                                 <div>
                                   <Label>Date</Label>
-                                  <Input value={achievement.date} placeholder="MM/YYYY" />
+                                  <Input value={achievement.date} onChange={(e) => updateItem("achievements", achievement.id, { date: e.target.value })} placeholder="MM/YYYY" />
                                 </div>
                               </div>
                               <div className="mt-4">
                                 <Label>Description</Label>
-                                <Textarea value={achievement.description} rows={3} placeholder="Describe the achievement" />
+                                <Textarea value={achievement.description} onChange={(e) => updateItem("achievements", achievement.id, { description: e.target.value })} rows={3} placeholder="Describe the achievement" />
                               </div>
                               <div className="flex justify-end gap-2 mt-4">
-                                <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Edit</Button>
-                                <Button size="sm" variant="destructive">Delete</Button>
+                                <Button size="sm" variant="destructive" onClick={() => deleteItem("achievements", achievement.id)}>Delete</Button>
                               </div>
                             </div>
                           )}
@@ -1255,53 +1280,47 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Portfolio Items</h3>
-                  <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
+                  <Button size="sm" onClick={addPortfolio} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Portfolio Item
                   </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {editForm.portfolio.map((item, index) => (
+                  {editForm.portfolio.map((item) => (
                     <Card key={item.id} className="border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                      <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                        {item.type === "video" && (
-                          <div className="text-center">
-                            <Video className="w-12 h-12 text-yellow-600 mx-auto mb-2" />
-                            <p className="text-sm font-medium text-gray-700">Video</p>
-                          </div>
-                        )}
-                        {item.type === "image" && (
-                          <div className="text-center">
-                            <ImageIcon className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-                            <p className="text-sm font-medium text-gray-700">Image</p>
-                          </div>
-                        )}
-                        {item.type === "document" && (
-                          <div className="text-center">
-                            <FileIcon className="w-12 h-12 text-green-600 mx-auto mb-2" />
-                            <p className="text-sm font-medium text-gray-700">Document</p>
-                          </div>
-                        )}
-                        {item.type === "audio" && (
-                          <div className="text-center">
-                            <MusicIcon className="w-12 h-12 text-orange-600 mx-auto mb-2" />
-                            <p className="text-sm font-medium text-gray-700">Audio</p>
-                          </div>
-                        )}
+                      <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        {item.type === "video" && <Video className="w-10 h-10 text-yellow-600" />}
+                        {item.type === "image" && <ImageIcon className="w-10 h-10 text-blue-600" />}
+                        {item.type === "document" && <FileIcon className="w-10 h-10 text-green-600" />}
+                        {item.type === "audio" && <MusicIcon className="w-10 h-10 text-orange-600" />}
                       </div>
-                      <CardContent className="p-4">
-                        <h4 className="font-medium text-sm text-gray-900 mb-2 line-clamp-2">{item.title}</h4>
-                        <p className="text-xs text-gray-600 mb-3 line-clamp-2">{item.description}</p>
-                        <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                          <span>{item.date}</span>
-                          <div className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" />
-                            <span>{item.views}</span>
-                          </div>
+                      <CardContent className="p-3 space-y-2">
+                        <div>
+                          <Label className="text-xs">Title</Label>
+                          <Input value={item.title} onChange={(e) => updateItem("portfolio", item.id, { title: e.target.value })} placeholder="Title" />
                         </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="flex-1 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Edit</Button>
-                          <Button size="sm" variant="destructive" className="flex-1">Delete</Button>
+                        <div>
+                          <Label className="text-xs">Type</Label>
+                          <Select value={item.type} onValueChange={(v) => updateItem("portfolio", item.id, { type: v })}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="image">Image</SelectItem>
+                              <SelectItem value="video">Video</SelectItem>
+                              <SelectItem value="document">Document</SelectItem>
+                              <SelectItem value="audio">Audio</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Description</Label>
+                          <Textarea value={item.description} onChange={(e) => updateItem("portfolio", item.id, { description: e.target.value })} rows={2} placeholder="Description" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Date</Label>
+                          <Input value={item.date} onChange={(e) => updateItem("portfolio", item.id, { date: e.target.value })} placeholder="YYYY-MM-DD" />
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                          <Button size="sm" variant="destructive" className="flex-1" onClick={() => deleteItem("portfolio", item.id)}>Delete</Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -1315,7 +1334,7 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Education</h3>
-                  <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
+                  <Button size="sm" onClick={addEducation} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Education
                   </Button>
@@ -1348,40 +1367,39 @@ export default function ProfilePage() {
                             </Button>
                           </div>
                           {isExpanded && (
-                            <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <Label>Degree</Label>
-                                  <Input value={edu.degree} placeholder="Enter degree" />
+                                  <Input value={edu.degree} onChange={(e) => updateItem("education", edu.id, { degree: e.target.value })} placeholder="Enter degree" />
                                 </div>
                                 <div>
                                   <Label>School</Label>
-                                  <Input value={edu.school} placeholder="Enter school name" />
+                                  <Input value={edu.school} onChange={(e) => updateItem("education", edu.id, { school: e.target.value })} placeholder="Enter school name" />
                                 </div>
                                 <div>
                                   <Label>Location</Label>
-                                  <Input value={edu.location} placeholder="Enter location" />
+                                  <Input value={edu.location} onChange={(e) => updateItem("education", edu.id, { location: e.target.value })} placeholder="Enter location" />
                                 </div>
                                 <div>
                                   <Label>Start Date</Label>
-                                  <Input value={edu.startDate} placeholder="MM/YYYY" />
+                                  <Input value={edu.startDate} onChange={(e) => updateItem("education", edu.id, { startDate: e.target.value })} placeholder="MM/YYYY" />
                                 </div>
                                 <div>
                                   <Label>End Date</Label>
-                                  <Input value={edu.endDate || ''} placeholder="MM/YYYY (leave empty if current)" />
+                                  <Input value={edu.endDate || ''} onChange={(e) => updateItem("education", edu.id, { endDate: e.target.value })} placeholder="MM/YYYY (leave empty if current)" />
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <input type="checkbox" checked={edu.current} />
+                                  <input type="checkbox" checked={edu.current} onChange={(e) => updateItem("education", edu.id, { current: e.target.checked })} />
                                   <Label>Currently studying</Label>
                                 </div>
                               </div>
                               <div className="mt-4">
                                 <Label>Description</Label>
-                                <Textarea value={edu.description || ''} rows={3} placeholder="Describe your education" />
+                                <Textarea value={edu.description || ''} onChange={(e) => updateItem("education", edu.id, { description: e.target.value })} rows={3} placeholder="Describe your education" />
                               </div>
                               <div className="flex justify-end gap-2 mt-4">
-                                <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Edit</Button>
-                                <Button size="sm" variant="destructive">Delete</Button>
+                                <Button size="sm" variant="destructive" onClick={() => deleteItem("education", edu.id)}>Delete</Button>
                               </div>
                             </div>
                           )}
