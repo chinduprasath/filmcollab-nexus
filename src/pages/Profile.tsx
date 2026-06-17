@@ -313,7 +313,9 @@ export default function ProfilePage() {
       return;
     }
     setSaving(true);
-    const payload = profileToRow(editForm, user.id);
+    const parsedSkills = skillsInput.split(",").map(s => s.trim()).filter(Boolean);
+    const formWithSkills = { ...editForm, skills: parsedSkills };
+    const payload = profileToRow(formWithSkills, user.id);
     const { data, error } = await supabase
       .from("profiles")
       .upsert(payload as any, { onConflict: "user_id" })
