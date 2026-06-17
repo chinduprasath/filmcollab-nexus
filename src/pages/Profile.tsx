@@ -256,6 +256,7 @@ export default function ProfilePage() {
   const [expandedEditExperience, setExpandedEditExperience] = useState<Set<string>>(new Set());
   const [expandedEditAchievements, setExpandedEditAchievements] = useState<Set<string>>(new Set());
   const [expandedEditEducation, setExpandedEditEducation] = useState<Set<string>>(new Set());
+  const [skillsInput, setSkillsInput] = useState("");
 
   // Load profile from database
   useEffect(() => {
