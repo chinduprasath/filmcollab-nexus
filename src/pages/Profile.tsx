@@ -1233,15 +1233,15 @@ export default function ProfilePage() {
                             </Button>
                           </div>
                           {isExpanded && (
-                            <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <Label>Achievement Title</Label>
-                                  <Input value={achievement.title} placeholder="Enter achievement title" />
+                                  <Input value={achievement.title} onChange={(e) => updateItem("achievements", achievement.id, { title: e.target.value })} placeholder="Enter achievement title" />
                                 </div>
                                 <div>
                                   <Label>Type</Label>
-                                  <Select value={achievement.type}>
+                                  <Select value={achievement.type} onValueChange={(v) => updateItem("achievements", achievement.id, { type: v })}>
                                     <SelectTrigger>
                                       <SelectValue />
                                     </SelectTrigger>
@@ -1255,16 +1255,15 @@ export default function ProfilePage() {
                                 </div>
                                 <div>
                                   <Label>Date</Label>
-                                  <Input value={achievement.date} placeholder="MM/YYYY" />
+                                  <Input value={achievement.date} onChange={(e) => updateItem("achievements", achievement.id, { date: e.target.value })} placeholder="MM/YYYY" />
                                 </div>
                               </div>
                               <div className="mt-4">
                                 <Label>Description</Label>
-                                <Textarea value={achievement.description} rows={3} placeholder="Describe the achievement" />
+                                <Textarea value={achievement.description} onChange={(e) => updateItem("achievements", achievement.id, { description: e.target.value })} rows={3} placeholder="Describe the achievement" />
                               </div>
                               <div className="flex justify-end gap-2 mt-4">
-                                <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Edit</Button>
-                                <Button size="sm" variant="destructive">Delete</Button>
+                                <Button size="sm" variant="destructive" onClick={() => deleteItem("achievements", achievement.id)}>Delete</Button>
                               </div>
                             </div>
                           )}
