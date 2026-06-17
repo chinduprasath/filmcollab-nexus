@@ -319,82 +319,118 @@ export type Database = {
       }
       profiles: {
         Row: {
+          achievements: Json
+          avatar_url: string | null
           bio: string | null
           category: string | null
+          company: string | null
+          cover_image_url: string | null
           created_at: string | null
+          education: Json
           email: string | null
           experience_level: string | null
+          experiences: Json
           first_name: string | null
           followers_count: number | null
           full_name: string | null
           github_url: string | null
           id: string
           industry: string | null
+          instagram_url: string | null
           is_verified: boolean | null
           last_name: string | null
           likes_count: number | null
           linkedin_url: string | null
           location: string | null
+          phone: string | null
+          portfolio: Json
           portfolio_url: string | null
           posts_count: number | null
           projects_count: number | null
           role: string | null
           skills: string[] | null
+          twitter_url: string | null
           updated_at: string | null
           user_id: string | null
+          username: string | null
           website: string | null
+          youtube_url: string | null
         }
         Insert: {
+          achievements?: Json
+          avatar_url?: string | null
           bio?: string | null
           category?: string | null
+          company?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
+          education?: Json
           email?: string | null
           experience_level?: string | null
+          experiences?: Json
           first_name?: string | null
           followers_count?: number | null
           full_name?: string | null
           github_url?: string | null
           id?: string
           industry?: string | null
+          instagram_url?: string | null
           is_verified?: boolean | null
           last_name?: string | null
           likes_count?: number | null
           linkedin_url?: string | null
           location?: string | null
+          phone?: string | null
+          portfolio?: Json
           portfolio_url?: string | null
           posts_count?: number | null
           projects_count?: number | null
           role?: string | null
           skills?: string[] | null
+          twitter_url?: string | null
           updated_at?: string | null
           user_id?: string | null
+          username?: string | null
           website?: string | null
+          youtube_url?: string | null
         }
         Update: {
+          achievements?: Json
+          avatar_url?: string | null
           bio?: string | null
           category?: string | null
+          company?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
+          education?: Json
           email?: string | null
           experience_level?: string | null
+          experiences?: Json
           first_name?: string | null
           followers_count?: number | null
           full_name?: string | null
           github_url?: string | null
           id?: string
           industry?: string | null
+          instagram_url?: string | null
           is_verified?: boolean | null
           last_name?: string | null
           likes_count?: number | null
           linkedin_url?: string | null
           location?: string | null
+          phone?: string | null
+          portfolio?: Json
           portfolio_url?: string | null
           posts_count?: number | null
           projects_count?: number | null
           role?: string | null
           skills?: string[] | null
+          twitter_url?: string | null
           updated_at?: string | null
           user_id?: string | null
+          username?: string | null
           website?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
