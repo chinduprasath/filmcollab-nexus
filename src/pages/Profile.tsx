@@ -314,7 +314,7 @@ export default function ProfilePage() {
     const payload = profileToRow(editForm, user.id);
     const { data, error } = await supabase
       .from("profiles")
-      .upsert(payload, { onConflict: "user_id" })
+      .upsert(payload as any, { onConflict: "user_id" })
       .select()
       .maybeSingle();
     setSaving(false);
