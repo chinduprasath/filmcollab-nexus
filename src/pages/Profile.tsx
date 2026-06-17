@@ -256,6 +256,7 @@ export default function ProfilePage() {
   const [expandedEditExperience, setExpandedEditExperience] = useState<Set<string>>(new Set());
   const [expandedEditAchievements, setExpandedEditAchievements] = useState<Set<string>>(new Set());
   const [expandedEditEducation, setExpandedEditEducation] = useState<Set<string>>(new Set());
+  const [skillsInput, setSkillsInput] = useState("");
 
   // Load profile from database
   useEffect(() => {
@@ -302,6 +303,7 @@ export default function ProfilePage() {
 
   const handleEditProfile = () => {
     setEditForm(profile);
+    setSkillsInput((profile.skills || []).join(", "));
     setShowEditProfile(true);
   };
 
@@ -311,7 +313,9 @@ export default function ProfilePage() {
       return;
     }
     setSaving(true);
-    const payload = profileToRow(editForm, user.id);
+    const parsedSkills = skillsInput.split(",").map(s => s.trim()).filter(Boolean);
+    const formWithSkills = { ...editForm, skills: parsedSkills };
+    const payload = profileToRow(formWithSkills, user.id);
     const { data, error } = await supabase
       .from("profiles")
       .upsert(payload as any, { onConflict: "user_id" })
@@ -1026,11 +1030,11 @@ export default function ProfilePage() {
                 <div>
                   <Label>Skills (comma-separated)</Label>
                   <Input
-                    value={editForm.skills.join(', ')}
-                    onChange={(e) => handleSkillsChange(e.target.value.split(',').map(s => s.trim()).filter(s => s))}
+                    value={skillsInput}
+                    onChange={(e) => setSkillsInput(e.target.value)}
+                    onBlur={() => handleSkillsChange(skillsInput.split(',').map(s => s.trim()).filter(Boolean))}
                     placeholder="Enter your skills separated by commas"
                   />
-                  <p className="text-sm text-gray-500 mt-1">Example: Directing, Producing, Screenwriting, Post-Production</p>
                 </div>
               </div>
 
