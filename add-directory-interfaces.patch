@@ -1,0 +1,17 @@
+--- src/pages/Profile.tsx
++++ src/pages/Profile.tsx
+@@ -107,6 +107,14 @@
+   date: string;
+ }
+ 
++export interface DirectoryFile {
++  id: string;
++  name: string;
++  type: "document" | "image" | "video" | "audio" | "all";
++  url: string;
++  uploadDate: string;
++}
++
+ interface Education {
+   id: string;
+   degree: string;
