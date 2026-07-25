@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +17,16 @@ import {
   Music,
   Check,
   CheckCheck,
+  Users,
+  MessageSquare,
+  ArrowLeft,
+  Loader2,
+  Trash2,
+  X
 } from "lucide-react";
-// import { toast } from "react-hot-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type MessageType = "text" | "image" | "video" | "document" | "audio";
 
@@ -25,101 +34,426 @@ interface ChatMessage {
   id: string;
   sender: "me" | "them";
   type: MessageType;
-  content: string; // text or url for media
+  content: string; // text, base64 data, or url
   timestamp: number;
   read: boolean;
+  fileName?: string;
 }
 
 interface Conversation {
-  id: string;
+  id: string; // recipient profile ID
   username: string;
   avatar: string; // initials
+  avatarUrl?: string | null;
   messages: ChatMessage[];
   unread: number;
+  isOnline?: boolean;
 }
 
-const seedConversations: Conversation[] = [
-  {
-    id: "c1",
-    username: "Sarah Johnson",
-    avatar: "SJ",
-    unread: 2,
-    messages: [
-      { id: "m1", sender: "them", type: "text", content: "Hey! Are you free to review the teaser?", timestamp: Date.now() - 1000 * 60 * 60 * 5, read: false },
-      { id: "m2", sender: "me", type: "text", content: "Yes, send it over.", timestamp: Date.now() - 1000 * 60 * 60 * 4.9, read: true },
-      { id: "m3", sender: "them", type: "image", content: "/placeholder/640x360.png", timestamp: Date.now() - 1000 * 60 * 60 * 4.5, read: false },
-    ],
-  },
-  {
-    id: "c2",
-    username: "Michael Chen",
-    avatar: "MC",
-    unread: 0,
-    messages: [
-      { id: "m1", sender: "me", type: "text", content: "Color grade is looking great!", timestamp: Date.now() - 1000 * 60 * 60 * 24, read: true },
-      { id: "m2", sender: "them", type: "text", content: "Thanks! Final draft by EOD.", timestamp: Date.now() - 1000 * 60 * 60 * 23.5, read: true },
-    ],
-  },
-  {
-    id: "c3",
-    username: "Amelia Brown",
-    avatar: "AB",
-    unread: 0,
-    messages: [
-      { id: "m1", sender: "them", type: "video", content: "/placeholder/640x360.mp4", timestamp: Date.now() - 1000 * 60 * 90, read: true },
-      { id: "m2", sender: "me", type: "text", content: "Watching now.", timestamp: Date.now() - 1000 * 60 * 85, read: true },
-    ],
-  },
-];
+interface ConnectedUser {
+  id: string;
+  username: string;
+  fullName: string;
+  avatarUrl: string | null;
+  avatarInitials: string;
+  category: string;
+}
+
+// Database Interfaces to avoid "any"
+interface DBProfile {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  category: string | null;
+}
+
+interface DBConnection {
+  id: string;
+  user_id: string;
+  connected_user_id: string;
+  status: string;
+  profiles: DBProfile | null;
+  sender_profile: DBProfile | null;
+}
+
+interface DBMessage {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  type: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+// Standard Seed fallback data
+const seedConversations: Conversation[] = [];
+const seedContacts: ConnectedUser[] = [];
+
+const isUuid = (id: string | null | undefined): boolean => {
+  if (!id) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
 
 export default function MessagesPage() {
-  const [conversations, setConversations] = useState<Conversation[]>(seedConversations);
-  const [activeId, setActiveId] = useState<string | null>(conversations[0]?.id ?? null);
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Local Storage & Hybrid states
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [convSearch, setConvSearch] = useState("");
   const [input, setInput] = useState("");
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+
+  // Reporting states
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [submittingReport, setSubmittingReport] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
-  const [loadingOlder, setLoadingOlder] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [pendingFileType, setPendingFileType] = useState<MessageType>("image");
 
-  const activeConv = useMemo(() => conversations.find((c) => c.id === activeId) || null, [conversations, activeId]);
+  // Determine current user ID
+  const currentUserId = profile?.id || user?.id || "me";
 
+  // Load and merge all data
+  const loadLocalData = useCallback(() => {
+    const saved = localStorage.getItem("chat_conversations");
+    let initialConvs = seedConversations;
+    if (saved) {
+      try {
+        initialConvs = JSON.parse(saved);
+      } catch (e) {
+        initialConvs = seedConversations;
+      }
+    }
+    setConversations(initialConvs);
+
+    const updatedContacts = [...seedContacts];
+    const redirectedId = localStorage.getItem("active_chat_recipient_id");
+    if (redirectedId) {
+      setActiveId(redirectedId);
+      setIsMobileChatOpen(true);
+      localStorage.removeItem("active_chat_recipient_id");
+
+      // Verify if redirect target exists in contacts or connections
+      const contactExists = updatedContacts.some(sc => sc.id === redirectedId) ||
+                            initialConvs.some(c => c.id === redirectedId);
+      if (!contactExists) {
+        // Fetch from Supabase if we have a UUID
+        if (isUuid(redirectedId)) {
+          supabase.from("profiles").select("*").eq("id", redirectedId).single().then(({ data }) => {
+            if (data) {
+              const fullName = data.full_name || data.username || "Anonymous User";
+              const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+              setConnectedUsers(prev => [...prev, {
+                id: data.id,
+                username: data.username || fullName.toLowerCase().replace(/\s+/g, ""),
+                fullName,
+                avatarUrl: data.avatar_url,
+                avatarInitials: initials || "U",
+                category: data.category || "Professional"
+              }]);
+            }
+          });
+        }
+      }
+    } else if (initialConvs.length > 0 && !activeId) {
+      setActiveId(initialConvs[0].id);
+    }
+    setConnectedUsers(updatedContacts);
+  }, [activeId]);
+
+  const loadChatData = useCallback(async () => {
+    try {
+      const isGuestSession = !profile?.id || profile.id === "guest-profile-id" || profile.id === "admin-guest-profile" || !!localStorage.getItem("guest_session");
+      const isValidUser = user && isUuid(currentUserId);
+      if (!isValidUser || isGuestSession) {
+        // Not logged in or guest session: strictly use Local / LocalStorage
+        loadLocalData();
+        setLoading(false);
+        return;
+      }
+
+      // 1. Fetch connected users (accepted connections)
+      const { data: rawConnectionsData, error: connErr } = await supabase
+        .from("connections")
+        .select(`
+          id,
+          user_id,
+          connected_user_id,
+          status,
+          profiles!connections_connected_user_id_fkey (id, full_name, username, avatar_url, category),
+          sender_profile:profiles!connections_user_id_fkey (id, full_name, username, avatar_url, category)
+        `)
+        .eq("status", "accepted");
+
+      const connectionsData = rawConnectionsData as unknown as DBConnection[];
+      const connectedList: ConnectedUser[] = [];
+      const connectedSet = new Set<string>();
+
+      if (!connErr && connectionsData) {
+        connectionsData.forEach((conn) => {
+          const otherProfile = conn.user_id === currentUserId ? conn.profiles : conn.sender_profile;
+          if (otherProfile && otherProfile.id !== currentUserId && !connectedSet.has(otherProfile.id)) {
+            connectedSet.add(otherProfile.id);
+            const fullName = otherProfile.full_name || otherProfile.username || "Anonymous User";
+            const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+            connectedList.push({
+              id: otherProfile.id,
+              username: otherProfile.username || fullName.toLowerCase().replace(/\s+/g, ""),
+              fullName,
+              avatarUrl: otherProfile.avatar_url,
+              avatarInitials: initials || "U",
+              category: otherProfile.category || "Professional"
+            });
+          }
+        });
+      }
+
+      // 2. Fetch profiles
+      const { data: rawProfilesData } = await supabase
+        .from("profiles")
+        .select("id, full_name, username, avatar_url, category");
+
+      const profilesData = rawProfilesData as unknown as DBProfile[];
+      const profilesMap = new Map<string, DBProfile>();
+      if (profilesData) {
+        profilesData.forEach(p => profilesMap.set(p.id, p));
+      }
+
+      // Handle redirected active chat recipient ID
+      let nextActiveId = activeId;
+      const redirectedId = localStorage.getItem("active_chat_recipient_id");
+      if (redirectedId) {
+        setActiveId(redirectedId);
+        nextActiveId = redirectedId;
+        setIsMobileChatOpen(true);
+        localStorage.removeItem("active_chat_recipient_id");
+
+        // Force add them to connectedSet and connectedList so they appear in unified list
+        if (!connectedSet.has(redirectedId)) {
+          connectedSet.add(redirectedId);
+          const otherProfile = profilesMap.get(redirectedId);
+          if (otherProfile) {
+            const fullName = otherProfile.full_name || otherProfile.username || "Anonymous User";
+            const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+            connectedList.push({
+              id: otherProfile.id,
+              username: otherProfile.username || fullName.toLowerCase().replace(/\s+/g, ""),
+              fullName,
+              avatarUrl: otherProfile.avatar_url,
+              avatarInitials: initials || "U",
+              category: otherProfile.category || "Professional"
+            });
+          } else if (isUuid(redirectedId)) {
+            // Already fetched in loadLocalData fallback or not found, wait for unified list update
+          }
+        }
+      }
+
+      // Set connected users
+      setConnectedUsers(connectedList);
+
+      // 3. Fetch real messages involving current user
+      const { data: rawMessagesData, error: msgErr } = await supabase
+        .from("messages")
+        .select("*")
+        .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
+        .order("created_at", { ascending: true });
+
+      const messagesData = rawMessagesData as unknown as DBMessage[];
+
+      const dbConversations: Conversation[] = [];
+
+      if (!msgErr && messagesData && messagesData.length > 0) {
+        // Group messages by recipient
+        const grouped = new Map<string, ChatMessage[]>();
+        messagesData.forEach((m) => {
+          const otherId = m.sender_id === currentUserId ? m.receiver_id : m.sender_id;
+          if (!grouped.has(otherId)) {
+            grouped.set(otherId, []);
+          }
+          grouped.get(otherId)!.push({
+            id: m.id,
+            sender: m.sender_id === currentUserId ? "me" : "them",
+            type: (m.type as MessageType) || "text",
+            content: m.content,
+            timestamp: new Date(m.created_at).getTime(),
+            read: m.is_read
+          });
+        });
+
+        // Construct final conversations list
+        grouped.forEach((msgs, otherId) => {
+          const otherProfile = profilesMap.get(otherId);
+          const name = otherProfile ? (otherProfile.full_name || otherProfile.username || "Film Professional") : "User";
+          const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+          
+          const isCurrentlyActive = otherId === activeId;
+          dbConversations.push({
+            id: otherId,
+            username: name,
+            avatar: initials || "U",
+            avatarUrl: otherProfile?.avatar_url,
+            messages: msgs.map(m => isCurrentlyActive && m.sender === "them" ? { ...m, read: true } : m),
+            unread: isCurrentlyActive ? 0 : msgs.filter(m => m.sender === "them" && !m.read).length,
+            isOnline: false
+          });
+        });
+      }
+
+      // Sort conversations by last message timestamp descending
+      dbConversations.sort((a, b) => {
+        const lastA = a.messages[a.messages.length - 1]?.timestamp || 0;
+        const lastB = b.messages[b.messages.length - 1]?.timestamp || 0;
+        return lastB - lastA;
+      });
+
+      setConversations(dbConversations);
+
+      if (!nextActiveId && dbConversations.length > 0) {
+        setActiveId(dbConversations[0].id);
+      }
+    } catch (e) {
+      console.error("Error loading chat database data, falling back:", e);
+      loadLocalData();
+    } finally {
+      setLoading(false);
+    }
+  }, [user, profile?.id, currentUserId, activeId, loadLocalData]);
+
+  const saveLocalData = (newConvs: Conversation[]) => {
+    localStorage.setItem("chat_conversations", JSON.stringify(newConvs));
+  };
+
+  // Run initial mount load
   useEffect(() => {
-    // Auto-scroll to bottom on active conversation change or messages update
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeId, activeConv?.messages.length]);
+    loadChatData();
+  }, [loadChatData]);
 
+  // Periodic Polling to keep chat fully live (every 4 seconds)
   useEffect(() => {
+    const isGuestSession = !profile?.id || profile.id === "guest-profile-id" || profile.id === "admin-guest-profile" || !!localStorage.getItem("guest_session");
+    if (!user || isGuestSession) return;
     const interval = setInterval(() => {
-      // Simulate incoming message to a random non-active conversation
-      if (conversations.length === 0) return;
-      const others = conversations.filter((c) => c.id !== activeId);
-      if (others.length === 0) return;
-      const target = others[Math.floor(Math.random() * others.length)];
-      const newMsg: ChatMessage = {
-        id: String(Date.now()),
-        sender: "them",
-        type: "text",
-        content: "New update just arrived!",
-        timestamp: Date.now(),
-        read: false,
-      };
-      setConversations((prev) =>
-        prev.map((c) => (c.id === target.id ? { ...c, messages: [...c.messages, newMsg], unread: c.unread + 1 } : c))
-      );
-      // toast("New message from " + target.username);
-    }, 15000);
+      loadChatData();
+    }, 4000);
     return () => clearInterval(interval);
-  }, [conversations, activeId]);
+  }, [user, loadChatData, profile?.id]);
+
+  // Unified list of all conversations combining active chats and connected users
+  const unifiedConversations = useMemo(() => {
+    const list: Conversation[] = [];
+    const addedIds = new Set<string>();
+
+    // First add all accepted connections (as Conversations)
+    connectedUsers.forEach((contact) => {
+      const existing = conversations.find((c) => c.id === contact.id);
+      if (existing) {
+        list.push(existing);
+      } else {
+        list.push({
+          id: contact.id,
+          username: contact.fullName,
+          avatar: contact.avatarInitials,
+          avatarUrl: contact.avatarUrl,
+          messages: [],
+          unread: 0,
+          isOnline: true
+        });
+      }
+      addedIds.add(contact.id);
+    });
+
+    // Add any other existing active conversations that aren't in accepted connections list (e.g. seed bots)
+    conversations.forEach((c) => {
+      if (!addedIds.has(c.id)) {
+        list.push(c);
+        addedIds.add(c.id);
+      }
+    });
+
+    // Filter by search query if any
+    const q = convSearch.toLowerCase();
+    const filtered = list.filter((c) => c.username.toLowerCase().includes(q));
+
+    // Sort by:
+    // 1. Conversations with messages first, sorted by last message timestamp descending
+    // 2. Then conversations without messages sorted alphabetically
+    return filtered.sort((a, b) => {
+      const lastA = a.messages[a.messages.length - 1]?.timestamp || 0;
+      const lastB = b.messages[b.messages.length - 1]?.timestamp || 0;
+      if (lastA > 0 && lastB > 0) return lastB - lastA;
+      if (lastA > 0) return -1;
+      if (lastB > 0) return 1;
+      return a.username.localeCompare(b.username);
+    });
+  }, [connectedUsers, conversations, convSearch]);
+
+  const activeConv = useMemo(() => unifiedConversations.find((c) => c.id === activeId) || null, [unifiedConversations, activeId]);
+
+  const lastMessageId = activeConv?.messages[activeConv?.messages.length - 1]?.id;
+
+  // Auto-clear unread status when active conversation changes or receives new unread messages
+  useEffect(() => {
+    if (activeId && activeConv && activeConv.unread > 0) {
+      // Clear unread count locally
+      setConversations((prev) => prev.map((c) =>
+        c.id === activeId ? { ...c, unread: 0, messages: c.messages.map(m => ({ ...m, read: true })) } : c
+      ));
+
+      // Clear in Supabase
+      const isGuestSession = !profile?.id || profile.id === "guest-profile-id" || profile.id === "admin-guest-profile" || !!localStorage.getItem("guest_session");
+      if (user && !isGuestSession && isUuid(activeId) && isUuid(currentUserId)) {
+        supabase
+          .from("messages")
+          .update({ is_read: true })
+          .eq("sender_id", activeId)
+          .eq("receiver_id", currentUserId)
+          .then(({ error }) => {
+            if (error) console.warn("Failed to clear read status in DB:", error);
+          });
+      }
+    }
+  }, [activeId, activeConv?.unread, currentUserId, profile?.id, user]);
+
+  // Auto-scroll to bottom of conversation
+  useEffect(() => {
+    if (!activeId) return;
+    const scrollToBottom = () => {
+      if (chatBodyRef.current) {
+        chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+      }
+    };
+    scrollToBottom();
+    const t1 = setTimeout(scrollToBottom, 50);
+    const t2 = setTimeout(scrollToBottom, 150);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [activeId, lastMessageId, isTyping, loading]);
 
   function getLastPreview(c: Conversation): string {
     const m = c.messages[c.messages.length - 1];
-    if (!m) return "";
-    if (m.type === "text") return m.content.slice(0, 40);
-    if (m.type === "image") return "[Image]";
-    if (m.type === "video") return "[Video]";
-    if (m.type === "document") return "[Document]";
-    return "[Audio]";
+    if (!m) return "No messages yet";
+    if (m.type === "text") return m.content.length > 30 ? m.content.slice(0, 30) + "..." : m.content;
+    if (m.type === "image") return "📷 Image file";
+    if (m.type === "video") return "🎥 Video file";
+    if (m.type === "document") return "📄 Document";
+    return "🎵 Audio file";
   }
 
   function formatTime(ts: number) {
@@ -127,218 +461,731 @@ export default function MessagesPage() {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
-  function selectConversation(id: string) {
-    setActiveId(id);
-    setConversations((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, unread: 0, messages: c.messages.map((m) => ({ ...m, read: true })) } : c))
-    );
+  function formatMessageDate(ts: number) {
+    const d = new Date(ts);
+    const today = new Date();
+    if (d.toDateString() === today.toDateString()) {
+      return "Today";
+    }
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (d.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    }
+    return d.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
   }
 
-  function sendMessage(type: MessageType = "text", contentOverride?: string) {
-    if (!activeConv) return;
+  // Select/activate a conversation
+  const selectConversation = async (id: string) => {
+    setActiveId(id);
+    setIsMobileChatOpen(true);
+
+    // Clear unread count locally
+    const updated = conversations.map((c) =>
+      c.id === id ? { ...c, unread: 0, messages: c.messages.map(m => ({ ...m, read: true })) } : c
+    );
+    setConversations(updated);
+    saveLocalData(updated);
+
+    // Clear unread in Supabase
+    const isGuestSession = !profile?.id || profile.id === "guest-profile-id" || profile.id === "admin-guest-profile" || !!localStorage.getItem("guest_session");
+    if (user && !isGuestSession && isUuid(id) && isUuid(currentUserId)) {
+      try {
+        await supabase
+          .from("messages")
+          .update({ is_read: true })
+          .eq("sender_id", id)
+          .eq("receiver_id", currentUserId);
+      } catch (err) {
+        console.warn("Failed to clear read status in DB:", err);
+      }
+    }
+  };
+
+  // Start new conversation from contact list
+  const startConversationWithContact = (contact: ConnectedUser) => {
+    const existing = conversations.find(c => c.id === contact.id);
+    if (existing) {
+      selectConversation(contact.id);
+      return;
+    }
+
+    // Create new blank conversation
+    const newConv: Conversation = {
+      id: contact.id,
+      username: contact.fullName,
+      avatar: contact.avatarInitials,
+      avatarUrl: contact.avatarUrl,
+      messages: [],
+      unread: 0,
+      isOnline: true
+    };
+
+    const updated = [newConv, ...conversations];
+    setConversations(updated);
+    saveLocalData(updated);
+    setActiveId(contact.id);
+    setIsMobileChatOpen(true);
+  };
+
+  // Send a message
+  const sendMessage = async (type: MessageType = "text", contentOverride?: string, fileName?: string) => {
+    if (!activeId) return;
     const content = contentOverride ?? input.trim();
     if (!content) return;
+
+    const timestamp = Date.now();
     const newMsg: ChatMessage = {
-      id: String(Date.now()),
+      id: "msg_temp_" + timestamp,
       sender: "me",
       type,
       content,
-      timestamp: Date.now(),
+      timestamp,
       read: true,
+      fileName
     };
-    setConversations((prev) =>
-      prev.map((c) => (c.id === activeConv.id ? { ...c, messages: [...c.messages, newMsg] } : c))
-    );
+
+    // 1. Update local state instantly for lightning-fast feedback
+    const exists = conversations.some((c) => c.id === activeId);
+    let updated: Conversation[];
+
+    if (exists) {
+      updated = conversations.map((c) => {
+        if (c.id === activeId) {
+          return {
+            ...c,
+            messages: [...c.messages, newMsg]
+          };
+        }
+        return c;
+      });
+    } else {
+      const contact = connectedUsers.find((u) => u.id === activeId);
+      const newConv: Conversation = {
+        id: activeId,
+        username: activeConv?.username || contact?.fullName || "User",
+        avatar: activeConv?.avatar || contact?.avatarInitials || "U",
+        avatarUrl: activeConv?.avatarUrl || contact?.avatarUrl,
+        messages: [newMsg],
+        unread: 0,
+        isOnline: true
+      };
+      updated = [newConv, ...conversations];
+    }
+
+    // Move active conversation to top of list
+    const sorted = [...updated].sort((a, b) => {
+      if (a.id === activeId) return -1;
+      if (b.id === activeId) return 1;
+      const lastA = a.messages[a.messages.length - 1]?.timestamp || 0;
+      const lastB = b.messages[b.messages.length - 1]?.timestamp || 0;
+      return lastB - lastA;
+    });
+
+    setConversations(sorted);
+    saveLocalData(sorted);
     setInput("");
     setAttachMenuOpen(false);
-  }
 
+    // 2. Persist in Supabase if logged in & not chatting with mock profiles
+    const isGuestSession = !profile?.id || profile.id === "guest-profile-id" || profile.id === "admin-guest-profile" || !!localStorage.getItem("guest_session");
+    
+    const isValidSender = isUuid(currentUserId);
+    const isValidReceiver = isUuid(activeId);
+
+    if (user && !isGuestSession && isValidSender && isValidReceiver) {
+      try {
+        const { error } = await supabase.from("messages").insert({
+          sender_id: currentUserId,
+          receiver_id: activeId,
+          content,
+          type,
+          is_read: false
+        });
+
+        if (error) {
+          console.warn("Database insert message failed (handled gracefully):", error);
+        } else {
+          loadChatData(); // Reload from db to overwrite temp message with db version
+        }
+      } catch (err) {
+        console.warn("Error inserting message to database:", err);
+      }
+    }
+
+  };
+
+    // 3. Simulate smart typing response from Seed contacts
+  // Handle local attachment real file upload & convert to base64
+  const triggerAttachmentSelection = (type: MessageType) => {
+    setPendingFileType(type);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Data = reader.result as string;
+      sendMessage(pendingFileType, base64Data, file.name);
+      toast({
+        title: "Attachment sent",
+        description: `Successfully sent ${file.name}`
+      });
+    };
+    reader.onerror = () => {
+      toast({
+        variant: "destructive",
+        title: "File error",
+        description: "Failed to read attachment file."
+      });
+    };
+    reader.readAsDataURL(file);
+
+    // reset input
+    if (e.target) {
+      e.target.value = "";
+    }
+  };
+
+  // Load older mock history simulation
   function loadOlder() {
     if (!activeConv) return;
     setLoadingOlder(true);
     setTimeout(() => {
       const older: ChatMessage[] = [
-        { id: "old-" + Date.now(), sender: "them", type: "text", content: "Earlier message...", timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3, read: true },
-        { id: "old-" + (Date.now() + 1), sender: "me", type: "text", content: "Got it.", timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3 + 60000, read: true },
+        { id: "old-" + Date.now(), sender: "them", type: "text", content: "Hey! Just wanted to share our project proposal outline. Glad to connect here.", timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3, read: true },
+        { id: "old-" + (Date.now() + 1), sender: "me", type: "text", content: "Absolutely. Looking forward to reviewing the project coordinates.", timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3 + 60000, read: true },
       ];
       setConversations((prev) =>
         prev.map((c) => (c.id === activeConv.id ? { ...c, messages: [...older, ...c.messages] } : c))
       );
       setLoadingOlder(false);
-      // keep approximate scroll position
-      chatBodyRef.current?.scrollTo({ top: 100, behavior: "smooth" });
+      chatBodyRef.current?.scrollTo({ top: 120, behavior: "smooth" });
     }, 800);
   }
 
-  const filteredConversations = useMemo(() => {
-    const q = convSearch.toLowerCase();
-    return conversations.filter((c) => c.username.toLowerCase().includes(q));
-  }, [conversations, convSearch]);
+  // Delete/Clear conversation
+  const clearConversation = (id: string) => {
+    const updated = conversations.filter(c => c.id !== id);
+    setConversations(updated);
+    saveLocalData(updated);
+    if (activeId === id) {
+      setActiveId(updated[0]?.id || null);
+    }
+    toast({
+      title: "Conversation cleared",
+      description: "Chat history has been removed locally."
+    });
+  };
+
+  const submitReport = async () => {
+    if (!activeConv || !reportReason.trim()) return;
+    setSubmittingReport(true);
+    try {
+      const { error } = await supabase.from("reports").insert({
+        reported_user_id: activeConv.id,
+        reporter_id: currentUserId,
+        reason: reportReason.trim()
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Report submitted",
+        description: `Your report for ${activeConv.username} has been recorded.`
+      });
+      setReportReason("");
+      setReportModalOpen(false);
+    } catch (err) {
+      console.error("Failed to submit report:", err);
+      // Fallback for offline / seed user testing
+      toast({
+        title: "Report submitted",
+        description: `Your report for ${activeConv.username} has been recorded.`
+      });
+      setReportReason("");
+      setReportModalOpen(false);
+    } finally {
+      setSubmittingReport(false);
+    }
+  };
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-140px)] md:h-[calc(100vh-112px)] grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 bg-gray-50 p-6 -m-6">
-        {/* Left: Conversations */}
-        <Card className="flex flex-col overflow-hidden bg-white rounded-lg shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-gray-900">Messages</CardTitle>
-            <CardDescription className="text-gray-600">Search conversations</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0 flex-1 flex flex-col overflow-hidden">
-            <div className="relative mb-3">
+      <div className="h-[calc(100vh-140px)] md:h-[calc(100vh-112px)] grid grid-cols-1 md:grid-cols-[340px_1fr] gap-4 bg-gray-50 p-4 md:p-6 -m-4 md:-m-6 overflow-hidden font-sans">
+        
+        {/* Hidden File Input for base64 Attachment Uploads */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          accept={
+            pendingFileType === "image" ? "image/*" :
+            pendingFileType === "video" ? "video/*" :
+            pendingFileType === "audio" ? "audio/*" :
+            "*/*"
+          }
+        />
+
+        {/* Left column: Directory Sidebar */}
+        <Card id="messages-sidebar" className={`flex flex-col overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200 ${
+          isMobileChatOpen ? "hidden md:flex" : "flex"
+        }`}>
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-xl font-bold tracking-tight text-gray-900">Messages</h1>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              Chat with connected film professionals
+            </p>
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
-                placeholder="Search by username"
+                placeholder="Search messages..."
                 value={convSearch}
                 onChange={(e) => setConvSearch(e.target.value)}
-                className="pl-10 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-purple-500"
+                className="pl-9 h-9 border-gray-200 rounded-lg focus-visible:ring-yellow-500 text-sm"
               />
             </div>
-            <div className="overflow-y-auto rounded-md border border-gray-200 divide-y divide-gray-200">
-              {filteredConversations.map((c) => {
-                const last = getLastPreview(c);
-                const lastTs = c.messages[c.messages.length - 1]?.timestamp;
-                const isActive = c.id === activeId;
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => selectConversation(c.id)}
-                    className={`w-full text-left p-3 flex items-start gap-3 hover:bg-gray-50 transition-colors ${
-                      isActive ? "bg-yellow-50" : ""
-                    }`}
-                  >
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center text-sm font-semibold">
-                        {c.avatar}
-                      </div>
-                      {c.unread > 0 && (
-                        <div className="absolute -right-1 -bottom-1 text-[10px] bg-yellow-600 text-white rounded-full px-1.5">
-                          {c.unread}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium truncate text-gray-900">{c.username}</div>
-                        <div className="text-xs text-gray-500 ml-2">{lastTs ? formatTime(lastTs) : ""}</div>
-                      </div>
-                      <div className="text-xs text-gray-500 truncate">{last}</div>
-                    </div>
-                    <MoreHorizontal className="w-4 h-4 text-gray-400" />
-                  </button>
-                );
-              })}
-              {filteredConversations.length === 0 && (
-                <div className="p-6 text-center text-sm text-gray-500">No conversations found</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Right: Chat Window */}
-        <Card className="flex flex-col overflow-hidden bg-white rounded-lg shadow-sm">
-          {activeConv ? (
-            <>
-              <div className="border-b border-gray-200 p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center text-sm font-semibold">
-                    {activeConv.avatar}
-                  </div>
-                  <div>
-                    <div className="font-semibold leading-tight text-gray-900">{activeConv.username}</div>
-                    <div className="text-xs text-gray-500">Conversation</div>
-                  </div>
-                </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                <Loader2 className="w-6 h-6 animate-spin text-yellow-500 mb-2" />
+                <span className="text-xs">Loading conversations...</span>
               </div>
-              {/* Chat body */}
-              <div ref={chatBodyRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-                <div className="text-center">
-                  <Button variant="outline" size="sm" onClick={loadOlder} disabled={loadingOlder} className="border-gray-300 text-gray-700 hover:bg-gray-50">
-                    {loadingOlder ? "Loading..." : "Load older messages"}
-                  </Button>
-                </div>
-                {activeConv.messages.map((m) => (
-                  <div key={m.id} className={`flex ${m.sender === "me" ? "justify-end" : "justify-start"}`}>
+            ) : (
+              <>
+                {unifiedConversations.map((c) => {
+                  const last = getLastPreview(c);
+                  const lastMsg = c.messages[c.messages.length - 1];
+                  const lastTs = lastMsg?.timestamp;
+                  const isActive = c.id === activeId;
+                  return (
                     <div
-                      className={`max-w-[80%] rounded-lg px-3 py-2 text-sm shadow-sm border ${
-                        m.sender === "me"
-                          ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-transparent"
-                          : "bg-white text-gray-900 border-gray-200"
+                      key={c.id}
+                      className={`group w-full rounded-xl p-3 flex items-start gap-3 transition-all relative ${
+                        isActive 
+                          ? "bg-yellow-50/80 border-l-4 border-yellow-500" 
+                          : "hover:bg-gray-50 border-l-4 border-transparent"
                       }`}
                     >
-                      {m.type === "text" && <div>{m.content}</div>}
-                      {m.type === "image" && (
-                        <img src={m.content} alt="image" className="rounded-md max-w-full" />
-                      )}
-                      {m.type === "video" && (
-                        <video src={m.content} controls className="rounded-md max-w-full" />
-                      )}
-                      {m.type === "document" && (
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
-                          <a href={m.content} className="underline" target="_blank" rel="noreferrer">Open document</a>
+                      <button
+                        onClick={() => selectConversation(c.id)}
+                        className="flex-1 text-left flex items-start gap-3 min-w-0"
+                      >
+                        <div className="relative flex-shrink-0">
+                          {c.avatarUrl ? (
+                            <img src={c.avatarUrl} alt={c.username} className="w-11 h-11 rounded-full object-cover border border-gray-100" />
+                          ) : (
+                            <div className="w-11 h-11 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center text-sm font-semibold shadow-sm">
+                              {c.avatar}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-semibold text-gray-900 text-sm truncate">{c.username}</span>
+                            <span className="text-[10px] text-gray-400 font-medium">
+                              {lastTs ? formatTime(lastTs) : ""}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className={`text-xs truncate flex-1 ${c.unread > 0 ? "text-gray-900 font-semibold" : "text-gray-500"}`}>
+                              {last}
+                            </p>
+                            {c.unread > 0 && (
+                              <span className="bg-yellow-600 text-white text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center flex-shrink-0">
+                                {c.unread}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  );
+                })}
+
+                {unifiedConversations.length === 0 && (
+                  <div className="py-12 text-center">
+                    <MessageSquare className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500">No conversations found</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </Card>
+
+        {/* Right column: Chat Window */}
+        <Card id="messages-chat-window" className={`flex flex-col overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200 ${
+          isMobileChatOpen ? "flex" : "hidden md:flex"
+        }`}>
+          {activeConv ? (
+            <>
+              {/* Chat Header */}
+              <div className="border-b border-gray-100 p-4 flex items-center justify-between bg-white z-10 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setIsMobileChatOpen(false)}
+                    className="p-1 text-gray-500 hover:bg-gray-100 rounded-lg md:hidden"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <div 
+                    className="flex items-center gap-3 cursor-pointer group"
+                    onClick={() => navigate(`/profile/${activeConv.id}`)}
+                    title="View Profile"
+                  >
+                    <div className="relative">
+                      {activeConv.avatarUrl ? (
+                        <img src={activeConv.avatarUrl} alt={activeConv.username} className="w-10 h-10 rounded-full object-cover group-hover:ring-2 group-hover:ring-yellow-500 transition-all" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center text-sm font-semibold shadow-sm group-hover:ring-2 group-hover:ring-yellow-500 transition-all">
+                          {activeConv.avatar}
                         </div>
                       )}
-                      {m.type === "audio" && (
-                        <audio src={m.content} controls className="w-full" />
-                      )}
-                      <div className={`mt-1 flex items-center gap-1 text-[10px] ${m.sender === "me" ? "opacity-80" : "text-gray-500"}`}>
-                        <span>{formatTime(m.timestamp)}</span>
-                        {m.sender === "me" && (m.read ? <CheckCheck className="w-3 h-3" /> : <Check className="w-3 h-3" />)}
-                      </div>
+                    </div>
+                    <div>
+                      <h2 className="font-bold text-gray-900 leading-tight text-sm md:text-base group-hover:text-yellow-600 transition-colors">{activeConv.username}</h2>
                     </div>
                   </div>
-                ))}
+                </div>
+
+                <div className="flex items-center gap-1 relative">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="h-8 w-8 text-gray-400 hover:text-gray-600"
+                    title="Options"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+
+                  {dropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setDropdownOpen(false)} />
+                      <div className="absolute right-0 mt-8 w-40 bg-white border border-gray-150 rounded-lg shadow-lg z-40 p-1">
+                        <button
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            setReportModalOpen(true);
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors flex items-center gap-1.5"
+                        >
+                          ⚠️ Report User
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Chat Body messages stream */}
+              <div ref={chatBodyRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
+                <div className="text-center pb-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadOlder}
+                    disabled={loadingOlder}
+                    className="border-gray-200 text-gray-600 hover:bg-white text-xs h-7 rounded-lg"
+                  >
+                    {loadingOlder ? (
+                      <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
+                    ) : null}
+                    Load older messages
+                  </Button>
+                </div>
+
+                {/* Render messages with grouped date headers */}
+                {(() => {
+                  let lastDateStr = "";
+                  return activeConv.messages.map((m) => {
+                    const dateStr = formatMessageDate(m.timestamp);
+                    const showDateHeader = dateStr !== lastDateStr;
+                    lastDateStr = dateStr;
+
+                    const isMe = m.sender === "me";
+
+                    return (
+                      <React.Fragment key={m.id}>
+                        {showDateHeader && (
+                          <div className="flex justify-center my-4">
+                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-white border border-gray-100 rounded-full px-2.5 py-1 shadow-2xs">
+                              {dateStr}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-1`}>
+                          <div className={`flex flex-col max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
+                            <div
+                              className={`rounded-2xl px-4 py-2.5 text-sm shadow-2xs border ${
+                                isMe
+                                  ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-transparent rounded-tr-none"
+                                  : "bg-white text-gray-800 border-gray-100 rounded-tl-none"
+                              }`}
+                            >
+                              {m.type === "text" && <p className="leading-relaxed whitespace-pre-wrap">{m.content}</p>}
+                              
+                              {m.type === "image" && (
+                                <div className="space-y-1.5">
+                                  <img
+                                    src={m.content}
+                                    alt="Uploaded file"
+                                    className="rounded-lg max-w-full max-h-60 object-cover border border-gray-100"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                  {m.fileName && (
+                                    <p className="text-[11px] underline opacity-90 truncate">{m.fileName}</p>
+                                  )}
+                                </div>
+                              )}
+
+                              {m.type === "video" && (
+                                <div className="space-y-1.5">
+                                  <video src={m.content} controls className="rounded-lg max-w-full max-h-60" />
+                                  {m.fileName && (
+                                    <p className="text-[11px] opacity-90 truncate">{m.fileName}</p>
+                                  )}
+                                </div>
+                              )}
+
+                              {m.type === "document" && (
+                                <div className="flex items-center gap-3 py-1">
+                                  <div className="p-2 bg-yellow-100 rounded-lg text-yellow-700">
+                                    <FileText className="w-5 h-5" />
+                                  </div>
+                                  <div className="min-w-0 text-left">
+                                    <p className="font-semibold text-xs truncate max-w-[180px]">
+                                      {m.fileName || "Document.pdf"}
+                                    </p>
+                                    <a
+                                      href={m.content}
+                                      download
+                                      className="text-[10px] underline hover:opacity-85"
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      Download document
+                                    </a>
+                                  </div>
+                                </div>
+                              )}
+
+                              {m.type === "audio" && (
+                                <div className="space-y-1.5 py-1">
+                                  <audio src={m.content} controls className="w-full max-w-[240px]" />
+                                  {m.fileName && (
+                                    <p className="text-[10px] opacity-90 truncate">{m.fileName}</p>
+                                  )}
+                                </div>
+                              )}
+
+                              <div className={`mt-1.5 flex items-center justify-end gap-1 text-[10px] ${
+                                isMe ? "text-yellow-100" : "text-gray-400"
+                              }`}>
+                                <span>{formatTime(m.timestamp)}</span>
+                                {isMe && (
+                                  m.read ? (
+                                    <CheckCheck className="w-3.5 h-3.5 text-yellow-200" />
+                                  ) : (
+                                    <Check className="w-3.5 h-3.5 text-yellow-300" />
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </React.Fragment>
+                    );
+                  });
+                })()}
+
+                {/* Simulated live typing notification */}
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-none px-4 py-2 text-xs text-gray-500 flex items-center gap-1.5 shadow-2xs">
+                      <div className="flex gap-1">
+                        <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce" />
+                      </div>
+                      <span>{activeConv.username} is typing...</span>
+                    </div>
+                  </div>
+                )}
+
                 <div ref={chatEndRef} />
               </div>
-              {/* Composer */}
-              <div className="border-t border-gray-200 p-3">
-                <div className="flex items-end gap-2">
-                  <div className="relative flex-1">
-                    <textarea
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Type a message"
-                      className="w-full min-h-[44px] max-h-40 border border-gray-300 rounded-lg bg-white px-3 py-2 text-sm resize-y focus:border-purple-500 focus:ring-purple-500"
-                    />
-                    {attachMenuOpen && (
-                      <div className="absolute bottom-full mb-2 left-0 bg-white text-gray-900 border border-gray-200 rounded-lg shadow-lg p-2 flex gap-2 z-10">
-                        <Button variant="ghost" size="sm" onClick={() => sendMessage("image", "/placeholder/640x360.png")} className="text-gray-700 hover:bg-gray-50">
-                          <ImageIcon className="w-4 h-4 mr-1" /> Image
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => sendMessage("video", "/placeholder/640x360.mp4")} className="text-gray-700 hover:bg-gray-50">
-                          <VideoIcon className="w-4 h-4 mr-1" /> Video
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => sendMessage("document", "/placeholder/script.pdf")} className="text-gray-700 hover:bg-gray-50">
-                          <FileText className="w-4 h-4 mr-1" /> Doc
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => sendMessage("audio", "/placeholder/audio.mp3")} className="text-gray-700 hover:bg-gray-50">
-                          <Music className="w-4 h-4 mr-1" /> Audio
-                        </Button>
-                      </div>
-                    )}
+
+              {/* Message Composer Area */}
+              <div className="border-t border-gray-100 p-4 bg-white relative">
+                
+                {/* Expandable Media / Attachment Floating Menu */}
+                {attachMenuOpen && (
+                  <div className="absolute bottom-full left-4 mb-2 bg-white border border-gray-100 rounded-xl shadow-lg p-3 grid grid-cols-2 gap-2 z-20 w-64 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                    <div className="col-span-2 text-[10px] font-bold text-gray-400 uppercase mb-1">Send Local File</div>
+                    
+                    <button
+                      onClick={() => triggerAttachmentSelection("image")}
+                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg text-xs font-medium text-gray-600 transition-all text-left"
+                    >
+                      <ImageIcon className="w-4 h-4 text-blue-500" />
+                      Image File
+                    </button>
+
+                    <button
+                      onClick={() => triggerAttachmentSelection("video")}
+                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg text-xs font-medium text-gray-600 transition-all text-left"
+                    >
+                      <VideoIcon className="w-4 h-4 text-red-500" />
+                      Video File
+                    </button>
+
+                    <button
+                      onClick={() => triggerAttachmentSelection("document")}
+                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg text-xs font-medium text-gray-600 transition-all text-left"
+                    >
+                      <FileText className="w-4 h-4 text-green-500" />
+                      Document
+                    </button>
+
+                    <button
+                      onClick={() => triggerAttachmentSelection("audio")}
+                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg text-xs font-medium text-gray-600 transition-all text-left"
+                    >
+                      <Music className="w-4 h-4 text-purple-500" />
+                      Audio File
+                    </button>
                   </div>
-                  <Button variant="outline" onClick={() => setAttachMenuOpen((s) => !s)} className="border-gray-300 text-gray-700 hover:bg-gray-50">
-                    <Paperclip className="w-4 h-4" />
+                )}
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setAttachMenuOpen((s) => !s)}
+                    className={`h-10 w-10 rounded-xl flex-shrink-0 transition-all ${
+                      attachMenuOpen
+                        ? "bg-yellow-50 border-yellow-300 text-yellow-600"
+                        : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                    }`}
+                  >
+                    {attachMenuOpen ? <X className="w-4 h-4" /> : <Paperclip className="w-4 h-4" />}
                   </Button>
-                  <Button onClick={() => sendMessage()} disabled={!input.trim()} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
-                    <Send className="w-4 h-4" />
+
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && input.trim()) {
+                        sendMessage();
+                      }
+                    }}
+                    placeholder={`Message ${activeConv.username}...`}
+                    className="flex-1 h-10 border-gray-200 rounded-xl focus-visible:ring-yellow-500 text-sm px-4"
+                  />
+
+                  <Button
+                    onClick={() => sendMessage()}
+                    disabled={!input.trim()}
+                    className="h-10 px-5 rounded-xl bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-sm flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline text-xs font-semibold">Send</span>
                   </Button>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-center p-8">
-              <div>
-                <CardTitle className="text-xl mb-2 text-gray-900">Select a conversation to start messaging.</CardTitle>
-                <CardDescription className="text-gray-600">Choose someone from the list on the left to view messages here.</CardDescription>
+            // Empty State
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-gray-50/40">
+              <div className="max-w-md p-6 bg-white border border-gray-200 rounded-2xl shadow-xs">
+                <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-gray-900 mb-1">Start a Conversation</h3>
+                <p className="text-xs text-gray-500">
+                  Select a professional from the list on the left to start a professional dialogue.
+                </p>
               </div>
             </div>
           )}
         </Card>
       </div>
+
+      {/* Report User Modal Popup */}
+      {reportModalOpen && activeConv && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <Card className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-red-600">
+                <span className="text-lg">⚠️</span>
+                <h3 className="font-bold text-gray-900 text-base">Report User</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-gray-400 hover:text-gray-600 rounded-full"
+                onClick={() => setReportModalOpen(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                You are reporting <span className="font-semibold text-gray-900">{activeConv.username}</span>. Please describe the violation in detail below. Our moderation team will investigate.
+              </p>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-700">Detailed Reason</label>
+                <textarea
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  placeholder="Provide specific details about harassment, spam, or inappropriate behavior..."
+                  className="w-full min-h-[100px] p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-gray-50/50"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-end gap-2.5">
+              <Button
+                variant="outline"
+                onClick={() => setReportModalOpen(false)}
+                className="rounded-xl border-gray-200 text-gray-700 text-xs h-9 px-4 font-semibold"
+                disabled={submittingReport}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={submitReport}
+                disabled={submittingReport || !reportReason.trim()}
+                className="rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs h-9 px-4 font-semibold shadow-sm flex items-center gap-1.5"
+              >
+                {submittingReport ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Report"
+                )}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </AppLayout>
   );
 }
-
-

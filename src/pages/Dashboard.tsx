@@ -1,3 +1,4 @@
+import React from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,43 +8,126 @@ import {
   Heart, 
   Users, 
   FolderOpen, 
-  MessageCircle, 
   TrendingUp,
-  Calendar
+  Calendar,
+  Image
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { supabase } from "@/integrations/supabase/client";
+
 export default function Dashboard() {
-  const { profile } = useAuth();
+  const { user, profile, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
+  const [connectionsCount, setConnectionsCount] = React.useState("0");
+  const [profileLikesCount, setProfileLikesCount] = React.useState("0");
+  const [projectsCount, setProjectsCount] = React.useState("0");
+  const [jobsAppliedCount, setJobsAppliedCount] = React.useState("0");
+
+  React.useEffect(() => {
+    if (!loading && isAdmin && isAdmin()) {
+      navigate("/admin-dashboard", { replace: true });
+    }
+  }, [loading, isAdmin, navigate]);
+
+  React.useEffect(() => {
+    const profileDbId = profile?.id;
+    const currentUserId = user?.id || profile?.user_id || profileDbId;
+
+    if (profileDbId) {
+      // Connections
+      supabase
+        .from("connections")
+        .select("id", { count: 'exact', head: true })
+        .eq("status", "accepted")
+        .or(`user_id.eq.${profileDbId},connected_user_id.eq.${profileDbId}`)
+        .then(({ count, error }) => {
+          if (!error && count !== null) {
+            setConnectionsCount(count.toString());
+          }
+        });
+
+      // Profile Likes
+      supabase
+        .from("user_likes")
+        .select("id", { count: 'exact', head: true })
+        .eq("liked_user_id", profileDbId)
+        .then(({ count, error }) => {
+          if (!error && count !== null) {
+            setProfileLikesCount(count.toString());
+          } else if ((profile as any)?.likes_count !== undefined) {
+            setProfileLikesCount(((profile as any).likes_count || 0).toString());
+          }
+        });
+    }
+
+    if (currentUserId) {
+      // Projects
+      Promise.all([
+        supabase.from("projects").select("id").eq("created_by", currentUserId),
+        supabase.from("project_members").select("project_id").eq("user_id", currentUserId)
+      ]).then(([createdRes, joinedRes]) => {
+        const pSet = new Set<string>();
+        if (createdRes.data) createdRes.data.forEach((p: any) => pSet.add(p.id));
+        if (joinedRes.data) joinedRes.data.forEach((p: any) => p.project_id && pSet.add(p.project_id));
+        setProjectsCount(pSet.size.toString());
+      }).catch(() => {});
+
+      // Jobs Applied
+      let localAppliedCount = 0;
+      try {
+        const stored = localStorage.getItem(`applied_jobs_${currentUserId}`);
+        if (stored) {
+          const arr = JSON.parse(stored);
+          if (Array.isArray(arr)) localAppliedCount = arr.length;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      supabase
+        .from("job_applications")
+        .select("id", { count: 'exact', head: true })
+        .eq("user_id", currentUserId)
+        .then(({ count, error }) => {
+          if (!error && count !== null && count > 0) {
+            setJobsAppliedCount(Math.max(count, localAppliedCount).toString());
+          } else {
+            setJobsAppliedCount(localAppliedCount.toString());
+          }
+        }).catch(() => {
+          setJobsAppliedCount(localAppliedCount.toString());
+        });
+    }
+  }, [profile, user]);
 
   const stats = [
     {
       title: "Profile Likes",
-      value: "1,247",
+      value: profileLikesCount,
       icon: Heart,
-      description: "+89 this week",
+      description: "Total profile likes",
       color: "text-yellow-600"
     },
     {
       title: "Connections",
-      value: "89",
+      value: connectionsCount,
       icon: Users,
-      description: "+5 new this week",
+      description: "Network size",
       color: "text-yellow-600"
     },
     {
       title: "Projects",
-      value: "23",
+      value: projectsCount,
       icon: FolderOpen,
-      description: "3 in progress",
+      description: "Created & joined",
       color: "text-yellow-600"
     },
     {
-      title: "Communities Joined",
-      value: "12",
-      icon: MessageCircle,
-      description: "4 active",
+      title: "Jobs Applied",
+      value: jobsAppliedCount,
+      icon: Briefcase,
+      description: "Total jobs applied",
       color: "text-yellow-600"
     }
   ];
@@ -71,10 +155,10 @@ export default function Dashboard() {
       color: "bg-yellow-500"
     },
     {
-      title: "Join Community",
-      description: "Engage in discussions",
-      icon: MessageCircle,
-      href: "/community",
+      title: "Directory",
+      description: "Explore portfolio & files",
+      icon: Image,
+      href: "/directory",
       color: "bg-yellow-600"
     }
   ];
@@ -132,7 +216,7 @@ export default function Dashboard() {
           {stats.map((stat, index) => (
             <Card 
               key={index} 
-              className="hover:shadow-soft transition-shadow border-yellow-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="hover:shadow-soft transition-shadow border-yellow-200 dark:border-gray-700 bg-white dark:bg-background"
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -152,7 +236,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Quick Actions */}
-          <Card className="border-yellow-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <Card className="border-yellow-200 dark:border-gray-700 bg-white dark:bg-background">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
@@ -187,7 +271,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Events */}
-          <Card className="border-yellow-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <Card className="border-yellow-200 dark:border-gray-700 bg-white dark:bg-background">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />

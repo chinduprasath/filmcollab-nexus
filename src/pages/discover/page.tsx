@@ -1046,9 +1046,9 @@ export default function DiscoverPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 bg-yellow-50/50 dark:bg-gray-950 min-h-screen p-6 -m-6 transition-colors duration-200">
+      <div className="space-y-6 bg-yellow-50/50 dark:bg-background min-h-screen p-6 -m-6 transition-colors duration-200">
         {/* Header */}
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40">
+        <div className="bg-white dark:bg-background p-6 rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 font-sans tracking-tight">Discover Creators</h1>
@@ -1063,7 +1063,7 @@ export default function DiscoverPage() {
                   placeholder="Search by name, skills, or location..."
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); resetPaging(); }}
-                  className="pl-10 h-11 border-yellow-200 dark:border-yellow-900/40 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 bg-white dark:bg-gray-900 dark:text-white"
+                  className="pl-10 h-11 border-yellow-200 dark:border-yellow-900/40 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 bg-white dark:bg-background dark:text-white"
                 />
               </div>
               
@@ -1072,7 +1072,7 @@ export default function DiscoverPage() {
                 <SheetTrigger asChild>
                   <Button
                     variant="outline"
-                    className="h-11 px-4 border-yellow-200 dark:border-yellow-900/40 hover:!bg-yellow-50 dark:hover:!bg-yellow-950/25 hover:!text-yellow-600 dark:hover:!text-yellow-400 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 relative shrink-0 animate-fade-in"
+                    className="h-11 px-4 border-yellow-200 dark:border-yellow-900/40 hover:!bg-yellow-50 dark:hover:!bg-yellow-950/25 hover:!text-yellow-600 dark:hover:!text-yellow-400 text-gray-700 dark:text-gray-300 bg-white dark:bg-background relative shrink-0 animate-fade-in"
                   >
                     <Filter className="w-4 h-4 mr-2" />
                     Filters
@@ -1081,7 +1081,7 @@ export default function DiscoverPage() {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-md flex flex-col h-full bg-white dark:bg-gray-900 border-l border-yellow-200 dark:border-yellow-900/40 p-0">
+                <SheetContent side="right" className="w-full sm:max-w-md flex flex-col h-full bg-white dark:bg-background border-l border-yellow-200 dark:border-yellow-900/40 p-0">
                   <div className="p-6 border-b border-yellow-100 dark:border-yellow-900/20 flex items-center justify-between">
                     <div>
                       <SheetTitle className="text-lg font-bold text-gray-900 dark:text-white">Filter Creators</SheetTitle>
@@ -1110,10 +1110,10 @@ export default function DiscoverPage() {
                       <div className="space-y-2">
                         <label className="text-xs font-semibold text-gray-800 dark:text-gray-200 tracking-wider uppercase">Filter by Type</label>
                         <Select value={filterType} onValueChange={(value) => { setFilterType(value as FilterType); resetPaging(); }}>
-                          <SelectTrigger className="w-full border-yellow-200 dark:border-yellow-900/40 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm">
+                          <SelectTrigger className="w-full border-yellow-200 dark:border-yellow-900/40 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white text-sm">
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
-                          <SelectContent className="bg-white dark:bg-gray-900 border-yellow-100 dark:border-yellow-900/40 text-gray-900 dark:text-white">
+                          <SelectContent className="bg-white dark:bg-background border-yellow-100 dark:border-yellow-900/40 text-gray-900 dark:text-white">
                             <SelectItem value="all">All Users</SelectItem>
                             <SelectItem value="verified">Verified Only</SelectItem>
                             <SelectItem value="new">New Users (30 days)</SelectItem>
@@ -1126,10 +1126,10 @@ export default function DiscoverPage() {
                       <div className="space-y-2">
                         <label className="text-xs font-semibold text-gray-800 dark:text-gray-200 tracking-wider uppercase">Sort by</label>
                         <Select value={sortType} onValueChange={(value) => { setSortType(value as SortType); resetPaging(); }}>
-                          <SelectTrigger className="w-full border-yellow-200 dark:border-yellow-900/40 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm">
+                          <SelectTrigger className="w-full border-yellow-200 dark:border-yellow-900/40 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white text-sm">
                             <SelectValue placeholder="Select sort" />
                           </SelectTrigger>
-                          <SelectContent className="bg-white dark:bg-gray-900 border-yellow-100 dark:border-yellow-900/40 text-gray-900 dark:text-white">
+                          <SelectContent className="bg-white dark:bg-background border-yellow-100 dark:border-yellow-900/40 text-gray-900 dark:text-white">
                             <SelectItem value="recent">Most Recent</SelectItem>
                             <SelectItem value="popular">Most Popular</SelectItem>
                             <SelectItem value="alphabetical">Alphabetical</SelectItem>
@@ -1146,7 +1146,7 @@ export default function DiscoverPage() {
                             placeholder="e.g. Austin, Toronto, Delhi..."
                             value={locationFilter}
                             onChange={(e) => { setLocationFilter(e.target.value); resetPaging(); }}
-                            className="pl-9 border-yellow-200 dark:border-yellow-900/40 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm h-10"
+                            className="pl-9 border-yellow-200 dark:border-yellow-900/40 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white text-sm h-10"
                           />
                         </div>
                       </div>
@@ -1180,7 +1180,7 @@ export default function DiscoverPage() {
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
-                              className="w-full justify-between border-yellow-200 dark:border-yellow-900/40 text-left font-normal hover:bg-yellow-50/50 dark:hover:bg-yellow-950/20 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm h-10"
+                              className="w-full justify-between border-yellow-200 dark:border-yellow-900/40 text-left font-normal hover:bg-yellow-50/50 dark:hover:bg-yellow-950/20 bg-white dark:bg-background text-gray-700 dark:text-gray-300 text-sm h-10"
                             >
                               <span className="truncate">
                                 {categoryFilters.length === 0
@@ -1190,7 +1190,7 @@ export default function DiscoverPage() {
                               <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-[320px] p-0 bg-white dark:bg-gray-900 border border-yellow-200 dark:border-yellow-900/40 shadow-lg" align="start">
+                          <PopoverContent className="w-[320px] p-0 bg-white dark:bg-background border border-yellow-200 dark:border-yellow-900/40 shadow-lg" align="start">
                             <div className="p-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
                               <div className="relative flex-1">
                                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -1198,7 +1198,7 @@ export default function DiscoverPage() {
                                   placeholder="Search categories..."
                                   value={categorySearch}
                                   onChange={(e) => setCategorySearch(e.target.value)}
-                                  className="pl-8 h-8 text-xs border-yellow-100 dark:border-yellow-900/40 focus:ring-yellow-500 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+                                  className="pl-8 h-8 text-xs border-yellow-100 dark:border-yellow-900/40 focus:ring-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white"
                                 />
                               </div>
                               {categoryFilters.length > 0 && (
@@ -1271,9 +1271,9 @@ export default function DiscoverPage() {
         </div>
 
         {/* Tabs Bar */}
-        <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-2 rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40">
+        <div className="flex justify-between items-center bg-white dark:bg-background p-2 rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40">
           <Tabs value={currentTab} onValueChange={(val) => { setCurrentTab(val as "discover" | "liked" | "saved"); resetPaging(); }} className="w-full sm:w-auto">
-            <TabsList className="bg-yellow-50/50 dark:bg-gray-950 border border-yellow-100 dark:border-yellow-900/40 p-1">
+            <TabsList className="bg-yellow-50/50 dark:bg-background border border-yellow-100 dark:border-yellow-900/40 p-1">
               <TabsTrigger 
                 value="discover" 
                 className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white text-gray-700 dark:text-gray-300 text-sm px-4 py-2 font-medium transition-all"
@@ -1304,7 +1304,7 @@ export default function DiscoverPage() {
         </div>
 
         {/* Users Grid */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 border border-yellow-100 dark:border-yellow-900/40">
+        <div className="bg-white dark:bg-background rounded-lg shadow-sm p-6 border border-yellow-100 dark:border-yellow-900/40">
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto mb-4"></div>
@@ -1319,7 +1319,7 @@ export default function DiscoverPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {pageItems.map((userItem) => (
-                <Card key={userItem.id} className="hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden flex flex-col justify-between">
+                <Card key={userItem.id} className="hover:shadow-lg transition-all duration-200 bg-white dark:bg-background border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden flex flex-col justify-between">
                   <div>
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between">
@@ -1370,7 +1370,7 @@ export default function DiscoverPage() {
                                 <MoreVertical className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-md text-gray-900 dark:text-white">
+                            <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-background border border-gray-100 dark:border-gray-800 shadow-md text-gray-900 dark:text-white">
                               <DropdownMenuItem 
                                 onClick={() => handleSave(userItem.id, userItem.full_name)}
                                 className="flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-yellow-50/50 dark:hover:bg-yellow-950/20"
@@ -1406,7 +1406,7 @@ export default function DiscoverPage() {
                             </Badge>
                           ))}
                           {userItem.skills.length > 2 && (
-                            <Badge variant="outline" className="text-[10px] bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800">
+                            <Badge variant="outline" className="text-[10px] bg-gray-50 dark:bg-background text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800">
                               +{userItem.skills.length - 2} more
                             </Badge>
                           )}
@@ -1430,7 +1430,7 @@ export default function DiscoverPage() {
                         ) : userItem.connection_status === "pending" ? (
                           userItem.connection_initiator === profile?.id ? (
                             <Button
-                              className="flex-1 bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800 font-medium text-xs h-9 cursor-not-allowed"
+                              className="flex-1 bg-gray-100 dark:bg-background text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800 font-medium text-xs h-9 cursor-not-allowed"
                               size="sm"
                               disabled
                             >
@@ -1461,7 +1461,7 @@ export default function DiscoverPage() {
                       <Button
                         onClick={() => navigate(`/profile/${userItem.id}`)}
                         variant="outline"
-                        className={`${userItem.id === user?.id ? "w-full" : "flex-1"} border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:!bg-yellow-50 hover:!text-yellow-700 hover:!border-yellow-300 dark:hover:!bg-yellow-950/30 dark:hover:!text-yellow-400 dark:hover:!border-yellow-900/40 font-medium text-xs h-9 transition-all`}
+                        className={`${userItem.id === user?.id ? "w-full" : "flex-1"} border-gray-300 dark:border-gray-700 bg-white dark:bg-background text-gray-700 dark:text-gray-200 hover:!bg-yellow-50 hover:!text-yellow-700 hover:!border-yellow-300 dark:hover:!bg-yellow-950/30 dark:hover:!text-yellow-400 dark:hover:!border-yellow-900/40 font-medium text-xs h-9 transition-all`}
                         size="sm"
                       >
                         <UserIcon className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
@@ -1477,7 +1477,7 @@ export default function DiscoverPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40">
+          <div className="bg-white dark:bg-background p-4 rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <span className="text-xs text-gray-500 dark:text-gray-400 font-medium font-mono">
                 Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filtered.length)} of {filtered.length} creators
@@ -1488,7 +1488,7 @@ export default function DiscoverPage() {
                   size="sm" 
                   disabled={page <= 1} 
                   onClick={() => setPage((p) => Math.max(1, p - 1))} 
-                  className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-xs h-8"
+                  className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-background hover:bg-gray-50 dark:hover:bg-gray-800 text-xs h-8"
                 >
                   Previous
                 </Button>
@@ -1500,7 +1500,7 @@ export default function DiscoverPage() {
                   size="sm" 
                   disabled={page >= totalPages} 
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))} 
-                  className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-xs h-8"
+                  className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-background hover:bg-gray-50 dark:hover:bg-gray-800 text-xs h-8"
                 >
                   Next
                 </Button>

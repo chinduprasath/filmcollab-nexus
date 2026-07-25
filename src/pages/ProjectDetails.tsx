@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -10,6 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -36,7 +43,14 @@ import {
   Trash2,
   CheckCircle,
   Circle,
-  AlertCircle
+  AlertCircle,
+  Settings,
+  FileText,
+  Globe,
+  Award,
+  Instagram,
+  Mail,
+  Phone
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -63,6 +77,8 @@ interface Project {
   is_member: boolean;
   is_liked: boolean;
   is_saved: boolean;
+  is_creator?: boolean;
+  allow_applicants?: boolean;
   full_description?: string;
   production_notes?: string;
   target_audience?: string;
@@ -71,6 +87,7 @@ interface Project {
   requirements?: string;
   benefits?: string;
   contact_info?: string;
+  hiring_categories?: string[];
 }
 
 interface ProjectMember {
@@ -115,6 +132,7 @@ interface Applicant {
 }
 
 export default function ProjectDetails() {
+  const { profile } = useAuth();
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -125,6 +143,26 @@ export default function ProjectDetails() {
   const [isLiked, setIsLiked] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [currentUser, setCurrentUser] = useState<{ id: string; email?: string } | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isHireConfirmOpen, setIsHireConfirmOpen] = useState(false);
+  const [targetHireState, setTargetHireState] = useState(false);
+  const [editingSections, setEditingSections] = useState<{ [key: string]: boolean }>({});
+  const [sectionValues, setSectionValues] = useState<{ [key: string]: string }>({});
+  const [editForm, setEditForm] = useState({
+    title: "",
+    project_type: "",
+    category: "",
+    status: "",
+    project_status: "Public",
+    location: "",
+    team_size: 5,
+    budget_min: "" as string | number,
+    budget_max: "" as string | number,
+    budget_currency: "₹",
+    duration_minutes: "" as string | number,
+    episodes: "" as string | number,
+  });
   const [sourceTab, setSourceTab] = useState<string>("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -138,6 +176,38 @@ export default function ProjectDetails() {
     priority: "medium" as const,
     due_date: ""
   });
+
+  const [dbMembers, setDbMembers] = useState<ProjectMember[]>([]);
+  const [localProjectMembers, setLocalProjectMembers] = useState<ProjectMember[]>([
+    {
+      id: "member-1",
+      name: "Sarah Johnson",
+      role: "Director",
+      avatar: "SJ",
+      joined_date: "2024-01-10"
+    },
+    {
+      id: "member-2",
+      name: "Michael Chen",
+      role: "Producer",
+      avatar: "MC",
+      joined_date: "2024-01-12"
+    },
+    {
+      id: "member-3",
+      name: "Emily Rodriguez",
+      role: "Cinematographer",
+      avatar: "ER",
+      joined_date: "2024-01-14"
+    },
+    {
+      id: "member-4",
+      name: "David Kim",
+      role: "Editor",
+      avatar: "DK",
+      joined_date: "2024-01-16"
+    }
+  ]);
 
   // Hardcoded projects data
   const hardcodedProjects: Project[] = [
@@ -538,51 +608,279 @@ export default function ProjectDetails() {
     }
   ];
 
-  const projectMembers: ProjectMember[] = [
-    {
-      id: "member-1",
-      name: "Sarah Johnson",
-      role: "Director",
-      avatar: "SJ",
-      joined_date: "2024-01-10"
-    },
-    {
-      id: "member-2",
-      name: "Michael Chen",
-      role: "Producer",
-      avatar: "MC",
-      joined_date: "2024-01-12"
-    },
-    {
-      id: "member-3",
-      name: "Emily Rodriguez",
-      role: "Cinematographer",
-      avatar: "ER",
-      joined_date: "2024-01-14"
-    },
-    {
-      id: "member-4",
-      name: "David Kim",
-      role: "Editor",
-      avatar: "DK",
-      joined_date: "2024-01-16"
-    }
-  ];
+  const projectMembers: ProjectMember[] = [...dbMembers, ...localProjectMembers];
 
-  const handleJoinProject = () => {
-    setIsMember(true);
-    toast({
-      title: "Joined project",
-      description: "You have successfully joined this project."
-    });
+  const handleJoinProject = async () => {
+    if (!currentUser) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to join projects.",
+      });
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from("project_members")
+        .insert({
+          project_id: projectId,
+          user_id: currentUser.id,
+          role: "Member"
+        });
+
+      if (error) throw error;
+
+      setIsMember(true);
+      if (project) {
+        setProject({ ...project, is_member: true });
+      }
+      toast({
+        title: "Joined project",
+        description: "You have successfully joined this project."
+      });
+    } catch (err) {
+      console.error("Error joining project:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to join project."
+      });
+    }
   };
 
-  const handleLeaveProject = () => {
-    setIsMember(false);
-    toast({
-      title: "Left project",
-      description: "You have left this project."
-    });
+  const handleLeaveProject = async () => {
+    if (!currentUser) return;
+    try {
+      const { error } = await supabase
+        .from("project_members")
+        .delete()
+        .eq("project_id", projectId)
+        .eq("user_id", currentUser.id);
+
+      if (error) throw error;
+
+      setIsMember(false);
+      if (project) {
+        setProject({ ...project, is_member: false });
+      }
+      toast({
+        title: "Left project",
+        description: "You have left this project."
+      });
+    } catch (err) {
+      console.error("Error leaving project:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to leave project."
+      });
+    }
+  };
+
+  const handleDeleteMember = async (memberId: string, isDbMember: boolean, userId?: string) => {
+    try {
+      if (isDbMember) {
+        const { error } = await supabase
+          .from("project_members")
+          .delete()
+          .eq("id", memberId);
+
+        if (error) throw error;
+
+        setDbMembers(prev => prev.filter(m => m.id !== memberId));
+      } else {
+        setLocalProjectMembers(prev => prev.filter(m => m.id !== memberId));
+      }
+
+      toast({
+        title: "Success",
+        description: "Member removed from project.",
+      });
+    } catch (err) {
+      console.error("Error removing member:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to remove member.",
+      });
+    }
+  };
+
+  const handleToggleHiringCategory = async (categoryName: string) => {
+    if (!project) return;
+    
+    const currentCategories = project.hiring_categories || [];
+    let updatedCategories: string[];
+    if (currentCategories.includes(categoryName)) {
+      updatedCategories = currentCategories.filter(c => c !== categoryName);
+    } else {
+      updatedCategories = [...currentCategories, categoryName];
+    }
+
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ hiring_categories: updatedCategories })
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      setProject(prev => prev ? { ...prev, hiring_categories: updatedCategories } : null);
+      toast({
+        title: "Success",
+        description: "Hiring role updated.",
+      });
+    } catch (err) {
+      console.error("Error updating hiring roles:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update hiring roles.",
+      });
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!projectId) return;
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Project Deleted",
+        description: "The project has been successfully deleted.",
+      });
+      navigate("/projects");
+    } catch (err) {
+      console.error("Error deleting project:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete project.",
+      });
+    }
+  };
+
+  const handleUpdateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({
+          title: editForm.title,
+          location: editForm.location,
+          project_type: editForm.project_type,
+          category: editForm.category,
+          status: editForm.status,
+          project_status: editForm.project_status,
+          team_size: Number(editForm.team_size),
+          budget_min: editForm.budget_min ? Number(editForm.budget_min) : null,
+          budget_max: editForm.budget_max ? Number(editForm.budget_max) : null,
+          budget_currency: editForm.budget_currency,
+          duration_minutes: editForm.duration_minutes ? Number(editForm.duration_minutes) : null,
+          episodes: editForm.episodes ? Number(editForm.episodes) : null,
+        })
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      setProject(prev => prev ? {
+        ...prev,
+        title: editForm.title,
+        location: editForm.location,
+        project_type: editForm.project_type,
+        category: editForm.category,
+        status: editForm.status,
+        project_status: editForm.project_status,
+        team_size: Number(editForm.team_size),
+        budget_min: editForm.budget_min ? Number(editForm.budget_min) : null,
+        budget_max: editForm.budget_max ? Number(editForm.budget_max) : null,
+        budget_currency: editForm.budget_currency,
+        duration_minutes: editForm.duration_minutes ? Number(editForm.duration_minutes) : null,
+        episodes: editForm.episodes ? Number(editForm.episodes) : null,
+      } : null);
+
+      setIsEditDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Project details updated successfully.",
+      });
+    } catch (err) {
+      console.error("Error updating project:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update project details.",
+      });
+    }
+  };
+
+  const handleToggleHire = (newState: boolean) => {
+    setTargetHireState(newState);
+    setIsHireConfirmOpen(true);
+  };
+
+  const handleConfirmHire = async () => {
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ allow_applicants: targetHireState })
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      setProject(prev => prev ? { ...prev, allow_applicants: targetHireState } : null);
+      setIsHireConfirmOpen(false);
+      toast({
+        title: "Success",
+        description: targetHireState ? "Hiring has been enabled (Allow Applicants)." : "Hiring has been disabled.",
+      });
+    } catch (err) {
+      console.error("Error updating hiring state:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update hiring state.",
+      });
+    }
+  };
+
+  const startEditingSection = (sectionKey: string, currentValue: string) => {
+    setEditingSections(prev => ({ ...prev, [sectionKey]: true }));
+    setSectionValues(prev => ({ ...prev, [sectionKey]: currentValue }));
+  };
+
+  const cancelEditingSection = (sectionKey: string) => {
+    setEditingSections(prev => ({ ...prev, [sectionKey]: false }));
+  };
+
+  const saveSection = async (sectionKey: string, dbColumn: string) => {
+    const newValue = sectionValues[sectionKey] || "";
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ [dbColumn]: newValue })
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      setProject(prev => prev ? { ...prev, [sectionKey]: newValue } : null);
+      setEditingSections(prev => ({ ...prev, [sectionKey]: false }));
+      toast({
+        title: "Section updated",
+        description: "The section has been successfully updated.",
+      });
+    } catch (err) {
+      console.error(`Error updating section ${sectionKey}:`, err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update section.",
+      });
+    }
   };
 
   const handleLike = () => {
@@ -743,7 +1041,7 @@ export default function ProjectDetails() {
   };
 
   useEffect(() => {
-    const fetchProjectDetails = () => {
+    const fetchProjectDetails = async () => {
       // Get the source tab from URL parameters
       const tabParam = searchParams.get('tab');
       setSourceTab(tabParam || '');
@@ -765,17 +1063,651 @@ export default function ProjectDetails() {
         setApplicants(hardcodedApplicants);
         setLoading(false);
       } else {
-        setLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Project not found",
-          description: "The requested project could not be found."
-        });
+        try {
+          const { data, error } = await supabase
+            .from("projects")
+            .select("*")
+            .eq("id", projectId)
+            .maybeSingle();
+
+          if (error) {
+            console.error("Error fetching project:", error);
+            throw error;
+          }
+
+          if (data) {
+            const { data: { user } } = await supabase.auth.getUser();
+            setCurrentUser(user);
+            
+            let isProjectLiked = false;
+            if (user) {
+              const { data: likeData } = await supabase
+                .from("project_likes")
+                .select("*")
+                .eq("project_id", projectId)
+                .eq("user_id", user.id);
+              isProjectLiked = likeData && likeData.length > 0;
+            }
+
+            let isProjectSaved = false;
+            if (user) {
+              const saved = localStorage.getItem(`saved_projects_${user.id}`);
+              if (saved) {
+                isProjectSaved = JSON.parse(saved).includes(projectId);
+              }
+            }
+
+            let isUserMember = false;
+            if (user) {
+              const { data: memberData } = await supabase
+                .from("project_members")
+                .select("*")
+                .eq("project_id", projectId)
+                .eq("user_id", user.id);
+              isUserMember = memberData && memberData.length > 0;
+            }
+
+            const isProjectCreator = user ? data.created_by === user.id : false;
+
+            let fetchedMembers: ProjectMember[] = [];
+            try {
+              const { data: membersData, error: membersError } = await supabase
+                .from("project_members")
+                .select("id, user_id, role, created_at")
+                .eq("project_id", projectId);
+
+              if (membersData && !membersError) {
+                const userIds = (membersData as Array<{ user_id: string }>).map((m) => m.user_id).filter(Boolean);
+                if (userIds.length > 0) {
+                  const { data: profilesData } = await supabase
+                    .from("profiles")
+                    .select("user_id, full_name, username, category")
+                    .in("user_id", userIds);
+
+                  const profileMap: Record<string, { user_id: string; full_name?: string | null; username?: string | null; category?: string | null }> = {};
+                  if (profilesData) {
+                    (profilesData as Array<{ user_id: string; full_name?: string | null; username?: string | null; category?: string | null }>).forEach(p => {
+                      profileMap[p.user_id] = p;
+                    });
+                  }
+
+                  fetchedMembers = (membersData as Array<{ id: string; user_id: string; role: string | null; created_at: string | null }>).map((m) => {
+                    const p = profileMap[m.user_id];
+                    const name = p?.full_name || p?.username || "Unknown User";
+                    return {
+                      id: m.id,
+                      user_id: m.user_id,
+                      name: name,
+                      role: m.role || p?.category || "Member",
+                      avatar: name.substring(0, 2).toUpperCase(),
+                      joined_date: m.created_at || new Date().toISOString()
+                    };
+                  });
+                }
+              }
+            } catch (err) {
+              console.error("Error fetching project members:", err);
+            }
+            setDbMembers(fetchedMembers);
+
+            const dbProject: Project = {
+              id: data.id,
+              title: data.title,
+              description: data.description,
+              project_type: data.project_type,
+              category: data.category,
+              status: data.status,
+              location: data.location,
+              budget_min: data.budget_min ? Number(data.budget_min) : null,
+              budget_max: data.budget_max ? Number(data.budget_max) : null,
+              budget_currency: data.budget_currency || "₹",
+              duration_minutes: data.duration_minutes ? Number(data.duration_minutes) : null,
+              episodes: data.episodes ? Number(data.episodes) : null,
+              team_size: data.team_size || 5,
+              created_by: data.created_by,
+              created_at: data.created_at,
+              updated_at: data.updated_at || data.created_at,
+              featured: data.featured || false,
+              popular: data.popular || false,
+              likes_count: 0,
+              is_member: isUserMember,
+              is_creator: isProjectCreator,
+              is_liked: isProjectLiked,
+              is_saved: isProjectSaved,
+              allow_applicants: data.allow_applicants !== false,
+              hiring_categories: data.hiring_categories || [],
+              full_description: data.description || "",
+              requirements: data.skills_required ? data.skills_required.join(", ") : "None specified",
+              production_notes: data.production_notes || "None specified",
+              target_audience: data.target_audience || "None specified",
+              distribution_plan: data.distribution_plan || "None specified",
+              timeline: data.timeline || "None specified",
+              benefits: data.benefits || "None specified",
+              contact_info: data.contact_info || "None specified",
+            };
+
+            setProject(dbProject);
+            setEditForm({
+              title: data.title || "",
+              project_type: data.project_type || "",
+              category: data.category || "",
+              status: data.status || "planning",
+              project_status: data.project_status || "Public",
+              location: data.location || "",
+              team_size: data.team_size || 5,
+              budget_min: data.budget_min !== null ? Number(data.budget_min) : "",
+              budget_max: data.budget_max !== null ? Number(data.budget_max) : "",
+              budget_currency: data.budget_currency || "₹",
+              duration_minutes: data.duration_minutes !== null ? Number(data.duration_minutes) : "",
+              episodes: data.episodes !== null ? Number(data.episodes) : "",
+            });
+            setIsSaved(dbProject.is_saved);
+            setIsLiked(dbProject.is_liked);
+            setIsMember(dbProject.is_member);
+            setTasks([]);
+            setChatMessages([]);
+            setApplicants([]);
+            setLoading(false);
+          } else {
+            setLoading(false);
+            toast({
+              variant: "destructive",
+              title: "Project not found",
+              description: "The requested project could not be found."
+            });
+          }
+        } catch (err) {
+          console.error("Error fetching project details from database:", err);
+          setLoading(false);
+          toast({
+            variant: "destructive",
+            title: "Project not found",
+            description: "The requested project could not be found."
+          });
+        }
       }
     };
 
     fetchProjectDetails();
   }, [projectId, searchParams, toast]);
+
+  const renderEditableSection = (
+    title: string,
+    sectionKey: string,
+    dbColumn: string,
+    currentValue: string,
+    icon?: React.ReactNode
+  ) => {
+    const isEditing = editingSections[sectionKey];
+    const editedValue = sectionValues[sectionKey] !== undefined ? sectionValues[sectionKey] : currentValue;
+
+    return (
+      <Card className="border-yellow-200">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900 text-lg">
+            {icon}
+            {title}
+          </CardTitle>
+          {project?.is_creator && !isEditing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => startEditingSection(sectionKey, currentValue)}
+              className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {isEditing ? (
+            <div className="space-y-4">
+              <Textarea
+                value={editedValue}
+                onChange={(e) => setSectionValues(prev => ({ ...prev, [sectionKey]: e.target.value }))}
+                className="min-h-[120px] border-yellow-200 focus-visible:ring-yellow-500"
+                placeholder={`Enter ${title.toLowerCase()}...`}
+              />
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => cancelEditingSection(sectionKey)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                  onClick={async () => {
+                    if (dbColumn === "skills_required") {
+                      try {
+                        const skillsArray = editedValue.split(",").map((s: string) => s.trim()).filter(Boolean);
+                        const { error } = await supabase
+                          .from("projects")
+                          .update({ skills_required: skillsArray })
+                          .eq("id", projectId);
+
+                        if (error) throw error;
+
+                        setProject(prev => prev ? { ...prev, requirements: skillsArray.join(", ") } : null);
+                        setEditingSections(prev => ({ ...prev, [sectionKey]: false }));
+                        toast({
+                          title: "Section updated",
+                          description: "The section has been successfully updated.",
+                        });
+                      } catch (err) {
+                        console.error("Error updating skills:", err);
+                        toast({
+                          variant: "destructive",
+                          title: "Error",
+                          description: "Failed to update requirements.",
+                        });
+                      }
+                    } else {
+                      await saveSection(sectionKey, dbColumn);
+                    }
+                  }}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            sectionKey === "requirements" || sectionKey === "target_audience" ? (
+              <div className="flex flex-wrap gap-2">
+                {currentValue && currentValue !== "None specified" ? (
+                  currentValue.split(",").map((item, idx) => {
+                    const trimmed = item.trim();
+                    if (!trimmed) return null;
+                    return (
+                      <Badge 
+                        key={idx} 
+                        variant="secondary" 
+                        className="bg-yellow-50 hover:bg-yellow-100 text-yellow-800 border-yellow-200"
+                      >
+                        {trimmed}
+                      </Badge>
+                    );
+                  })
+                ) : (
+                  <p className="text-gray-500 text-sm italic">None specified</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-gray-600 whitespace-pre-wrap text-sm leading-relaxed">
+                {currentValue || "None specified"}
+              </p>
+            )
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  interface TimelineEvent {
+    date: string;
+    notes: string;
+  }
+
+  const renderContactSection = () => {
+    const sectionKey = "contact_info";
+    const isEditing = editingSections[sectionKey];
+    
+    // Parse contact_info safely
+    let contactData = { name: "", email: "", phone: "", website: "", instagram: "", whatsapp: "" };
+    try {
+      if (project?.contact_info) {
+        contactData = JSON.parse(project.contact_info);
+      }
+    } catch (e) {
+      contactData.name = project?.contact_info || "";
+    }
+
+    const draftValue = sectionValues[sectionKey];
+    let draftData = contactData;
+    if (isEditing && draftValue) {
+      try {
+        draftData = JSON.parse(draftValue);
+      } catch (e) {
+        draftData = { name: draftValue, email: "", phone: "", website: "", instagram: "", whatsapp: "" };
+      }
+    }
+
+    return (
+      <Card className="border-yellow-200">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900 text-lg">
+            <Users className="h-5 w-5 text-yellow-600" />
+            Contact Information
+          </CardTitle>
+          {project?.is_creator && !isEditing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => startEditingSection(sectionKey, JSON.stringify(contactData))}
+              className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {isEditing ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500">Name</label>
+                  <Input
+                    value={draftData.name || ""}
+                    onChange={(e) => {
+                      const updated = { ...draftData, name: e.target.value };
+                      setSectionValues(prev => ({ ...prev, [sectionKey]: JSON.stringify(updated) }));
+                    }}
+                    placeholder="Contact Name"
+                    className="border-yellow-100 focus:border-yellow-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500">Email Address</label>
+                  <Input
+                    type="email"
+                    value={draftData.email || ""}
+                    onChange={(e) => {
+                      const updated = { ...draftData, email: e.target.value };
+                      setSectionValues(prev => ({ ...prev, [sectionKey]: JSON.stringify(updated) }));
+                    }}
+                    placeholder="contact@example.com"
+                    className="border-yellow-100 focus:border-yellow-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500">Phone Number</label>
+                  <Input
+                    value={draftData.phone || ""}
+                    onChange={(e) => {
+                      const updated = { ...draftData, phone: e.target.value };
+                      setSectionValues(prev => ({ ...prev, [sectionKey]: JSON.stringify(updated) }));
+                    }}
+                    placeholder="+91 XXXXX XXXXX"
+                    className="border-yellow-100 focus:border-yellow-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500">Website Link</label>
+                  <Input
+                    value={draftData.website || ""}
+                    onChange={(e) => {
+                      const updated = { ...draftData, website: e.target.value };
+                      setSectionValues(prev => ({ ...prev, [sectionKey]: JSON.stringify(updated) }));
+                    }}
+                    placeholder="https://example.com"
+                    className="border-yellow-100 focus:border-yellow-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500">Instagram Link</label>
+                  <Input
+                    value={draftData.instagram || ""}
+                    onChange={(e) => {
+                      const updated = { ...draftData, instagram: e.target.value };
+                      setSectionValues(prev => ({ ...prev, [sectionKey]: JSON.stringify(updated) }));
+                    }}
+                    placeholder="https://instagram.com/profile"
+                    className="border-yellow-100 focus:border-yellow-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500">WhatsApp Link / Number</label>
+                  <Input
+                    value={draftData.whatsapp || ""}
+                    onChange={(e) => {
+                      const updated = { ...draftData, whatsapp: e.target.value };
+                      setSectionValues(prev => ({ ...prev, [sectionKey]: JSON.stringify(updated) }));
+                    }}
+                    placeholder="WhatsApp link or phone number"
+                    className="border-yellow-100 focus:border-yellow-500"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => cancelEditingSection(sectionKey)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                  onClick={() => saveSection(sectionKey, "contact_info")}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              <div className="flex items-center gap-2.5 text-sm">
+                <span className="font-semibold text-gray-600 w-24">Name:</span>
+                <span className="text-gray-900">{contactData.name || <span className="text-gray-400 italic">Not specified</span>}</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-sm">
+                <span className="font-semibold text-gray-600 w-24">Email:</span>
+                <span className="text-gray-900">
+                  {contactData.email ? (
+                    <a href={`mailto:${contactData.email}`} className="text-yellow-600 hover:underline">{contactData.email}</a>
+                  ) : (
+                    <span className="text-gray-400 italic">Not specified</span>
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5 text-sm">
+                <span className="font-semibold text-gray-600 w-24">Phone:</span>
+                <span className="text-gray-900">{contactData.phone || <span className="text-gray-400 italic">Not specified</span>}</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-sm">
+                <span className="font-semibold text-gray-600 w-24">Website:</span>
+                <span className="text-gray-900">
+                  {contactData.website ? (
+                    <a href={contactData.website.startsWith('http') ? contactData.website : `https://${contactData.website}`} target="_blank" rel="noopener noreferrer" className="text-yellow-600 hover:underline">{contactData.website}</a>
+                  ) : (
+                    <span className="text-gray-400 italic">Not specified</span>
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5 text-sm">
+                <span className="font-semibold text-gray-600 w-24">Instagram:</span>
+                <span className="text-gray-900">
+                  {contactData.instagram ? (
+                    <a href={contactData.instagram.startsWith('http') ? contactData.instagram : `https://instagram.com/${contactData.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-yellow-600 hover:underline">{contactData.instagram}</a>
+                  ) : (
+                    <span className="text-gray-400 italic">Not specified</span>
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5 text-sm">
+                <span className="font-semibold text-gray-600 w-24">WhatsApp:</span>
+                <span className="text-gray-900">
+                  {contactData.whatsapp ? (
+                    contactData.whatsapp.startsWith('http') || contactData.whatsapp.startsWith('https') ? (
+                      <a href={contactData.whatsapp} target="_blank" rel="noopener noreferrer" className="text-yellow-600 hover:underline">Chat on WhatsApp</a>
+                    ) : (
+                      <a href={`https://wa.me/${contactData.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-yellow-600 hover:underline">{contactData.whatsapp}</a>
+                    )
+                  ) : (
+                    <span className="text-gray-400 italic">Not specified</span>
+                  )}
+                </span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderTimelineSection = () => {
+    const sectionKey = "timeline";
+    const isEditing = editingSections[sectionKey];
+    
+    let timelineEvents: TimelineEvent[] = [];
+    try {
+      if (project?.timeline) {
+        const parsed = JSON.parse(project.timeline);
+        if (Array.isArray(parsed)) {
+          timelineEvents = parsed;
+        } else {
+          timelineEvents = [{ date: "", notes: project.timeline }];
+        }
+      }
+    } catch (e) {
+      if (project?.timeline) {
+        timelineEvents = [{ date: "", notes: project.timeline }];
+      }
+    }
+
+    const draftValue = sectionValues[sectionKey];
+    let draftEvents: TimelineEvent[] = timelineEvents;
+    if (isEditing && draftValue) {
+      try {
+        const parsed = JSON.parse(draftValue);
+        if (Array.isArray(parsed)) {
+          draftEvents = parsed;
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    const handleAddEvent = () => {
+      const newEvents = [...draftEvents, { date: "", notes: "" }];
+      setSectionValues(prev => ({ ...prev, [sectionKey]: JSON.stringify(newEvents) }));
+    };
+
+    const handleUpdateEvent = (index: number, field: keyof TimelineEvent, value: string) => {
+      const newEvents = draftEvents.map((event, idx) => {
+        if (idx === index) {
+          return { ...event, [field]: value };
+        }
+        return event;
+      });
+      setSectionValues(prev => ({ ...prev, [sectionKey]: JSON.stringify(newEvents) }));
+    };
+
+    const handleRemoveEvent = (index: number) => {
+      const newEvents = draftEvents.filter((_, idx) => idx !== index);
+      setSectionValues(prev => ({ ...prev, [sectionKey]: JSON.stringify(newEvents) }));
+    };
+
+    return (
+      <Card className="border-yellow-200">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900 text-lg">
+            <Calendar className="h-5 w-5 text-yellow-600" />
+            Timeline
+          </CardTitle>
+          {project?.is_creator && !isEditing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => startEditingSection(sectionKey, JSON.stringify(timelineEvents))}
+              className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {isEditing ? (
+            <div className="space-y-4">
+              {draftEvents.map((event, index) => (
+                <div key={index} className="flex gap-4 items-start border-b border-yellow-50 pb-4 last:border-0 last:pb-0">
+                  <div className="w-1/3 space-y-1">
+                    <label className="text-xs font-semibold text-gray-500">Date</label>
+                    <Input
+                      type="date"
+                      value={event.date}
+                      onChange={(e) => handleUpdateEvent(index, "date", e.target.value)}
+                      className="border-yellow-100 focus:border-yellow-500"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <label className="text-xs font-semibold text-gray-500">Notes / Milestones</label>
+                    <Textarea
+                      value={event.notes}
+                      onChange={(e) => handleUpdateEvent(index, "notes", e.target.value)}
+                      placeholder="Enter notes for this day..."
+                      className="min-h-[60px] border-yellow-100 focus:border-yellow-500"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveEvent(index)}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 mt-6"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddEvent}
+                className="w-full border-dashed border-yellow-300 hover:border-yellow-500 text-yellow-600 hover:bg-yellow-50/50"
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Timeline Milestone
+              </Button>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => cancelEditingSection(sectionKey)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                  onClick={() => saveSection(sectionKey, "timeline")}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {timelineEvents.length > 0 ? (
+                <div className="relative pl-6 border-l-2 border-yellow-200 ml-3 space-y-6">
+                  {timelineEvents.map((event, index) => (
+                    <div key={index} className="relative">
+                      <span className="absolute -left-[31px] top-1.5 bg-yellow-500 border-4 border-white rounded-full w-4 h-4 shadow-sm"></span>
+                      <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+                        <span className="text-xs font-bold text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded border border-yellow-100 w-fit shrink-0">
+                          {event.date ? new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : "Date TBD"}
+                        </span>
+                        <p className="text-sm text-gray-700 flex-1 whitespace-pre-wrap leading-relaxed mt-0.5">
+                          {event.notes || <span className="text-gray-400 italic">No notes specified</span>}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm italic">None specified</p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (loading) {
     return (
@@ -807,187 +1739,141 @@ export default function ProjectDetails() {
     );
   }
 
+  const isCategoryMatched = !project?.hiring_categories || 
+    project.hiring_categories.length === 0 || 
+    (profile?.category && project.hiring_categories.some(c => c.toLowerCase() === profile.category.toLowerCase()));
+
   return (
     <AppLayout pageTitle={`${project.title} - Project Details`}>
       <div className="w-full space-y-6">
-        {/* Header with Back Button */}
-        <div className="flex items-center gap-4">
+        {/* Header with Back Button and Actions */}
+        <div className="flex justify-between items-center gap-4 w-full">
           <Button 
             variant="outline" 
             onClick={() => navigate("/projects")}
-            className="flex items-center gap-2 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+            className="flex items-center gap-2 border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 text-gray-700 dark:text-gray-300 bg-white dark:bg-background"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Projects
           </Button>
-        </div>
 
-        {/* Project Header */}
-        <Card className="border-yellow-200">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-2xl font-bold text-gray-900">
-                    {project.title}
-                  </CardTitle>
-                  {project.featured && (
-                    <Badge variant="outline" className="border-yellow-500 text-yellow-600">
-                      <Star className="h-3 w-3 mr-1" />
-                      Featured
-                    </Badge>
-                  )}
-                  {project.popular && (
-                    <Badge variant="outline" className="border-yellow-500 text-yellow-600">
-                      <Star className="h-3 w-3 mr-1" />
-                      Popular
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  {getTypeIcon(project.project_type)}
-                  <span className="font-medium">{project.project_type} • {project.category}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin className="h-4 w-4" />
-                  <span>{project.location}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`}></div>
-                  <span className="text-sm text-gray-600 capitalize">{project.status}</span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleLike} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                  <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current text-red-500' : ''}`} />
-                  {isLiked ? 'Liked' : 'Like'}
-                </Button>
-                <Button variant="outline" onClick={handleSave} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                  <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
-                  {isSaved ? 'Saved' : 'Save'}
-                </Button>
-                <Button variant="outline" onClick={handleShare} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleShare} className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 text-gray-700 dark:text-gray-300 bg-white dark:bg-background">
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
+            </Button>
+            {project.is_creator && (
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditDialogOpen(true)} 
+                className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 text-gray-700 dark:text-gray-300 bg-white dark:bg-background"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* Project Details with Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full ${sourceTab === 'created' ? 'grid-cols-5' : 'grid-cols-4'} bg-yellow-50 border-yellow-200`}>
-            <TabsTrigger value="overview" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Overview</TabsTrigger>
-            <TabsTrigger value="tasks" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Tasks</TabsTrigger>
-            <TabsTrigger value="chat" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Chat</TabsTrigger>
-            <TabsTrigger value="team" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Team Members</TabsTrigger>
+          <TabsList className={`grid w-full ${sourceTab === 'created' ? 'grid-cols-5' : 'grid-cols-4'} bg-yellow-50/40 dark:bg-yellow-950/10 border border-yellow-200/50 dark:border-yellow-900/30 p-1 rounded-xl h-auto`}>
+            <TabsTrigger value="overview" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all">Overview</TabsTrigger>
+            <TabsTrigger value="tasks" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all">Tasks</TabsTrigger>
+            <TabsTrigger value="chat" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all">Chat</TabsTrigger>
+            <TabsTrigger value="team" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all">Team Members</TabsTrigger>
             {sourceTab === 'created' && (
-              <TabsTrigger value="applicants" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Applicants</TabsTrigger>
+              <TabsTrigger value="applicants" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all">Applicants</TabsTrigger>
             )}
           </TabsList>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
               <div className="lg:col-span-2 space-y-6">
-                {/* Project Description */}
-                <Card className="border-yellow-200">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-gray-900">
-                      <Briefcase className="h-5 w-5 text-yellow-600" />
-                      Project Description
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600 whitespace-pre-wrap">
-                      {project?.full_description || project?.description}
-                    </p>
+                {/* Project Header Info in Overview */}
+                <Card className="border-yellow-200 dark:border-yellow-900/40 bg-white dark:bg-background">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex flex-wrap justify-between items-start gap-4">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{project?.title}</h2>
+                          {project?.featured && (
+                            <Badge variant="outline" className="border-yellow-500 text-yellow-600">
+                              <Star className="h-3 w-3 mr-1" />
+                              Featured
+                            </Badge>
+                          )}
+                          {project?.popular && (
+                            <Badge variant="outline" className="border-yellow-500 text-yellow-600">
+                              <Star className="h-3 w-3 mr-1" />
+                              Popular
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          {getTypeIcon(project?.project_type || "")}
+                          <span className="font-medium">{project?.project_type} • {project?.category}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <MapPin className="h-4 w-4" />
+                          <span>{project?.location || "No location specified"}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${getStatusColor(project?.status || "")}`}></div>
+                          <span className="text-sm text-gray-600 capitalize">{project?.status}</span>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
+                {/* Project Description */}
+                {renderEditableSection(
+                  "Project Description",
+                  "full_description",
+                  "description",
+                  project?.full_description || project?.description || "",
+                  <Briefcase className="h-5 w-5 text-yellow-600" />
+                )}
+
                 {/* Production Notes */}
-                {project?.production_notes && (
-                  <Card className="border-yellow-200">
-                    <CardHeader>
-                      <CardTitle className="text-gray-900">Production Notes</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600 whitespace-pre-wrap">
-                        {project.production_notes}
-                      </p>
-                    </CardContent>
-                  </Card>
+                {renderEditableSection(
+                  "Production Notes",
+                  "production_notes",
+                  "production_notes",
+                  project?.production_notes || "",
+                  <FileText className="h-5 w-5 text-yellow-600" />
                 )}
 
                 {/* Target Audience */}
-                {project?.target_audience && (
-                  <Card className="border-yellow-200">
-                    <CardHeader>
-                      <CardTitle className="text-gray-900">Target Audience</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600 whitespace-pre-wrap">
-                        {project.target_audience}
-                      </p>
-                    </CardContent>
-                  </Card>
+                {renderEditableSection(
+                  "Target Audience",
+                  "target_audience",
+                  "target_audience",
+                  project?.target_audience || "",
+                  <Users className="h-5 w-5 text-yellow-600" />
                 )}
 
                 {/* Distribution Plan */}
-                {project?.distribution_plan && (
-                  <Card className="border-yellow-200">
-                    <CardHeader>
-                      <CardTitle className="text-gray-900">Distribution Plan</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600 whitespace-pre-wrap">
-                        {project.distribution_plan}
-                      </p>
-                    </CardContent>
-                  </Card>
+                {renderEditableSection(
+                  "Distribution Plan",
+                  "distribution_plan",
+                  "distribution_plan",
+                  project?.distribution_plan || "",
+                  <Globe className="h-5 w-5 text-yellow-600" />
                 )}
 
                 {/* Timeline */}
-                {project?.timeline && (
-                  <Card className="border-yellow-200">
-                    <CardHeader>
-                      <CardTitle className="text-gray-900">Timeline</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600 whitespace-pre-wrap">
-                        {project.timeline}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                {renderTimelineSection()}
 
                 {/* Requirements */}
-                {project?.requirements && (
-                  <Card className="border-yellow-200">
-                    <CardHeader>
-                      <CardTitle className="text-gray-900">Requirements</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600 whitespace-pre-wrap">
-                        {project.requirements}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Benefits */}
-                {project?.benefits && (
-                  <Card className="border-yellow-200">
-                    <CardHeader>
-                      <CardTitle className="text-gray-900">Benefits</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600 whitespace-pre-wrap">
-                        {project.benefits}
-                      </p>
-                    </CardContent>
-                  </Card>
+                {renderEditableSection(
+                  "Requirements",
+                  "requirements",
+                  "skills_required",
+                  project?.requirements || "",
+                  <AlertCircle className="h-5 w-5 text-yellow-600" />
                 )}
               </div>
 
@@ -1045,50 +1931,190 @@ export default function ProjectDetails() {
 
                     <Separator />
 
-                    <div className="flex items-center gap-3">
-                      <Heart className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Likes</p>
-                        <p className="text-sm text-gray-600">{project?.likes_count}</p>
+                    <div className="flex items-center justify-between gap-3 pt-2">
+                      <div className="flex items-center gap-3">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Hire Members</p>
+                          <p className="text-xs text-gray-500">
+                            {project?.allow_applicants ? "Hiring is Active" : "Hiring is Inactive"}
+                          </p>
+                        </div>
                       </div>
+                      {project?.is_creator ? (
+                        <Switch
+                          checked={!!project?.allow_applicants}
+                          onCheckedChange={(checked) => handleToggleHire(checked)}
+                        />
+                      ) : (
+                        <Switch
+                          checked={!!project?.allow_applicants}
+                          disabled
+                          className="opacity-75"
+                        />
+                      )}
                     </div>
+
+                    {/* Category Multiselect and Selected Chips */}
+                    {project?.allow_applicants && (
+                      <div className="pt-4 border-t border-yellow-100 space-y-3 animate-fade-in">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Required Crew Roles</p>
+                        {project?.is_creator ? (
+                          <div className="space-y-2">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="w-full justify-between border-yellow-200 text-xs text-gray-700 bg-white hover:bg-yellow-50/50"
+                                >
+                                  <span>
+                                    {project?.hiring_categories && project.hiring_categories.length > 0 
+                                      ? `Select Roles (${project.hiring_categories.length} selected)`
+                                      : "Select Roles..."}
+                                  </span>
+                                  <Plus className="h-3 w-3 text-yellow-600 ml-2" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-56 p-2 bg-white border border-yellow-100 shadow-md rounded-md z-50">
+                                <div className="space-y-1 max-h-60 overflow-y-auto">
+                                  {[
+                                    "Director", 
+                                    "Actor", 
+                                    "Writer", 
+                                    "Cinematographer", 
+                                    "Producer", 
+                                    "Editor", 
+                                    "Sound Designer", 
+                                    "Composer", 
+                                    "VFX Artist", 
+                                    "Art Director", 
+                                    "Makeup Artist"
+                                  ].map((cat) => {
+                                    const isSelected = project?.hiring_categories?.includes(cat);
+                                    return (
+                                      <div 
+                                        key={cat} 
+                                        className="flex items-center gap-2 p-1.5 hover:bg-yellow-50 rounded cursor-pointer transition-colors"
+                                        onClick={() => handleToggleHiringCategory(cat)}
+                                      >
+                                        <Checkbox 
+                                          checked={isSelected} 
+                                          onCheckedChange={() => handleToggleHiringCategory(cat)}
+                                          className="border-yellow-400 text-yellow-600 focus:ring-yellow-500"
+                                        />
+                                        <span className="text-xs font-medium text-gray-700 select-none">{cat}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        ) : null}
+
+                        {/* Chips list */}
+                        <div className="flex flex-wrap gap-1.5">
+                          {project?.hiring_categories && project.hiring_categories.length > 0 ? (
+                            project.hiring_categories.map((cat, idx) => (
+                              <Badge 
+                                key={idx} 
+                                variant="secondary" 
+                                className="bg-yellow-50 text-yellow-800 border-yellow-200 text-[11px] font-medium flex items-center gap-1"
+                              >
+                                {cat}
+                                {project?.is_creator && (
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleToggleHiringCategory(cat);
+                                    }}
+                                    className="ml-1 text-yellow-600 hover:text-yellow-800 font-bold"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </Badge>
+                            ))
+                          ) : (
+                            <p className="text-xs text-gray-400 italic">No role specified (open to all)</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
-
+                
                 {/* Contact Information */}
-                {project?.contact_info && (
-                  <Card className="border-yellow-200">
-                    <CardHeader>
-                      <CardTitle className="text-gray-900">Contact Information</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                        {project.contact_info}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                {renderContactSection()}
 
                 {/* Action Buttons */}
                 <Card className="border-yellow-200">
                   <CardContent className="pt-6">
-                    {isMember ? (
+                    {project?.is_creator ? (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="destructive"
+                            className="w-full bg-red-600 hover:bg-red-700 text-white animate-fade-in"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Project
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle className="text-red-600">Delete Project</DialogTitle>
+                          </DialogHeader>
+                          <p className="text-sm text-gray-600 my-4">
+                            Are you sure you want to delete this project? This action is permanent and cannot be undone. All project data and associations will be permanently removed.
+                          </p>
+                          <div className="flex justify-end gap-2">
+                            <DialogTrigger asChild>
+                              <Button variant="outline">Cancel</Button>
+                            </DialogTrigger>
+                            <Button variant="destructive" onClick={handleDeleteProject}>
+                              Confirm Delete
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    ) : isMember ? (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            className="w-full border-red-200 hover:border-red-500 hover:bg-red-50 text-red-600 hover:text-red-700"
+                          >
+                            Leave Project
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Leave Project</DialogTitle>
+                          </DialogHeader>
+                          <p className="text-sm text-gray-600 my-4">
+                            Are you sure you want to leave this project? You will no longer be listed as a team member.
+                          </p>
+                          <div className="flex justify-end gap-2">
+                            <DialogTrigger asChild>
+                              <Button variant="outline">Cancel</Button>
+                            </DialogTrigger>
+                            <Button variant="destructive" onClick={handleLeaveProject}>
+                              Confirm Leave
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    ) : (project?.allow_applicants && !project?.is_creator && isCategoryMatched) ? (
                       <Button 
-                        variant="outline" 
-                        className="w-full border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50" 
-                        onClick={handleLeaveProject}
-                      >
-                        Leave Project
-                      </Button>
-                    ) : (
-                      <Button 
-                        className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white" 
+                        className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white animate-fade-in" 
                         onClick={handleJoinProject}
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Join Project
                       </Button>
-                    )}
+                    ) : null}
                   </CardContent>
                 </Card>
               </div>
@@ -1146,7 +2172,7 @@ export default function ProjectDetails() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">Priority</label>
-                      <Select value={newTask.priority} onValueChange={(value: any) => setNewTask(prev => ({ ...prev, priority: value }))}>
+                      <Select value={newTask.priority} onValueChange={(value: "low" | "medium" | "high") => setNewTask(prev => ({ ...prev, priority: value }))}>
                         <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
                           <SelectValue />
                         </SelectTrigger>
@@ -1204,7 +2230,7 @@ export default function ProjectDetails() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Select value={task.status} onValueChange={(value: any) => handleUpdateTaskStatus(task.id, value)}>
+                        <Select value={task.status} onValueChange={(value: "pending" | "in_progress" | "completed") => handleUpdateTaskStatus(task.id, value)}>
                           <SelectTrigger className="w-32 border-yellow-200 focus:border-yellow-500">
                             <SelectValue />
                           </SelectTrigger>
@@ -1239,44 +2265,75 @@ export default function ProjectDetails() {
 
           {/* Chat Tab */}
           <TabsContent value="chat" className="space-y-6">
-            <Card className="border-yellow-200">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <MessageCircle className="h-5 w-5 text-yellow-600" />
-                  Team Chat
+            <Card className="border-yellow-200 dark:border-yellow-900/40 bg-white dark:bg-background overflow-hidden shadow-sm rounded-xl">
+              <CardHeader className="border-b border-yellow-100 dark:border-yellow-900/20 bg-yellow-50/50 dark:bg-yellow-950/10 py-4">
+                <CardTitle className="flex items-center justify-between text-gray-900 dark:text-white">
+                  <div className="flex items-center gap-2 text-base font-semibold">
+                    <MessageCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
+                    Team Chat
+                  </div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">
+                    {chatMessages.length} messages
+                  </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {chatMessages.map((message) => (
-                    <div key={message.id} className="flex gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-xs">
-                          {message.user_avatar}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm text-gray-900">{message.user_name}</span>
-                          <span className="text-xs text-gray-500">
-                            {formatDate(message.timestamp)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600">{message.message}</p>
-                      </div>
+              <CardContent className="p-0 flex flex-col h-[500px]">
+                {/* Messages List Area */}
+                <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50/50 dark:bg-background/50 min-h-0">
+                  {chatMessages.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 space-y-2">
+                      <MessageCircle className="h-10 w-10 text-gray-300 dark:text-gray-700" />
+                      <p className="text-sm">No messages yet. Start the conversation!</p>
                     </div>
-                  ))}
+                  ) : (
+                    chatMessages.map((message) => {
+                      const isMe = message.user_id === "current-user" || message.user_id === currentUser?.id;
+                      const initials = message.user_avatar || message.user_name?.split(" ").map(n => n[0]).join("").toUpperCase() || "U";
+                      return (
+                        <div key={message.id} className={cn("flex gap-3 max-w-[85%] w-full", isMe ? "ml-auto flex-row-reverse" : "mr-auto")}>
+                          {/* Avatar */}
+                          <Avatar className="h-8 w-8 shrink-0 border border-yellow-200/50 dark:border-yellow-900/30">
+                            <AvatarFallback className={cn(
+                              "text-[10px] font-bold text-white",
+                              isMe ? "bg-gradient-to-br from-yellow-500 to-yellow-600" : "bg-gradient-to-br from-gray-500 to-gray-600"
+                            )}>
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          
+                          {/* Message bubble */}
+                          <div className={cn("space-y-1 flex-1", isMe ? "text-right" : "text-left")}>
+                            <div className={cn("flex items-baseline gap-2 mb-1", isMe ? "justify-end" : "justify-start")}>
+                              <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">{message.user_name}</span>
+                              <span className="text-[10px] text-gray-400 dark:text-gray-500">{formatDate(message.timestamp)}</span>
+                            </div>
+                            <div className={cn(
+                              "p-3 rounded-2xl text-sm shadow-sm inline-block text-left",
+                              isMe 
+                                ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-tr-none" 
+                                : "bg-white dark:bg-background text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700/50 rounded-tl-none"
+                            )}>
+                              <p className="whitespace-pre-wrap break-words leading-relaxed">{message.message}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
-                <div className="flex gap-2 mt-4">
+
+                {/* Chat Input Section */}
+                <div className="p-4 border-t border-yellow-100 dark:border-yellow-900/20 bg-white dark:bg-background flex gap-2 shrink-0">
                   <Input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    className="border-yellow-200 focus:border-yellow-500"
+                    className="flex-1 border-yellow-200 dark:border-yellow-900/30 focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white"
                   />
-                  <Button onClick={handleSendMessage} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
-                    <Send className="h-4 w-4" />
+                  <Button onClick={handleSendMessage} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shrink-0 shadow-sm transition-transform active:scale-95">
+                    <Send className="h-4 w-4 mr-1.5" />
+                    <span>Send</span>
                   </Button>
                 </div>
               </CardContent>
@@ -1306,10 +2363,23 @@ export default function ProjectDetails() {
                         <p className="text-sm text-gray-600">{member.role}</p>
                         <p className="text-xs text-gray-500">Joined: {formatDate(member.joined_date)}</p>
                       </div>
-                      <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        Message
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Message
+                        </Button>
+                        {project?.is_creator && member.user_id !== currentUser?.id && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDeleteMember(member.id, !!member.user_id, member.user_id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                            title="Remove Member"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1381,6 +2451,174 @@ export default function ProjectDetails() {
             </TabsContent>
           )}
         </Tabs>
+
+        {/* Edit Project Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Edit Project Details</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdateProject} className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Project Title</label>
+                  <Input 
+                    required
+                    value={editForm.title}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Project Type</label>
+                  <Select 
+                    value={editForm.project_type} 
+                    onValueChange={(val) => setEditForm(prev => ({ ...prev, project_type: val }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Film">Film</SelectItem>
+                      <SelectItem value="Television">Television</SelectItem>
+                      <SelectItem value="Web Series">Web Series</SelectItem>
+                      <SelectItem value="Short Film">Short Film</SelectItem>
+                      <SelectItem value="Documentary">Documentary</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Your Role</label>
+                  <Input 
+                    required
+                    value={editForm.category}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Location</label>
+                  <Input 
+                    value={editForm.location}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Status</label>
+                  <Select 
+                    value={editForm.status} 
+                    onValueChange={(val) => setEditForm(prev => ({ ...prev, status: val }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="ongoing">Ongoing</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Project Status</label>
+                  <Select 
+                    value={editForm.project_status} 
+                    onValueChange={(val) => setEditForm(prev => ({ ...prev, project_status: val }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select visibility" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Public">Public</SelectItem>
+                      <SelectItem value="Private">Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Team Size Target</label>
+                  <Input 
+                    type="number"
+                    value={editForm.team_size}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, team_size: Number(e.target.value) }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Budget Min</label>
+                  <Input 
+                    type="number"
+                    value={editForm.budget_min}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, budget_min: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Budget Max</label>
+                  <Input 
+                    type="number"
+                    value={editForm.budget_max}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, budget_max: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Budget Currency</label>
+                  <Input 
+                    value={editForm.budget_currency}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, budget_currency: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Duration (Minutes)</label>
+                  <Input 
+                    type="number"
+                    value={editForm.duration_minutes}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, duration_minutes: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Episodes count</label>
+                  <Input 
+                    type="number"
+                    value={editForm.episodes}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, episodes: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Toggle Hire (Allow Applicants) Confirm Dialog */}
+        <Dialog open={isHireConfirmOpen} onOpenChange={setIsHireConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold">Allow Applicants</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-sm text-gray-600">
+                {targetHireState 
+                  ? "Are you sure you want to allow applicants for this project? If confirmed, other members will see the 'Join Project' option on cards and detail views." 
+                  : "Are you sure you want to stop allowing applicants for this project?"}
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsHireConfirmOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleConfirmHire}
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white"
+              >
+                Confirm
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );

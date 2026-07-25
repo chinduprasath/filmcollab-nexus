@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Sidebar } from "./sidebar";
 import { DashboardTopbar } from "./dashboard-topbar";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,18 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, pageTitle }: AppLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('sidebarCollapsed') === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', sidebarCollapsed.toString());
+  }, [sidebarCollapsed]);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-white dark:bg-gray-900">
+    <div className="flex h-screen bg-background text-foreground">
       {/* Sidebar - Desktop */}
       <div className="hidden md:flex">
         <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
@@ -41,7 +48,7 @@ export function AppLayout({ children, pageTitle }: AppLayoutProps) {
         />
 
         {/* Content area */}
-        <main className="flex-1 overflow-auto p-6 bg-white dark:bg-gray-900">
+        <main className="flex-1 overflow-auto p-6 bg-background">
           {children}
         </main>
       </div>

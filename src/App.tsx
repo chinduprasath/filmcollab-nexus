@@ -19,6 +19,7 @@ import IndustryHub from "./pages/industry-hub/page";
 import Projects from "./pages/projects/page";
 import Posts from "./pages/posts/page";
 import Directory from "./pages/directory/page";
+import StudiosDirectory from "./pages/StudiosDirectory";
 import Community from "./pages/community/page";
 import GroupDetails from "./pages/community/GroupDetails";
 import JoinedGroupDetails from "./pages/community/JoinedGroupDetails";
@@ -230,6 +231,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Directory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/studios"
+        element={
+          <ProtectedRoute>
+            <StudiosDirectory />
           </ProtectedRoute>
         }
       />

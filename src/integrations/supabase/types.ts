@@ -510,6 +510,7 @@ export type Database = {
           id: string
           location: string | null
           popular: boolean | null
+          project_status: string | null
           project_type: string
           skills_required: string[] | null
           status: string
@@ -532,6 +533,7 @@ export type Database = {
           id?: string
           location?: string | null
           popular?: boolean | null
+          project_status?: string | null
           project_type: string
           skills_required?: string[] | null
           status?: string
@@ -554,6 +556,7 @@ export type Database = {
           id?: string
           location?: string | null
           popular?: boolean | null
+          project_status?: string | null
           project_type?: string
           skills_required?: string[] | null
           status?: string

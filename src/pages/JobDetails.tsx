@@ -30,6 +30,7 @@ import {
   Phone,
   GraduationCap
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface Job {
@@ -58,6 +59,7 @@ export default function JobDetails() {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -450,7 +452,7 @@ export default function JobDetails() {
 
           <TabsContent value="overview" className="space-y-6">
             {/* Job Details Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Job Description */}
@@ -588,24 +590,26 @@ export default function JobDetails() {
                   </CardContent>
                 </Card>
 
-                {/* Apply Button */}
-                <Card className="border-yellow-200">
-                  <CardContent className="pt-6">
-                    <Button 
-                      className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white" 
-                      size="lg"
-                      onClick={handleApply}
-                      disabled={isApplied}
-                    >
-                      {isApplied ? 'Applied' : 'Apply Now'}
-                    </Button>
-                    {isApplied && (
-                      <p className="text-sm text-green-600 text-center mt-2">
-                        ✓ Application submitted successfully
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                {job.user_id !== user?.id && (
+                  /* Apply Button */
+                  <Card className="border-yellow-200">
+                    <CardContent className="pt-6">
+                      <Button 
+                        className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white" 
+                        size="lg"
+                        onClick={handleApply}
+                        disabled={isApplied}
+                      >
+                        {isApplied ? 'Applied' : 'Apply Now'}
+                      </Button>
+                      {isApplied && (
+                        <p className="text-sm text-green-600 text-center mt-2">
+                          ✓ Application submitted successfully
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </TabsContent>

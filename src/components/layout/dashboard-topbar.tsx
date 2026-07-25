@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardTopbarProps {
@@ -117,34 +117,140 @@ export function DashboardTopbar({
     }
   };
 
-  const mockNotifications = [
-    {
-      id: 1,
-      title: "New job posted",
-      description: "Senior Director position at Netflix Studios",
-      time: "5 minutes ago",
-      unread: true
-    },
-    {
-      id: 2,
-      title: "Connection request",
-      description: "John Smith wants to connect",
-      time: "1 hour ago",
-      unread: true
-    },
-    {
-      id: 3,
-      title: "Project update",
-      description: "Your project 'Indie Film' has a new comment",
-      time: "2 hours ago",
-      unread: false
-    }
-  ];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isUsingMock, setIsUsingMock] = useState(false);
 
-  const unreadCount = mockNotifications.filter(n => n.unread).length;
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!profile?.id) {
+        setNotifications([
+          {
+            id: "mock-1",
+            title: "New job posted",
+            description: "Senior Director position at Netflix Studios",
+            time: "5m ago",
+            unread: true
+          },
+          {
+            id: "mock-2",
+            title: "Connection request",
+            description: "John Smith wants to connect",
+            time: "1h ago",
+            unread: true
+          },
+          {
+            id: "mock-3",
+            title: "Project update",
+            description: "Your project 'Indie Film' has a new comment",
+            time: "2h ago",
+            unread: false
+          }
+        ]);
+        setIsUsingMock(true);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', profile.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) {
+          setIsUsingMock(true);
+          setNotifications([
+            {
+              id: "mock-1",
+              title: "New job posted",
+              description: "Senior Director position at Netflix Studios",
+              time: "5m ago",
+              unread: true
+            },
+            {
+              id: "mock-2",
+              title: "Connection request",
+              description: "John Smith wants to connect",
+              time: "1h ago",
+              unread: true
+            }
+          ]);
+        } else {
+          setIsUsingMock(false);
+          const formatted = (data || []).map(n => {
+            const now = new Date();
+            const date = new Date(n.created_at);
+            const diffMins = Math.floor((now.getTime() - date.getTime()) / 60000);
+            let timeStr = "Recently";
+            if (diffMins < 1) timeStr = "Just now";
+            else if (diffMins < 60) timeStr = `${diffMins}m ago`;
+            else if (diffMins < 1440) timeStr = `${Math.floor(diffMins / 60)}h ago`;
+            else timeStr = `${Math.floor(diffMins / 1440)}d ago`;
+
+            return {
+              id: n.id,
+              title: n.title,
+              description: n.description,
+              time: timeStr,
+              unread: n.status === 'unread'
+            };
+          });
+          setNotifications(formatted);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchNotifications();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let subscription: any;
+    if (profile?.id) {
+      subscription = supabase
+        .channel('topbar:notifications')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'notifications',
+          filter: `user_id=eq.${profile.id}`
+        }, () => {
+          fetchNotifications();
+        })
+        .subscribe();
+    }
+
+    return () => {
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+    };
+  }, [profile?.id]);
+
+  const handleMarkAllTopbarRead = async () => {
+    if (isUsingMock) {
+      setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+      return;
+    }
+    if (!profile?.id) return;
+    try {
+      await supabase
+        .from('notifications')
+        .update({ status: 'read' })
+        .eq('user_id', profile.id)
+        .eq('status', 'unread');
+      setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => n.unread).length;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-gray-950/60 border-b border-yellow-200 dark:border-yellow-900/40">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-background/60 border-b border-yellow-200 dark:border-yellow-900/40">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           {/* Mobile menu toggle */}
@@ -178,22 +284,31 @@ export function DashboardTopbar({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 bg-white dark:bg-gray-900 border border-yellow-100 dark:border-yellow-900/40" align="end">
+            <PopoverContent className="w-80 bg-white dark:bg-background border border-yellow-100 dark:border-yellow-900/40" align="end">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
-                  <Button variant="ghost" size="sm" className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleMarkAllTopbarRead}
+                    className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
+                  >
                     Mark all read
                   </Button>
                 </div>
-                <div className="space-y-3">
-                  {mockNotifications.map((notification) => (
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                  {notifications.map((notification) => (
                     <div
                       key={notification.id}
+                      onClick={() => {
+                        setNotificationsOpen(false);
+                        navigate("/notifications");
+                      }}
                       className={`p-3 rounded-lg border cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-950/20 transition-colors ${
                         notification.unread 
                           ? 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-900/40' 
-                          : 'bg-white dark:bg-gray-950 border-gray-100 dark:border-gray-800'
+                          : 'bg-white dark:bg-background border-gray-100 dark:border-gray-800'
                       }`}
                     >
                       <div className="flex items-start justify-between">
@@ -208,6 +323,11 @@ export function DashboardTopbar({
                       </div>
                     </div>
                   ))}
+                  {notifications.length === 0 && (
+                    <div className="text-center py-4 text-xs text-gray-500">
+                      No notifications yet
+                    </div>
+                  )}
                 </div>
                 <Button variant="outline" size="sm" onClick={() => navigate("/notifications")} className="w-full border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 dark:hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 dark:text-white">
                   View all notifications
@@ -227,17 +347,17 @@ export function DashboardTopbar({
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:flex flex-col items-start">
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {profile?.full_name || profile?.username || "User"}
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {profile?.username || user?.email?.split('@')[0] || "user"}
                   </span>
                   <span className="text-xs text-gray-600 dark:text-gray-400">
-                    {profile?.role || "Creator"}
+                    {profile?.full_name || "User"}
                   </span>
                 </div>
                 <ChevronDown className="h-4 w-4 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 bg-white dark:bg-gray-900 border border-yellow-100 dark:border-yellow-900/40" align="end" forceMount>
+            <DropdownMenuContent className="w-56 bg-white dark:bg-background border border-yellow-100 dark:border-yellow-900/40" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none text-gray-900 dark:text-white">

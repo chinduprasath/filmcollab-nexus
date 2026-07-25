@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "Film Industry Network",
+  "description": "A networking, messaging, job board, and collaboration platform for film professionals, director, and studios.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

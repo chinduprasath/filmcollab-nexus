@@ -21,7 +21,7 @@ type SignInFormData = z.infer<typeof signInSchema>;
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, user, profile, loading: authLoading } = useAuth();
+  const { signIn, user, profile, loading: authLoading, signInAsGuest } = useAuth();
   const navigate = useNavigate();
 
   const { isAdmin } = useAuth();

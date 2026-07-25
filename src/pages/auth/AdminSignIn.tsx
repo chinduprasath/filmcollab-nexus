@@ -20,7 +20,7 @@ type AdminSignInFormData = z.infer<typeof adminSignInSchema>;
 export default function AdminSignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, user, profile, userRole, loading: authLoading, isAdmin } = useAuth();
+  const { signIn, user, profile, userRole, loading: authLoading, isAdmin, signInAsGuest } = useAuth();
   const navigate = useNavigate();
 
   // Handle role-based redirect after successful sign in
@@ -157,6 +157,22 @@ export default function AdminSignIn() {
                 </Button>
               </form>
             </Form>
+
+            <div className="relative my-4 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-200" />
+              </div>
+              <span className="relative bg-white px-2 text-xs text-gray-500 uppercase">Or Bypass Credentials</span>
+            </div>
+
+            <Button
+              type="button"
+              onClick={() => signInAsGuest(true)}
+              variant="outline"
+              className="w-full border-red-200 hover:bg-red-50 text-red-700 font-semibold"
+            >
+              Explore as Guest Admin
+            </Button>
 
             <div className="mt-6 text-center space-y-4">
               <div className="text-sm text-gray-600">

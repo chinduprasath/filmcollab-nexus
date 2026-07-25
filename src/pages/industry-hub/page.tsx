@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,20 +17,27 @@ import {
   Bookmark, 
   Edit, 
   X,
-  FileText
+  FileText,
+  ChevronLeft,
+  ArrowLeft,
+  ArrowRight
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 interface News {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   category: string;
   createdDate: string;
   createdBy: string;
+  user_id?: string | null;
 }
 
 interface Event {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   date: string;
@@ -39,10 +46,14 @@ interface Event {
   attendees: number;
   price: string;
   createdBy: string;
+  user_id?: string | null;
+  googleMapsLink?: string | null;
+  meetingLink?: string | null;
+  registrationLink?: string | null;
 }
 
 interface Course {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   duration: string;
@@ -52,9 +63,13 @@ interface Course {
   enrolled: number;
   level: string;
   category: string;
+  user_id?: string | null;
 }
 
 export default function IndustryHubPage() {
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+
   const [activeTab, setActiveTab] = useState("news");
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreatePopup, setShowCreatePopup] = useState(false);
@@ -67,6 +82,41 @@ export default function IndustryHubPage() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [createdFilter, setCreatedFilter] = useState("all");
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
+
+  // Database-backed state lists
+  const [newsList, setNewsList] = useState<News[]>([]);
+  const [eventsList, setEventsList] = useState<Event[]>([]);
+  const [coursesList, setCoursesList] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Form fields state
+  const [editingItem, setEditingItem] = useState<{ id: string | number; type: string } | null>(null);
+  const [formFields, setFormFields] = useState({
+    // News
+    newsTitle: "",
+    newsCategory: "Technology",
+    newsDescription: "",
+
+    // Events
+    eventTitle: "",
+    eventDate: "",
+    eventPrice: "Free",
+    eventLocation: "",
+    eventType: "In-Person",
+    eventDescription: "",
+    eventGoogleMapsLink: "",
+    eventMeetingLink: "",
+    eventRegistrationLink: "",
+
+    // Courses
+    courseTitle: "",
+    courseDuration: "",
+    coursePrice: "",
+    courseLevel: "Beginner",
+    courseCategory: "Cinematography",
+    courseInstructor: "",
+    courseDescription: "",
+  });
 
   const sampleNews: News[] = [
     {
@@ -113,7 +163,9 @@ export default function IndustryHubPage() {
       isOnline: false,
       createdBy: "Film Producers Guild",
       attendees: 45,
-      price: "₹500"
+      price: "₹500",
+      googleMapsLink: "https://maps.google.com/?q=Mumbai",
+      registrationLink: "https://example.com/register-networking"
     },
     {
       id: 2,
@@ -124,7 +176,9 @@ export default function IndustryHubPage() {
       isOnline: true,
       createdBy: "Digital Creators Hub",
       attendees: 120,
-      price: "₹1,000"
+      price: "₹1,000",
+      meetingLink: "https://zoom.us/j/123456789",
+      registrationLink: "https://example.com/register-workshop"
     },
     {
       id: 3,
@@ -135,7 +189,9 @@ export default function IndustryHubPage() {
       isOnline: false,
       createdBy: "VFX Society",
       attendees: 30,
-      price: "₹2,500"
+      price: "₹2,500",
+      googleMapsLink: "https://maps.google.com/?q=Bangalore",
+      registrationLink: "https://example.com/register-vfx"
     },
     {
       id: 4,
@@ -146,7 +202,9 @@ export default function IndustryHubPage() {
       isOnline: false,
       createdBy: "Screenwriters Association",
       attendees: 25,
-      price: "₹3,000"
+      price: "₹3,000",
+      googleMapsLink: "https://maps.google.com/?q=Delhi",
+      registrationLink: "https://example.com/register-screenwriting"
     }
   ];
 
@@ -201,103 +259,1046 @@ export default function IndustryHubPage() {
     }
   ];
 
-  const filteredNews = sampleNews.filter(news =>
+  // Fetch dynamic database data
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // 1. Fetch news
+      const { data: newsData, error: newsError } = await supabase
+        .from("industry_news")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (newsError) {
+        console.warn("Could not fetch industry_news (table might not exist yet)", newsError);
+      } else if (newsData) {
+        const mappedNews: News[] = newsData.map((item: {
+          id: string;
+          title: string;
+          description: string;
+          category: string;
+          created_at: string;
+          created_by: string;
+          user_id: string | null;
+        }) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          category: item.category,
+          createdDate: new Date(item.created_at).toISOString().split('T')[0],
+          createdBy: item.created_by,
+          user_id: item.user_id
+        }));
+        setNewsList(mappedNews);
+      }
+
+      // 2. Fetch events
+      const { data: eventsData, error: eventsError } = await supabase
+        .from("industry_events")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (eventsError) {
+        console.warn("Could not fetch industry_events (table might not exist yet)", eventsError);
+      } else if (eventsData) {
+        const mappedEvents: Event[] = eventsData.map((item: {
+          id: string;
+          title: string;
+          description: string;
+          date: string;
+          location: string;
+          is_online: boolean;
+          attendees: number;
+          price: string;
+          created_by: string;
+          user_id: string | null;
+          google_maps_link?: string | null;
+          meeting_link?: string | null;
+          registration_link?: string | null;
+        }) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          date: item.date,
+          location: item.location,
+          isOnline: item.is_online,
+          attendees: item.attendees || 0,
+          price: item.price,
+          createdBy: item.created_by,
+          user_id: item.user_id,
+          googleMapsLink: item.google_maps_link || null,
+          meetingLink: item.meeting_link || null,
+          registrationLink: item.registration_link || null
+        }));
+        setEventsList(mappedEvents);
+      }
+
+      // 3. Fetch courses
+      const { data: coursesData, error: coursesError } = await supabase
+        .from("industry_courses")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (coursesError) {
+        console.warn("Could not fetch industry_courses (table might not exist yet)", coursesError);
+      } else if (coursesData) {
+        const mappedCourses: Course[] = coursesData.map((item: {
+          id: string;
+          title: string;
+          description: string;
+          duration: string;
+          instructor: string;
+          created_by: string;
+          price: string;
+          enrolled: number;
+          level: string;
+          category: string;
+          user_id: string | null;
+        }) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          duration: item.duration,
+          instructor: item.instructor,
+          createdBy: item.created_by,
+          price: item.price,
+          enrolled: item.enrolled || 0,
+          level: item.level,
+          category: item.category,
+          user_id: item.user_id
+        }));
+        setCoursesList(mappedCourses);
+      }
+    } catch (err) {
+      console.error("Error in fetchData", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const createType = params.get("create");
+    if (createType === "events" || createType === "courses") {
+      setSelectedPostType(createType);
+      setShowCreatePopup(true);
+      // Clean up URL query parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const eventId = params.get("eventId");
+    if (eventId) {
+      const foundEvent = (eventsList.length > 0 ? eventsList : sampleEvents).find(e => e.id === eventId);
+      if (foundEvent) {
+        setSelectedEvent(foundEvent);
+        setShowEventDetail(true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    const courseId = params.get("courseId");
+    if (courseId) {
+      const foundCourse = (coursesList.length > 0 ? coursesList : sampleCourses).find(c => c.id === courseId);
+      if (foundCourse) {
+        setSelectedCourse(foundCourse);
+        setShowCourseDetail(true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [eventsList, coursesList]);
+
+  // Determine lists to show (fall back to static samples if DB tables don't exist yet or are completely empty)
+  const displayNews = newsList.length > 0 ? newsList : sampleNews;
+  const displayEvents = eventsList.length > 0 ? eventsList : sampleEvents;
+  const displayCourses = coursesList.length > 0 ? coursesList : sampleCourses;
+
+  const filteredNews = displayNews.filter(news =>
     news.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     news.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     news.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredEvents = sampleEvents.filter(event =>
+  const filteredEvents = displayEvents.filter(event =>
     event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredCourses = sampleCourses.filter(course =>
+  const filteredCourses = displayCourses.filter(course =>
     course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     course.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
     course.instructor.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Owned created content filter
+  const myNews = newsList.filter(item => item.user_id === user?.id);
+  const myEvents = eventsList.filter(item => item.user_id === user?.id);
+  const myCourses = coursesList.filter(item => item.user_id === user?.id);
+  const totalMyItems = myNews.length + myEvents.length + myCourses.length;
+
+  const allMyItems = [
+    ...myNews.map(item => ({ ...item, type: "news" })),
+    ...myEvents.map(item => ({ ...item, type: "events", category: "Event", createdDate: item.date })),
+    ...myCourses.map(item => ({ ...item, type: "courses", createdDate: "N/A" }))
+  ];
+
+  // Apply created tab filter
+  const filteredMyItems = allMyItems.filter(item => {
+    if (createdFilter !== "all" && item.type !== createdFilter) return false;
+    
+    // Apply date range
+    if (dateRange.from && item.createdDate !== "N/A" && item.createdDate < dateRange.from) return false;
+    if (dateRange.to && item.createdDate !== "N/A" && item.createdDate > dateRange.to) return false;
+
+    return true;
+  });
+
+  // Navigation for news
+  const currentNewsIndex = selectedNews ? filteredNews.findIndex(n => n.id === selectedNews.id) : -1;
+  const hasPrevNews = currentNewsIndex > 0;
+  const hasNextNews = currentNewsIndex !== -1 && currentNewsIndex < filteredNews.length - 1;
+
+  const handlePrevNews = () => {
+    if (hasPrevNews) {
+      setSelectedNews(filteredNews[currentNewsIndex - 1]);
+    }
+  };
+
+  const handleNextNews = () => {
+    if (hasNextNews) {
+      setSelectedNews(filteredNews[currentNewsIndex + 1]);
+    }
+  };
+
+  const resetForm = () => {
+    setEditingItem(null);
+    setFormFields({
+      newsTitle: "",
+      newsCategory: "Technology",
+      newsDescription: "",
+      eventTitle: "",
+      eventDate: "",
+      eventPrice: "Free",
+      eventLocation: "",
+      eventType: "In-Person",
+      eventDescription: "",
+      eventGoogleMapsLink: "",
+      eventMeetingLink: "",
+      eventRegistrationLink: "",
+      courseTitle: "",
+      courseDuration: "",
+      coursePrice: "",
+      courseLevel: "Beginner",
+      courseCategory: "Cinematography",
+      courseInstructor: "",
+      courseDescription: "",
+    });
+  };
+
+  const handleEditClick = (item: {
+    id: string | number;
+    title: string;
+    description: string;
+    category?: string;
+    date?: string;
+    price?: string;
+    location?: string;
+    isOnline?: boolean;
+    duration?: string;
+    level?: string;
+    instructor?: string;
+    googleMapsLink?: string | null;
+    meetingLink?: string | null;
+    registrationLink?: string | null;
+  }, type: string) => {
+    setEditingItem({ id: item.id, type });
+    setSelectedPostType(type);
+    
+    if (type === "news") {
+      setFormFields(prev => ({
+        ...prev,
+        newsTitle: item.title,
+        newsCategory: item.category,
+        newsDescription: item.description
+      }));
+    } else if (type === "events") {
+      setFormFields(prev => ({
+        ...prev,
+        eventTitle: item.title,
+        eventDate: item.date,
+        eventPrice: item.price,
+        eventLocation: item.location,
+        eventType: item.isOnline ? "Online" : "In-Person",
+        eventDescription: item.description,
+        eventGoogleMapsLink: item.googleMapsLink || "",
+        eventMeetingLink: item.meetingLink || "",
+        eventRegistrationLink: item.registrationLink || ""
+      }));
+    } else if (type === "courses") {
+      setFormFields(prev => ({
+        ...prev,
+        courseTitle: item.title,
+        courseDuration: item.duration,
+        coursePrice: item.price,
+        courseLevel: item.level,
+        courseCategory: item.category,
+        courseInstructor: item.instructor,
+        courseDescription: item.description
+      }));
+    }
+    setShowCreatePopup(true);
+  };
+
+  const handleDelete = async (id: string | number, type: string) => {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+      let table = "";
+      if (type === "news") table = "industry_news";
+      else if (type === "events") table = "industry_events";
+      else if (type === "courses") table = "industry_courses";
+
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({ title: "Deleted successfully", description: "Your post was deleted from the Industry Hub." });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      toast({
+        title: "Error deleting item",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to post content.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const creatorName = profile?.full_name || user.email || "Anonymous";
+
+    setLoading(true);
+    try {
+      if (selectedPostType === "news") {
+        if (!formFields.newsTitle.trim() || !formFields.newsDescription.trim()) {
+          toast({ title: "Validation Error", description: "Please fill all required fields", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+
+        const payload = {
+          title: formFields.newsTitle,
+          category: formFields.newsCategory,
+          description: formFields.newsDescription,
+          created_by: creatorName,
+          user_id: user.id
+        };
+
+        if (editingItem && editingItem.type === "news") {
+          const { error } = await supabase
+            .from("industry_news")
+            .update(payload)
+            .eq("id", editingItem.id);
+
+          if (error) throw error;
+          toast({ title: "News updated successfully" });
+        } else {
+          const { error } = await supabase
+            .from("industry_news")
+            .insert([payload]);
+
+          if (error) throw error;
+          toast({ title: "News posted successfully" });
+        }
+      } else if (selectedPostType === "events") {
+        if (!formFields.eventTitle.trim() || !formFields.eventDate || !formFields.eventLocation.trim() || !formFields.eventDescription.trim()) {
+          toast({ title: "Validation Error", description: "Please fill all required fields", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+
+        // Additional validation based on type
+        if (formFields.eventType === "In-Person" && !formFields.eventLocation.trim()) {
+          toast({ title: "Validation Error", description: "Please enter a location/address for the in-person event.", variant: "destructive" });
+          setLoading(false);
+          return;
+        } else if (formFields.eventType === "Online" && !formFields.eventMeetingLink.trim()) {
+          toast({ title: "Validation Error", description: "Please enter a meeting link for the online event.", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+
+        const payload: Record<string, string | boolean | null | undefined> = {
+          title: formFields.eventTitle,
+          date: formFields.eventDate,
+          price: formFields.eventPrice || "Free",
+          location: formFields.eventLocation,
+          is_online: formFields.eventType === "Online",
+          description: formFields.eventDescription,
+          created_by: creatorName,
+          user_id: user.id,
+          google_maps_link: formFields.eventType === "In-Person" ? (formFields.eventGoogleMapsLink || null) : null,
+          meeting_link: formFields.eventType === "Online" ? (formFields.eventMeetingLink || null) : null,
+          registration_link: formFields.eventRegistrationLink || null
+        };
+
+        if (editingItem && editingItem.type === "events") {
+          let { error } = await supabase
+            .from("industry_events")
+            .update(payload)
+            .eq("id", editingItem.id);
+
+          if (error && error.code === "42703") {
+            // Fallback if columns don't exist yet
+            console.warn("New event columns don't exist. Falling back to old schema.", error);
+            const fallbackPayload = { ...payload };
+            delete fallbackPayload.google_maps_link;
+            delete fallbackPayload.meeting_link;
+            delete fallbackPayload.registration_link;
+            
+            const result = await supabase
+              .from("industry_events")
+              .update(fallbackPayload)
+              .eq("id", editingItem.id);
+            error = result.error;
+            
+            toast({
+              title: "Event updated with limits",
+              description: "Event saved successfully. Please run the updated SQL in setup_industry_hub.sql in your Supabase dashboard to support Google Maps, Meeting, and Registration links.",
+              variant: "default"
+            });
+          } else if (error) {
+            throw error;
+          } else {
+            toast({ title: "Event updated successfully" });
+          }
+        } else {
+          let { error } = await supabase
+            .from("industry_events")
+            .insert([payload]);
+
+          if (error && error.code === "42703") {
+            // Fallback if columns don't exist yet
+            console.warn("New event columns don't exist. Falling back to old schema.", error);
+            const fallbackPayload = { ...payload };
+            delete fallbackPayload.google_maps_link;
+            delete fallbackPayload.meeting_link;
+            delete fallbackPayload.registration_link;
+            
+            const result = await supabase
+              .from("industry_events")
+              .insert([fallbackPayload]);
+            error = result.error;
+            
+            toast({
+              title: "Event created with limits",
+              description: "Event saved successfully. Please run the updated SQL in setup_industry_hub.sql in your Supabase dashboard to support Google Maps, Meeting, and Registration links.",
+              variant: "default"
+            });
+          } else if (error) {
+            throw error;
+          } else {
+            toast({ title: "Event created successfully" });
+          }
+        }
+      } else if (selectedPostType === "courses") {
+        if (!formFields.courseTitle.trim() || !formFields.courseDuration.trim() || !formFields.coursePrice.trim() || !formFields.courseInstructor.trim() || !formFields.courseDescription.trim()) {
+          toast({ title: "Validation Error", description: "Please fill all required fields", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+
+        const payload = {
+          title: formFields.courseTitle,
+          duration: formFields.courseDuration,
+          price: formFields.coursePrice,
+          instructor: formFields.courseInstructor,
+          level: formFields.courseLevel,
+          category: formFields.courseCategory,
+          description: formFields.courseDescription,
+          created_by: creatorName,
+          user_id: user.id
+        };
+
+        if (editingItem && editingItem.type === "courses") {
+          const { error } = await supabase
+            .from("industry_courses")
+            .update(payload)
+            .eq("id", editingItem.id);
+
+          if (error) throw error;
+          toast({ title: "Course updated successfully" });
+        } else {
+          const { error } = await supabase
+            .from("industry_courses")
+            .insert([payload]);
+
+          if (error) throw error;
+          toast({ title: "Course created successfully" });
+        }
+      }
+
+      // Reset form & reload
+      resetForm();
+      setShowCreatePopup(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "An error occurred while saving. Please ensure the database tables are setup.";
+      toast({
+        title: "Error saving item",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isViewingNewsDetail = !!(showNewsDetail && selectedNews);
+  const isViewingEventDetail = !!(showEventDetail && selectedEvent);
+  const isViewingCourseDetail = !!(showCourseDetail && selectedCourse);
+  const isViewingAnyDetail = isViewingNewsDetail || isViewingEventDetail || isViewingCourseDetail;
+
   return (
     <AppLayout>
-      <div className="space-y-4 bg-yellow-50 min-h-screen p-4 -m-4">
+      <div className="space-y-4 bg-yellow-50/30 dark:bg-background min-h-screen p-4 -m-4 text-gray-900 dark:text-gray-100">
         {/* Header */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border-yellow-200">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Industry Hub</h1>
-              <p className="text-gray-600 text-sm">
-                Stay updated with industry news, events, and educational opportunities
-              </p>
-            </div>
-            <div className="flex items-center gap-4 w-full lg:w-auto">
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
-                <Input
-                  placeholder="Search news..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 border-yellow-200 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 text-sm"
-                />
+        {!isViewingAnyDetail && (
+          <div className="bg-white dark:bg-background p-4 rounded-lg shadow-sm border border-yellow-200 dark:border-yellow-900/40">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Industry Hub</h1>
+                <p className="text-gray-600 dark:text-gray-300 text-sm">
+                  Stay updated with industry news, events, and educational opportunities
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Select value={selectedPostType} onValueChange={setSelectedPostType}>
-                  <SelectTrigger className="w-32 h-9 border-yellow-200 rounded-lg text-sm focus:border-yellow-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="news">News</SelectItem>
-                    <SelectItem value="events">Events</SelectItem>
-                    <SelectItem value="courses">Courses</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCreatePopup(true)}
-                  className="h-9 px-3 border-yellow-200 text-gray-700 hover:bg-yellow-50 rounded-lg text-sm"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Post
-                </Button>
+              <div className="flex items-center gap-4 w-full lg:w-auto">
+                <div className="relative w-full max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                  <Input
+                    placeholder={`Search ${activeTab === "news" ? "news" : activeTab === "events" ? "events" : "courses"}...`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-9 border-yellow-200 dark:border-yellow-900/40 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 text-sm bg-white dark:bg-background text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select value={selectedPostType} onValueChange={setSelectedPostType}>
+                    <SelectTrigger className="w-32 h-9 border-yellow-200 dark:border-yellow-900/40 rounded-lg text-sm focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="news">News</SelectItem>
+                      <SelectItem value="events">Events</SelectItem>
+                      <SelectItem value="courses">Courses</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      resetForm();
+                      setShowCreatePopup(true);
+                    }}
+                    className="h-9 px-3 border-yellow-200 dark:border-yellow-900/40 text-gray-700 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 rounded-lg text-sm bg-white dark:bg-background"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Post
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="flex border-b border-gray-200 px-4">
+        {/* If viewing a detail, show the detail page. Otherwise, show Tabs + Tab Content */}
+        {isViewingNewsDetail && selectedNews ? (
+          <div className="bg-white dark:bg-background rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800 space-y-6">
+            {/* News Detail Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  setShowNewsDetail(false);
+                  setSelectedNews(null);
+                }} 
+                className="w-fit flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back to Industry Hub
+              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handlePrevNews} 
+                  disabled={!hasPrevNews}
+                  className="flex items-center gap-1 border-gray-200 hover:border-yellow-500 hover:bg-yellow-50/50 dark:border-gray-800 text-gray-700 dark:text-gray-300"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Previous News
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleNextNews} 
+                  disabled={!hasNextNews}
+                  className="flex items-center gap-1 border-gray-200 hover:border-yellow-500 hover:bg-yellow-50/50 dark:border-gray-800 text-gray-700 dark:text-gray-300"
+                >
+                  Next News
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* News Details */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/50">
+                  {selectedNews.category}
+                </Badge>
+                <span className="text-xs text-muted-foreground">{selectedNews.createdDate}</span>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight flex-1">
+                  {selectedNews.title}
+                </h1>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast({ title: "Link copied!", description: "Industry Hub link copied to clipboard." });
+                    }}
+                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-sm"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share News
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => toast({ title: "Saved to bookmarks!", description: "You can find saved insights in your profile." })}
+                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 text-gray-700 dark:text-gray-300 shadow-sm"
+                  >
+                    <Bookmark className="w-4 h-4 mr-2" />
+                    Save to Bookmarks
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-gray-50 dark:bg-background p-3 rounded-lg border border-gray-100 dark:border-gray-900">
+                <UserPlus className="w-4 h-4 text-yellow-500" />
+                <span>Written by <span className="font-semibold text-gray-900 dark:text-white">{selectedNews.createdBy}</span></span>
+                <span className="mx-2">•</span>
+                <Calendar className="w-4 h-4 text-yellow-500" />
+                <span>Published on {selectedNews.createdDate}</span>
+              </div>
+
+              <div className="prose max-w-none dark:prose-invert text-gray-800 dark:text-gray-200 text-base leading-relaxed whitespace-pre-line pt-2">
+                {selectedNews.description}
+              </div>
+            </div>
+            
+            {/* News Actions */}
+            {user && selectedNews.user_id === user.id && (
+              <div className="flex justify-end gap-2 border-t pt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    handleEditClick(selectedNews, "news");
+                    setShowNewsDetail(false);
+                  }}
+                  className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 text-gray-700 dark:text-gray-300"
+                >
+                  <Edit className="w-4 h-4 mr-1" />
+                  Edit
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    handleDelete(selectedNews.id, "news");
+                    setShowNewsDetail(false);
+                  }}
+                  className="text-red-600 border-red-200 hover:border-red-500 hover:bg-red-50"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
+            )}
+          </div>
+        ) : isViewingEventDetail && selectedEvent ? (
+          <div className="bg-white dark:bg-background rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800 space-y-6">
+            {/* Event Detail Header */}
+            <div className="flex items-center justify-between border-b pb-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  setShowEventDetail(false);
+                  setSelectedEvent(null);
+                }} 
+                className="w-fit flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back to Industry Hub
+              </Button>
+              {user && selectedEvent.user_id === user.id && (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      handleEditClick(selectedEvent, "events");
+                      setShowEventDetail(false);
+                    }}
+                    className="h-9 px-3 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 text-gray-700 dark:text-gray-300 text-sm"
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      handleDelete(selectedEvent.id, "events");
+                      setShowEventDetail(false);
+                    }}
+                    className="h-9 px-3 text-red-600 border-red-200 hover:border-red-500 hover:bg-red-50 text-sm"
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Event Details */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge variant={selectedEvent.isOnline ? "default" : "secondary"}>
+                  {selectedEvent.isOnline ? "Online" : "In-Person"}
+                </Badge>
+                <Badge variant="outline" className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
+                  {selectedEvent.price}
+                </Badge>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight flex-1">
+                  {selectedEvent.title}
+                </h1>
+                <div className="flex items-center gap-2 shrink-0">
+                  {selectedEvent.registrationLink ? (
+                    <a 
+                      href={selectedEvent.registrationLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold rounded-lg text-sm flex items-center justify-center gap-2 h-9 px-4 shadow-sm transition-all"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Register Now ↗
+                    </a>
+                  ) : (
+                    <Button 
+                      onClick={() => toast({ title: "Booking successful!", description: `You have successfully booked a spot for: ${selectedEvent.title}` })}
+                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white h-9 px-4 rounded-lg font-semibold text-sm shadow-sm"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Book Now
+                    </Button>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast({ title: "Link copied!", description: "Event link copied to clipboard." });
+                    }}
+                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 h-9 px-4 text-gray-700 dark:text-gray-300 shadow-sm"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share Event
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 dark:bg-background p-4 rounded-xl border border-gray-100 dark:border-gray-900">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-950/50 rounded-lg text-yellow-600 dark:text-yellow-400">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Date & Time</p>
+                    <p className="text-sm font-semibold">{selectedEvent.date}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-950/50 rounded-lg text-yellow-600 dark:text-yellow-400">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Location</p>
+                    <p className="text-sm font-semibold truncate max-w-[150px]">{selectedEvent.location}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-950/50 rounded-lg text-yellow-600 dark:text-yellow-400">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Attendees</p>
+                    <p className="text-sm font-semibold">{selectedEvent.attendees} attending</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-950/50 rounded-lg text-yellow-600 dark:text-yellow-400">
+                    <UserPlus className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Organizer</p>
+                    <p className="text-sm font-semibold truncate max-w-[150px]">{selectedEvent.createdBy}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Links Display Panel */}
+              {(selectedEvent.googleMapsLink || selectedEvent.meetingLink || selectedEvent.registrationLink) && (
+                <div className="p-5 bg-yellow-50/50 dark:bg-yellow-950/10 border border-yellow-100 dark:border-yellow-900/30 rounded-xl space-y-3">
+                  <h4 className="text-xs font-bold text-yellow-800 dark:text-yellow-400 uppercase tracking-wider">Event Resource Links</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    {!selectedEvent.isOnline && selectedEvent.googleMapsLink && (
+                      <div className="flex flex-col gap-1 p-3 bg-white dark:bg-background border rounded-lg">
+                        <span className="text-xs text-muted-foreground font-medium">Google Maps Directions:</span>
+                        <a 
+                          href={selectedEvent.googleMapsLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-primary hover:underline flex items-center gap-1 font-semibold text-sm mt-0.5"
+                        >
+                          View Map Venue
+                          <span className="text-xs">↗</span>
+                        </a>
+                      </div>
+                    )}
+                    {selectedEvent.isOnline && selectedEvent.meetingLink && (
+                      <div className="flex flex-col gap-1 p-3 bg-white dark:bg-background border rounded-lg">
+                        <span className="text-xs text-muted-foreground font-medium">Virtual Meeting Room:</span>
+                        <a 
+                          href={selectedEvent.meetingLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-primary hover:underline flex items-center gap-1 font-semibold text-sm mt-0.5"
+                        >
+                          Join Online Link
+                          <span className="text-xs">↗</span>
+                        </a>
+                      </div>
+                    )}
+                    {selectedEvent.registrationLink && (
+                      <div className="flex flex-col gap-1 p-3 bg-white dark:bg-background border rounded-lg">
+                        <span className="text-xs text-muted-foreground font-medium">External Registration Form:</span>
+                        <a 
+                          href={selectedEvent.registrationLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-primary hover:underline flex items-center gap-1 font-semibold text-sm mt-0.5"
+                        >
+                          Registration Portal
+                          <span className="text-xs">↗</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="prose max-w-none dark:prose-invert text-gray-800 dark:text-gray-200 text-base leading-relaxed whitespace-pre-line pt-2">
+                {selectedEvent.description}
+              </div>
+            </div>
+          </div>
+        ) : isViewingCourseDetail && selectedCourse ? (
+          <div className="bg-white dark:bg-background rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800 space-y-6">
+            {/* Course Detail Header */}
+            <div className="flex items-center justify-between border-b pb-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  setShowCourseDetail(false);
+                  setSelectedCourse(null);
+                }} 
+                className="w-fit flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back to Industry Hub
+              </Button>
+              {user && selectedCourse.user_id === user.id && (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      handleEditClick(selectedCourse, "courses");
+                      setShowCourseDetail(false);
+                    }}
+                    className="h-9 px-3 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 text-gray-700 dark:text-gray-300 text-sm"
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      handleDelete(selectedCourse.id, "courses");
+                      setShowCourseDetail(false);
+                    }}
+                    className="h-9 px-3 text-red-600 border-red-200 hover:border-red-500 hover:bg-red-50 text-sm"
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Course Details */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">{selectedCourse.level}</Badge>
+                <Badge variant="secondary" className="bg-gray-100 dark:bg-gray-855 text-gray-700 dark:text-gray-300">{selectedCourse.category}</Badge>
+                <Badge variant="outline" className="text-primary font-bold">{selectedCourse.price}</Badge>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight flex-1">
+                  {selectedCourse.title}
+                </h1>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button 
+                    onClick={() => toast({ title: "Registration successful!", description: `You have successfully enrolled in: ${selectedCourse.title}` })}
+                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white h-9 px-4 rounded-lg font-semibold text-sm shadow-sm"
+                  >
+                    <Bookmark className="w-4 h-4 mr-2" />
+                    Register Now
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast({ title: "Link copied!", description: "Course link copied to clipboard." });
+                    }}
+                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 h-9 px-4 text-gray-700 dark:text-gray-300 shadow-sm"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share Course
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 dark:bg-background p-4 rounded-xl border border-gray-100 dark:border-gray-900">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-950/50 rounded-lg text-yellow-600 dark:text-yellow-400">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Duration</p>
+                    <p className="text-sm font-semibold">{selectedCourse.duration}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-950/50 rounded-lg text-yellow-600 dark:text-yellow-400">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Students</p>
+                    <p className="text-sm font-semibold">{selectedCourse.enrolled} enrolled</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-950/50 rounded-lg text-yellow-600 dark:text-yellow-400">
+                    <UserPlus className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Provider</p>
+                    <p className="text-sm font-semibold truncate max-w-[150px]">{selectedCourse.createdBy}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-950/50 rounded-lg text-yellow-600 dark:text-yellow-400">
+                    <UserPlus className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Instructor</p>
+                    <p className="text-sm font-semibold truncate max-w-[150px]">{selectedCourse.instructor}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="prose max-w-none dark:prose-invert text-gray-800 dark:text-gray-200 text-base leading-relaxed whitespace-pre-line pt-2">
+                {selectedCourse.description}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Tabs */}
+            <div className="bg-white dark:bg-background rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+          <div className="flex border-b border-gray-200 dark:border-gray-800 px-4">
             {[
               { id: "news", label: "Industry News & Insights", count: filteredNews.length },
               { id: "events", label: "Events", count: filteredEvents.length },
               { id: "courses", label: "Courses", count: filteredCourses.length },
-              { id: "created", label: "Created", count: 0 }
+              { id: "created", label: "Created By Me", count: totalMyItems }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-3 border-b-2 font-medium transition-colors relative flex items-center text-sm ${
                   activeTab === tab.id
-                    ? "border-yellow-500 text-yellow-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-yellow-500 text-yellow-600 dark:text-yellow-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 }`}
               >
                 {tab.label}
-                {tab.id !== "created" && (
-                  <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">
-                    {tab.count}
-                  </span>
-                )}
+                <span className="ml-2 text-xs bg-gray-100 dark:bg-background text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full">
+                  {tab.count}
+                </span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-lg shadow-sm p-4 min-h-[500px]">
+        <div className="bg-white dark:bg-background rounded-lg shadow-sm p-4 min-h-[500px] border border-gray-200 dark:border-gray-800">
+          {loading && <div className="text-center py-8 text-sm text-yellow-600">Loading live updates...</div>}
+
           {/* Industry News & Insights Tab */}
           {activeTab === "news" && (
             <div className="space-y-4">
@@ -306,7 +1307,7 @@ export default function IndustryHubPage() {
                   {filteredNews.map((news) => (
                     <Card
                       key={news.id}
-                      className="hover:shadow-lg transition-shadow border-gray-200 rounded-lg cursor-pointer"
+                      className="hover:shadow-lg transition-shadow bg-white dark:bg-background border-gray-200 dark:border-gray-800 rounded-lg cursor-pointer flex flex-col justify-between"
                       onClick={() => {
                         setSelectedNews(news);
                         setShowNewsDetail(true);
@@ -314,26 +1315,26 @@ export default function IndustryHubPage() {
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300 rounded-md px-1.5 py-0.5 text-xs">
+                          <Badge variant="outline" className="bg-gray-100 dark:bg-background text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-750 rounded-md px-1.5 py-0.5 text-xs">
                             {news.category}
                           </Badge>
                         </div>
-                        <CardTitle className="text-base font-semibold text-gray-900 line-clamp-2 leading-tight">
+                        <CardTitle className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 leading-tight">
                           {news.title}
                         </CardTitle>
-                        <CardDescription className="text-xs text-gray-600 line-clamp-3 mt-1">
+                        <CardDescription className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3 mt-1">
                           {news.description}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <div className="flex items-center justify-between text-xs text-gray-500">
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t pt-2 mt-2">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             <span>{news.createdDate}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <UserPlus className="w-3 h-3" />
-                            <span>By {news.createdBy}</span>
+                            <span className="truncate max-w-[120px]">By {news.createdBy}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -348,7 +1349,7 @@ export default function IndustryHubPage() {
                     {searchQuery ? "Try adjusting your search terms" : "Be the first to share industry insights and news"}
                   </p>
                   {!searchQuery && (
-                    <Button onClick={() => setShowCreatePopup(true)}>
+                    <Button onClick={() => { resetForm(); setSelectedPostType("news"); setShowCreatePopup(true); }}>
                       <Plus className="w-4 h-4 mr-2" />
                       Create First News
                     </Button>
@@ -366,7 +1367,7 @@ export default function IndustryHubPage() {
                   {filteredEvents.map((event) => (
                     <Card
                       key={event.id}
-                      className="hover:shadow-lg transition-shadow cursor-pointer"
+                      className="hover:shadow-lg transition-shadow bg-white dark:bg-background border border-gray-200 dark:border-gray-800 cursor-pointer flex flex-col justify-between"
                       onClick={() => {
                         setSelectedEvent(event);
                         setShowEventDetail(true);
@@ -377,16 +1378,16 @@ export default function IndustryHubPage() {
                           <Badge variant={event.isOnline ? "default" : "secondary"}>
                             {event.isOnline ? "Online" : "In-Person"}
                           </Badge>
-                          <Badge variant="outline">{event.price}</Badge>
+                          <Badge variant="outline" className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">{event.price}</Badge>
                         </div>
-                        <CardTitle className="text-base line-clamp-2">{event.title}</CardTitle>
-                        <CardDescription className="text-xs line-clamp-3">
+                        <CardTitle className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2">{event.title}</CardTitle>
+                        <CardDescription className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
                           {event.description}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="space-y-1 border-t pt-2 mt-2">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-gray-400">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               <span>{event.date}</span>
@@ -396,27 +1397,39 @@ export default function IndustryHubPage() {
                               <span>{event.attendees} attending</span>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-gray-400">
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
-                              <span>{event.location}</span>
+                              <span className="truncate max-w-[100px]">{event.location}</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <UserPlus className="w-3 h-3" />
-                              <span>By {event.createdBy}</span>
+                              <span className="truncate max-w-[100px]">By {event.createdBy}</span>
                             </div>
                           </div>
                           <div className="pt-2">
-                            <Button
-                              size="sm"
-                              className="w-full text-xs h-7 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Handle booking logic here
-                              }}
-                            >
-                              Book Now
-                            </Button>
+                            {event.registrationLink ? (
+                              <a
+                                href={event.registrationLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full text-xs h-7 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium rounded flex items-center justify-center gap-1 shadow-sm transition-all"
+                              >
+                                Register Now ↗
+                              </a>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="w-full text-xs h-7 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toast({ title: "Booking successful!", description: `You have successfully booked a spot for: ${event.title}` });
+                                }}
+                              >
+                                Book Now
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -426,12 +1439,12 @@ export default function IndustryHubPage() {
               ) : (
                 <div className="text-center py-12">
                   <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No events found</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">No events found</h3>
                   <p className="text-muted-foreground mb-4">
                     {searchQuery ? "Try adjusting your search terms" : "Be the first to create an industry event"}
                   </p>
                   {!searchQuery && (
-                    <Button onClick={() => setShowCreatePopup(true)}>
+                    <Button onClick={() => { resetForm(); setSelectedPostType("events"); setShowCreatePopup(true); }}>
                       <Plus className="w-4 h-4 mr-2" />
                       Create First Event
                     </Button>
@@ -449,7 +1462,7 @@ export default function IndustryHubPage() {
                   {filteredCourses.map((course) => (
                     <Card
                       key={course.id}
-                      className="hover:shadow-lg transition-shadow cursor-pointer"
+                      className="hover:shadow-lg transition-shadow bg-white dark:bg-background border border-gray-200 dark:border-gray-800 cursor-pointer flex flex-col justify-between"
                       onClick={() => {
                         setSelectedCourse(course);
                         setShowCourseDetail(true);
@@ -457,17 +1470,17 @@ export default function IndustryHubPage() {
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline">{course.level}</Badge>
-                          <Badge variant="secondary">{course.category}</Badge>
+                          <Badge variant="outline" className="border-gray-200 dark:border-gray-750 text-gray-700 dark:text-gray-300">{course.level}</Badge>
+                          <Badge variant="secondary" className="bg-gray-100 dark:bg-gray-855 text-gray-700 dark:text-gray-300">{course.category}</Badge>
                         </div>
-                        <CardTitle className="text-base line-clamp-2">{course.title}</CardTitle>
-                        <CardDescription className="text-xs line-clamp-3">
+                        <CardTitle className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2">{course.title}</CardTitle>
+                        <CardDescription className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
                           {course.description}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="space-y-1 border-t pt-2 mt-2">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-gray-400">
                             <div className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               <span>{course.duration}</span>
@@ -477,18 +1490,25 @@ export default function IndustryHubPage() {
                               <span>{course.enrolled} enrolled</span>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-gray-400">
                             <div className="flex items-center gap-1">
                               <UserPlus className="w-3 h-3" />
-                              <span>By {course.createdBy}</span>
+                              <span className="truncate max-w-[100px]">By {course.createdBy}</span>
                             </div>
                             <span className="font-semibold text-primary text-xs">{course.price}</span>
                           </div>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground dark:text-gray-400 pt-1">
                             <UserPlus className="w-3 h-3" />
-                            <span>Instructor: {course.instructor}</span>
+                            <span className="truncate max-w-[180px]">Instructor: {course.instructor}</span>
                           </div>
-                          <Button size="sm" className="w-full mt-2 text-xs h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
+                          <Button 
+                            size="sm" 
+                            className="w-full mt-2 text-xs h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toast({ title: "Registration successful!", description: `You have enrolled in: ${course.title}` });
+                            }}
+                          >
                             Register Now
                           </Button>
                         </div>
@@ -499,12 +1519,12 @@ export default function IndustryHubPage() {
               ) : (
                 <div className="text-center py-12">
                   <Bookmark className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No courses found</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">No courses found</h3>
                   <p className="text-muted-foreground mb-4">
                     {searchQuery ? "Try adjusting your search terms" : "Be the first to create an industry course"}
                   </p>
                   {!searchQuery && (
-                    <Button onClick={() => setShowCreatePopup(true)}>
+                    <Button onClick={() => { resetForm(); setSelectedPostType("courses"); setShowCreatePopup(true); }}>
                       <Plus className="w-4 h-4 mr-2" />
                       Create First Course
                     </Button>
@@ -518,142 +1538,117 @@ export default function IndustryHubPage() {
           {activeTab === "created" && (
             <div className="space-y-4">
               {/* Filters */}
-              <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Filter by:</label>
-                  <Select value={createdFilter} onValueChange={setCreatedFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="news">News</SelectItem>
-                      <SelectItem value="events">Events</SelectItem>
-                      <SelectItem value="courses">Courses</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="flex flex-wrap gap-4 items-center justify-between border-b pb-3 mb-2">
+                <div className="flex flex-wrap gap-4 items-center">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Filter by:</label>
+                    <Select value={createdFilter} onValueChange={setCreatedFilter}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="news">News</SelectItem>
+                        <SelectItem value="events">Events</SelectItem>
+                        <SelectItem value="courses">Courses</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Date Range:</label>
+                    <Input
+                      type="date"
+                      value={dateRange.from}
+                      onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                      className="w-40"
+                    />
+                    <span className="text-sm text-muted-foreground">to</span>
+                    <Input
+                      type="date"
+                      value={dateRange.to}
+                      onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                      className="w-40"
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Date Range:</label>
-                  <Input
-                    type="date"
-                    value={dateRange.from}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-                    className="w-40"
-                  />
-                  <span className="text-sm text-muted-foreground">to</span>
-                  <Input
-                    type="date"
-                    value={dateRange.to}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-                    className="w-40"
-                  />
-                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => { setDateRange({ from: "", to: "" }); setCreatedFilter("all"); }}
+                  className="text-xs h-8 border-gray-300"
+                >
+                  Clear Filters
+                </Button>
               </div>
 
               {/* Table */}
-              <div className="border rounded-lg">
+              <div className="border rounded-lg bg-white dark:bg-background">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gray-50 dark:bg-background">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created Date</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created Date</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {/* Sample created content - you can replace this with actual data */}
-                      <tr>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">News</Badge>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          Sample News Article
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                          Technology
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                          2024-12-10
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="default" className="bg-yellow-100 text-yellow-800">Published</Badge>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                              <Edit className="w-3 h-3 mr-1" />
-                              Edit
-                            </Button>
-                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-500 hover:bg-red-50">
-                              <X className="w-3 h-3 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="secondary" className="bg-gray-100 text-gray-700">Event</Badge>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          Sample Event
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                          Workshop
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                          2024-12-09
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="default" className="bg-yellow-100 text-yellow-800">Active</Badge>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                              <Edit className="w-3 h-3 mr-1" />
-                              Edit
-                            </Button>
-                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-500 hover:bg-red-50">
-                              <X className="w-3 h-3 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">Course</Badge>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          Sample Course
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                          Cinematography
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                          2024-12-08
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge variant="default" className="bg-yellow-100 text-yellow-800">Published</Badge>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                              <Edit className="w-3 h-3 mr-1" />
-                              Edit
-                            </Button>
-                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-500 hover:bg-red-50">
-                              <X className="w-3 h-3 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
+                    <tbody className="bg-white dark:bg-background divide-y divide-gray-200 dark:divide-gray-800">
+                      {filteredMyItems.length > 0 ? (
+                        filteredMyItems.map((item) => (
+                          <tr key={`${item.type}-${item.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <Badge variant="outline" className="bg-gray-100 dark:bg-background text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 capitalize">
+                                {item.type}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate">
+                              {item.title}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              {item.category}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              {item.createdDate}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <Badge variant="default" className="bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-transparent">
+                                Active
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex items-center gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={() => handleEditClick(item, item.type)}
+                                  className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:hover:bg-yellow-950/20"
+                                >
+                                  <Edit className="w-3 h-3 mr-1" />
+                                  Edit
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={() => handleDelete(item.id, item.type)}
+                                  className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-500 hover:bg-red-50 dark:border-red-900/30 dark:hover:bg-red-950/20"
+                                >
+                                  <X className="w-3 h-3 mr-1" />
+                                  Delete
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="text-center py-12 text-sm text-muted-foreground">
+                            {user ? "You haven't posted any items yet." : "Please sign in to view and manage your posted items."}
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -661,47 +1656,58 @@ export default function IndustryHubPage() {
             </div>
           )}
         </div>
+      </>
+    )}
 
-        {/* Unified Create Popup */}
+        {/* Unified Create/Edit Popup */}
         {showCreatePopup && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-background rounded-lg max-w-xl w-full max-h-[80vh] overflow-y-auto">
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
+            <div className="bg-background rounded-lg max-w-xl w-full max-h-[85vh] overflow-y-auto border border-yellow-200 dark:border-yellow-900/40 shadow-xl">
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-4 border-b pb-2">
                   <h2 className="text-lg font-bold">
-                    Create {selectedPostType === "news" ? "News & Insights" : selectedPostType === "events" ? "Event" : "Course"}
+                    {editingItem ? "Edit" : "Create"} {selectedPostType === "news" ? "News & Insights" : selectedPostType === "events" ? "Event" : "Course"}
                   </h2>
                   <Button variant="ghost" size="sm" onClick={() => setShowCreatePopup(false)}>
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
 
-                {/* Post Type Selector */}
-                <div className="mb-4">
-                  <label className="text-sm font-medium mb-2 block">Post Type</label>
-                  <Select value={selectedPostType} onValueChange={setSelectedPostType}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="news">News</SelectItem>
-                      <SelectItem value="events">Events</SelectItem>
-                      <SelectItem value="courses">Courses</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Post Type Selector (Only allowed if creating new) */}
+                {!editingItem && (
+                  <div className="mb-4">
+                    <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">Post Type</label>
+                    <Select value={selectedPostType} onValueChange={setSelectedPostType}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="news">News</SelectItem>
+                        <SelectItem value="events">Events</SelectItem>
+                        <SelectItem value="courses">Courses</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 {/* Dynamic Form Based on Post Type */}
                 {selectedPostType === "news" && (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-medium">Title *</label>
-                      <Input placeholder="Enter news title" className="h-8 text-sm" />
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Title *</label>
+                      <Input 
+                        placeholder="Enter news title" 
+                        value={formFields.newsTitle}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, newsTitle: e.target.value }))}
+                      />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium">Category *</label>
-                      <select className="w-full px-2 py-1 border border-border rounded-md text-xs bg-background h-8">
-                        <option>Select Category</option>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Category *</label>
+                      <select 
+                        className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background h-10"
+                        value={formFields.newsCategory}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, newsCategory: e.target.value }))}
+                      >
                         <option>Technology</option>
                         <option>Industry</option>
                         <option>Production</option>
@@ -710,19 +1716,24 @@ export default function IndustryHubPage() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium">Description *</label>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
                       <textarea
-                        className="w-full px-2 py-1 border border-border rounded-md text-xs bg-background min-h-[80px]"
+                        className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background min-h-[120px]"
                         placeholder="Enter news description..."
+                        value={formFields.newsDescription}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, newsDescription: e.target.value }))}
                       />
                     </div>
 
-                    <div className="flex gap-2 pt-2">
-                      <Button className="flex-1 h-8 text-xs bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
-                        <Plus className="w-3 h-3 mr-1" />
-                        Create News
+                    <div className="flex gap-2 pt-3 border-t">
+                      <Button 
+                        disabled={loading}
+                        onClick={handleSave}
+                        className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
+                      >
+                        {loading ? "Saving..." : editingItem ? "Update News" : "Post News"}
                       </Button>
-                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="h-8 text-xs border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                         Cancel
                       </Button>
                     </div>
@@ -731,44 +1742,107 @@ export default function IndustryHubPage() {
 
                 {selectedPostType === "events" && (
                   <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Event Title *</label>
-                      <Input placeholder="Enter event title" />
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Title *</label>
+                      <Input 
+                        placeholder="Enter event title" 
+                        value={formFields.eventTitle}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, eventTitle: e.target.value }))}
+                      />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Date *</label>
-                        <Input type="date" />
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Date *</label>
+                        <Input 
+                          type="date" 
+                          value={formFields.eventDate}
+                          onChange={(e) => setFormFields(prev => ({ ...prev, eventDate: e.target.value }))}
+                        />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Price *</label>
-                        <Input placeholder="e.g., ₹500" />
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Price *</label>
+                        <Input 
+                          placeholder="e.g., ₹500" 
+                          value={formFields.eventPrice}
+                          onChange={(e) => setFormFields(prev => ({ ...prev, eventPrice: e.target.value }))}
+                        />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Location *</label>
-                      <Input placeholder="Enter location or 'Online'" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Event Type</label>
-                      <select className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background">
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Type</label>
+                      <select 
+                        className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background h-10"
+                        value={formFields.eventType}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormFields(prev => ({ 
+                            ...prev, 
+                            eventType: val,
+                            eventLocation: val === "Online" ? "Online" : prev.eventLocation === "Online" ? "" : prev.eventLocation
+                          }));
+                        }}
+                      >
                         <option>In-Person</option>
                         <option>Online</option>
-                        <option>Hybrid</option>
                       </select>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Description *</label>
-                      <textarea
-                        className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background min-h-[100px]"
-                        placeholder="Enter event description..."
+
+                    {formFields.eventType === "In-Person" ? (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Location / Address *</label>
+                          <Input 
+                            placeholder="Enter physical address or venue" 
+                            value={formFields.eventLocation}
+                            onChange={(e) => setFormFields(prev => ({ ...prev, eventLocation: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Google Maps Link</label>
+                          <Input 
+                            placeholder="https://maps.google.com/..." 
+                            value={formFields.eventGoogleMapsLink}
+                            onChange={(e) => setFormFields(prev => ({ ...prev, eventGoogleMapsLink: e.target.value }))}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Meeting Link *</label>
+                        <Input 
+                          placeholder="https://zoom.us/j/... or Google Meet link" 
+                          value={formFields.eventMeetingLink}
+                          onChange={(e) => setFormFields(prev => ({ ...prev, eventMeetingLink: e.target.value }))}
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Registration Link</label>
+                      <Input 
+                        placeholder="https://example.com/register-event" 
+                        value={formFields.eventRegistrationLink}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, eventRegistrationLink: e.target.value }))}
                       />
                     </div>
 
-                    <div className="flex gap-2 pt-4">
-                      <Button className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Event
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
+                      <textarea
+                        className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background min-h-[100px]"
+                        placeholder="Enter event description..."
+                        value={formFields.eventDescription}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, eventDescription: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="flex gap-2 pt-3 border-t">
+                      <Button 
+                        disabled={loading}
+                        onClick={handleSave}
+                        className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
+                      >
+                        {loading ? "Saving..." : editingItem ? "Update Event" : "Create Event"}
                       </Button>
                       <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                         Cancel
@@ -779,34 +1853,52 @@ export default function IndustryHubPage() {
 
                 {selectedPostType === "courses" && (
                   <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Course Title *</label>
-                      <Input placeholder="Enter course title" />
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Course Title *</label>
+                      <Input 
+                        placeholder="Enter course title" 
+                        value={formFields.courseTitle}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, courseTitle: e.target.value }))}
+                      />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Duration *</label>
-                        <Input placeholder="e.g., 8 weeks" />
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration *</label>
+                        <Input 
+                          placeholder="e.g., 8 weeks" 
+                          value={formFields.courseDuration}
+                          onChange={(e) => setFormFields(prev => ({ ...prev, courseDuration: e.target.value }))}
+                        />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Price *</label>
-                        <Input placeholder="e.g., ₹15,000" />
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Price *</label>
+                        <Input 
+                          placeholder="e.g., ₹15,000" 
+                          value={formFields.coursePrice}
+                          onChange={(e) => setFormFields(prev => ({ ...prev, coursePrice: e.target.value }))}
+                        />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Level *</label>
-                        <select className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background">
-                          <option>Select Level</option>
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Level *</label>
+                        <select 
+                          className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background h-10"
+                          value={formFields.courseLevel}
+                          onChange={(e) => setFormFields(prev => ({ ...prev, courseLevel: e.target.value }))}
+                        >
                           <option>Beginner</option>
                           <option>Intermediate</option>
                           <option>Advanced</option>
                         </select>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Category *</label>
-                        <select className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background">
-                          <option>Select Category</option>
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Category *</label>
+                        <select 
+                          className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background h-10"
+                          value={formFields.courseCategory}
+                          onChange={(e) => setFormFields(prev => ({ ...prev, courseCategory: e.target.value }))}
+                        >
                           <option>Cinematography</option>
                           <option>Writing</option>
                           <option>Marketing</option>
@@ -815,22 +1907,31 @@ export default function IndustryHubPage() {
                         </select>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Instructor *</label>
-                      <Input placeholder="Enter instructor name" />
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Instructor *</label>
+                      <Input 
+                        placeholder="Enter instructor name" 
+                        value={formFields.courseInstructor}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, courseInstructor: e.target.value }))}
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Description *</label>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
                       <textarea
                         className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background min-h-[100px]"
                         placeholder="Enter course description..."
+                        value={formFields.courseDescription}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, courseDescription: e.target.value }))}
                       />
                     </div>
 
-                    <div className="flex gap-2 pt-4">
-                      <Button className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Course
+                    <div className="flex gap-2 pt-3 border-t">
+                      <Button 
+                        disabled={loading}
+                        onClick={handleSave}
+                        className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
+                      >
+                        {loading ? "Saving..." : editingItem ? "Update Course" : "Create Course"}
                       </Button>
                       <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                         Cancel
@@ -843,55 +1944,10 @@ export default function IndustryHubPage() {
           </div>
         )}
 
-        {/* News Detail Popup */}
-        {showNewsDetail && selectedNews && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-background rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
-                      {selectedNews.category}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">{selectedNews.createdDate}</span>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => setShowNewsDetail(false)}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-                
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">{selectedNews.title}</h1>
-                
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 leading-relaxed mb-4">{selectedNews.description}</p>
-                  
-                  <div className="border-t pt-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <UserPlus className="w-4 h-4" />
-                      <span>By {selectedNews.createdBy}</span>
-                      <Calendar className="w-4 h-4 ml-4" />
-                      <span>Published on {selectedNews.createdDate}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3 mt-6">
-                  <Button className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Share
-                  </Button>
-                  <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                    <Bookmark className="w-4 h-4 mr-2" />
-                    Save
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Event Detail Popup */}
-        {showEventDetail && selectedEvent && (
+
+        {/* Event Detail Popup Removed */}
+        {showNewsDetail === "NEVER_SHOW_MODAL_EVENT" && selectedEvent && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-background rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
               <div className="p-6">
@@ -907,39 +1963,112 @@ export default function IndustryHubPage() {
                   </Button>
                 </div>
                 
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">{selectedEvent.title}</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{selectedEvent.title}</h1>
                 
                 <div className="space-y-4 mb-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">{selectedEvent.date}</span>
+                      <span className="text-sm font-medium">{selectedEvent.date}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">{selectedEvent.location}</span>
+                      <span className="text-sm font-medium">{selectedEvent.location}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">{selectedEvent.attendees} attending</span>
+                      <span className="text-sm font-medium">{selectedEvent.attendees} attending</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <UserPlus className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">By {selectedEvent.createdBy}</span>
+                      <span className="text-sm font-medium">By {selectedEvent.createdBy}</span>
                     </div>
                   </div>
+
+                  {/* Event Links Display Panel */}
+                  {(selectedEvent.googleMapsLink || selectedEvent.meetingLink || selectedEvent.registrationLink) && (
+                    <div className="p-4 bg-yellow-50/50 dark:bg-yellow-950/20 border border-yellow-100 dark:border-yellow-900/30 rounded-lg space-y-2 mt-4">
+                      <h4 className="text-xs font-semibold text-yellow-800 dark:text-yellow-400 uppercase tracking-wider">Event Information Links</h4>
+                      <div className="grid grid-cols-1 gap-2.5">
+                        {!selectedEvent.isOnline && selectedEvent.googleMapsLink && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="font-semibold text-xs text-gray-500 dark:text-gray-400">Google Maps:</span>
+                            <a 
+                              href={selectedEvent.googleMapsLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-primary hover:underline flex items-center gap-1 font-medium text-xs sm:text-sm"
+                            >
+                              View on Google Maps
+                              <span className="text-xs">↗</span>
+                            </a>
+                          </div>
+                        )}
+                        {selectedEvent.isOnline && selectedEvent.meetingLink && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="font-semibold text-xs text-gray-500 dark:text-gray-400">Meeting Link:</span>
+                            <a 
+                              href={selectedEvent.meetingLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-primary hover:underline flex items-center gap-1 font-medium text-xs sm:text-sm"
+                            >
+                              Join Online Meeting
+                              <span className="text-xs">↗</span>
+                            </a>
+                          </div>
+                        )}
+                        {selectedEvent.registrationLink && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="font-semibold text-xs text-gray-500 dark:text-gray-400">Register:</span>
+                            <a 
+                              href={selectedEvent.registrationLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-primary hover:underline flex items-center gap-1 font-medium text-xs sm:text-sm"
+                            >
+                              Official Registration Page
+                              <span className="text-xs">↗</span>
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   
-                  <div className="prose max-w-none">
-                    <p className="text-gray-700 leading-relaxed">{selectedEvent.description}</p>
+                  <div className="prose max-w-none dark:prose-invert">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{selectedEvent.description}</p>
                   </div>
                 </div>
                 
                 <div className="flex gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Book Now
-                  </Button>
-                  <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                  {selectedEvent.registrationLink ? (
+                    <a 
+                      href={selectedEvent.registrationLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium rounded-md text-sm flex items-center justify-center gap-2 h-10 px-4 shadow-sm transition-all"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Register Now ↗
+                    </a>
+                  ) : (
+                    <Button 
+                      onClick={() => toast({ title: "Booking successful!", description: `You have successfully booked a spot for: ${selectedEvent.title}` })}
+                      className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white h-10"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Book Now
+                    </Button>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast({ title: "Link copied!", description: "Event link copied to clipboard." });
+                    }}
+                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 h-10"
+                  >
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
                   </Button>
@@ -949,8 +2078,8 @@ export default function IndustryHubPage() {
           </div>
         )}
 
-        {/* Course Detail Popup */}
-        {showCourseDetail && selectedCourse && (
+        {/* Course Detail Popup Removed */}
+        {showNewsDetail === "NEVER_SHOW_MODAL_COURSE" && selectedCourse && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-background rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
               <div className="p-6">
@@ -965,7 +2094,7 @@ export default function IndustryHubPage() {
                   </Button>
                 </div>
                 
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">{selectedCourse.title}</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{selectedCourse.title}</h1>
                 
                 <div className="space-y-4 mb-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -987,17 +2116,27 @@ export default function IndustryHubPage() {
                     </div>
                   </div>
                   
-                  <div className="prose max-w-none">
-                    <p className="text-gray-700 leading-relaxed">{selectedCourse.description}</p>
+                  <div className="prose max-w-none dark:prose-invert">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{selectedCourse.description}</p>
                   </div>
                 </div>
                 
                 <div className="flex gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
+                  <Button 
+                    onClick={() => toast({ title: "Registration successful!", description: `You have successfully enrolled in: ${selectedCourse.title}` })}
+                    className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
+                  >
                     <Bookmark className="w-4 h-4 mr-2" />
                     Register Now
                   </Button>
-                  <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast({ title: "Link copied!", description: "Course link copied to clipboard." });
+                    }}
+                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                  >
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
                   </Button>

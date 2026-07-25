@@ -25,7 +25,8 @@ import {
   TrendingUp,
   UserPlus,
   Bookmark,
-  X
+  X,
+  Check
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -44,6 +45,7 @@ interface Project {
   project_type: string;
   category: string;
   status: string;
+  project_status?: string | null;
   location: string | null;
   budget_min: number | null;
   budget_max: number | null;
@@ -58,9 +60,12 @@ interface Project {
   popular: boolean;
   created_at: string;
   updated_at: string;
-  likes_count?: number;
+   likes_count?: number;
   is_liked?: boolean;
   is_member?: boolean;
+  creator_username?: string;
+  creator_name?: string;
+  allow_applicants?: boolean;
 }
 
 // Form schema
@@ -70,6 +75,7 @@ const projectSchema = z.object({
   project_type: z.string().min(1, "Please select a project type"),
   category: z.string().min(1, "Please select a category"),
   status: z.string().min(1, "Please select a status"),
+  project_status: z.string().default("Public"),
   location: z.string().min(2, "Location must be at least 2 characters"),
   budget_min: z.number().optional(),
   budget_max: z.number().optional(),
@@ -94,7 +100,7 @@ export default function ProjectsPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetails, setShowProjectDetails] = useState(false);
   const [projectDetailsTab, setProjectDetailsTab] = useState("details");
-  const [applicants, setApplicants] = useState<any[]>([]);
+  const [applicants, setApplicants] = useState<Record<string, unknown>[]>([]);
   const [filters, setFilters] = useState({
     projectType: "all",
     category: "all",
@@ -102,6 +108,32 @@ export default function ProjectsPage() {
     location: "all",
     budgetRange: "all"
   });
+  const [categories, setCategories] = useState<string[]>([
+    "Feature Film", "Short Film", "Web Series", "TV Series", "Documentary", "Music Video"
+  ]);
+
+  useEffect(() => {
+    const fetchDBCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("categories")
+          .select("name")
+          .order("name", { ascending: true });
+        if (error) {
+          console.error("Error fetching categories:", error);
+          return;
+        }
+        if (data && data.length > 0) {
+          const names = data.map((item) => item.name);
+          setCategories(names);
+        }
+      } catch (err) {
+        console.error("Error in fetchDBCategories:", err);
+      }
+    };
+    fetchDBCategories();
+  }, []);
+
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -114,6 +146,7 @@ export default function ProjectsPage() {
       project_type: "",
       category: "",
       status: "planning",
+      project_status: "Public",
       location: "",
       budget_min: 0,
       budget_max: 0,
@@ -337,131 +370,102 @@ export default function ProjectsPage() {
     try {
       setLoading(true);
       
-      // Add some projects that appear as created by current user
-      const userCreatedProjects: Project[] = [
-        {
-          id: "user-created-1",
-          title: "My Indie Film Project",
-          description: "A personal passion project about family relationships and cultural identity. Looking for talented actors and crew members to bring this story to life.",
-          project_type: "Film",
-          category: "Feature Film",
-          status: "pre-production",
-          location: "Mumbai, India",
-          budget_min: 3000000,
-          budget_max: 5000000,
-          budget_currency: "₹",
-          duration_minutes: 110,
-          episodes: null,
-          team_size: 6,
-          tags: ["indie", "family", "culture"],
-          skills_required: ["Director", "Actor", "Cinematographer", "Editor"],
-          created_by: user?.id || "current-user",
-          featured: false,
-          popular: false,
-          created_at: "2024-12-10T09:00:00Z",
-          updated_at: "2024-12-16T14:30:00Z",
-          likes_count: 15,
-          is_liked: false,
-          is_member: true
-        },
-        {
-          id: "user-created-2",
-          title: "Tech Startup Documentary",
-          description: "Documenting the journey of young entrepreneurs building innovative tech solutions in India. Seeking experienced documentary filmmakers.",
-          project_type: "Documentary",
-          category: "Documentary",
-          status: "production",
-          location: "Bangalore, India",
-          budget_min: 1800000,
-          budget_max: 2800000,
-          budget_currency: "₹",
-          duration_minutes: 85,
-          episodes: null,
-          team_size: 4,
-          tags: ["documentary", "tech", "startup"],
-          skills_required: ["Director", "Cinematographer", "Editor", "Producer"],
-          created_by: user?.id || "current-user",
-          featured: false,
-          popular: false,
-          created_at: "2024-11-20T11:15:00Z",
-          updated_at: "2024-12-14T16:45:00Z",
-          likes_count: 22,
-          is_liked: false,
-          is_member: true
-        },
-        {
-          id: "user-created-3",
-          title: "Short Film: The Last Letter",
-          description: "A touching short film about a grandfather writing letters to his grandchildren. Perfect for film festival submissions.",
-          project_type: "Short Film",
-          category: "Short Film",
-          status: "post-production",
-          location: "Delhi, India",
-          budget_min: 400000,
-          budget_max: 600000,
-          budget_currency: "₹",
-          duration_minutes: 12,
-          episodes: null,
-          team_size: 3,
-          tags: ["short-film", "family", "emotional"],
-          skills_required: ["Director", "Actor", "Editor"],
-          created_by: user?.id || "current-user",
-          featured: false,
-          popular: false,
-          created_at: "2024-10-15T08:30:00Z",
-          updated_at: "2024-12-12T10:20:00Z",
-          likes_count: 8,
-          is_liked: false,
-          is_member: true
-        },
-        {
-          id: "user-created-4",
-          title: "Web Series: Urban Tales",
-          description: "An anthology web series exploring modern urban life in Indian cities. Each episode focuses on different characters and their struggles.",
-          project_type: "Web Series",
-          category: "Web Series",
-          status: "planning",
-          location: "Mumbai, India",
-          budget_min: 2500000,
-          budget_max: 4000000,
-          budget_currency: "₹",
-          duration_minutes: null,
-          episodes: 6,
-          team_size: 10,
-          tags: ["web-series", "urban", "anthology"],
-          skills_required: ["Director", "Writer", "Producer", "Cinematographer"],
-          created_by: user?.id || "current-user",
-          featured: false,
-          popular: false,
-          created_at: "2024-12-05T13:45:00Z",
-          updated_at: "2024-12-15T11:30:00Z",
-          likes_count: 18,
-          is_liked: false,
-          is_member: true
-        }
-      ];
+      // Fetch projects from Supabase dynamically
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      // Combine hardcoded projects with user-created projects
-      const allProjects = [...hardcodedProjects, ...userCreatedProjects];
-      
-      // Use hardcoded projects instead of Supabase
-      const projectsWithDetails = allProjects.map((project) => {
-        // Check if user liked this project (mock data)
-        const isLiked = likedProjects.includes(project.id);
-        
-        // Check if user is a member (mock data)
-        const isMember = project.created_by === user?.id || project.is_member || Math.random() > 0.8; // Random for demo
-        
-        return {
-          ...project,
-          is_liked: isLiked,
-          is_member: isMember,
-        };
-      });
+      if (error) {
+        console.error("Error fetching projects from Supabase:", error);
+        setProjects([]);
+        return;
+      }
 
-      setProjects(projectsWithDetails);
+      // Fetch profiles to map created_by to usernames
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("user_id, username, full_name");
+
+      const profileMap: Record<string, { username: string; full_name: string }> = {};
+      if (profilesData) {
+        profilesData.forEach(p => {
+          if (p.user_id) {
+            profileMap[p.user_id] = {
+              username: p.username || "",
+              full_name: p.full_name || ""
+            };
+          }
+        });
+      }
+
+      if (data && data.length > 0) {
+        const projectsWithDetails = data.map((project: {
+          id: string;
+          title: string;
+          description: string | null;
+          project_type: string;
+          category: string;
+          status: string;
+          project_status: string | null;
+          location: string | null;
+          budget_min: number | null;
+          budget_max: number | null;
+          budget_currency: string | null;
+          duration_minutes: number | null;
+          episodes: number | null;
+          team_size: number | null;
+          tags: string[] | null;
+          skills_required: string[] | null;
+          created_by: string | null;
+          featured: boolean | null;
+          popular: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+          likes_count?: number;
+          allow_applicants?: boolean | null;
+        }) => {
+          const isLiked = likedProjects.includes(project.id);
+          const isMember = project.created_by === user?.id || false;
+          
+          return {
+            id: project.id,
+            title: project.title,
+            description: project.description,
+            project_type: project.project_type,
+            category: project.category,
+            status: project.status,
+            project_status: project.project_status || "Public",
+            location: project.location,
+            budget_min: project.budget_min ? Number(project.budget_min) : null,
+            budget_max: project.budget_max ? Number(project.budget_max) : null,
+            budget_currency: project.budget_currency || "₹",
+            duration_minutes: project.duration_minutes,
+            episodes: project.episodes,
+            team_size: project.team_size || 1,
+            tags: project.tags || [],
+            skills_required: project.skills_required || [],
+            created_by: project.created_by || "",
+            featured: project.featured || false,
+            popular: project.popular || false,
+            created_at: project.created_at,
+            updated_at: project.updated_at || project.created_at,
+            likes_count: project.likes_count || Math.floor(Math.random() * 20) + 10,
+            is_liked: isLiked,
+            is_member: isMember,
+            creator_username: project.created_by ? (profileMap[project.created_by]?.username || "") : "",
+            creator_name: project.created_by ? (profileMap[project.created_by]?.full_name || "") : "",
+            allow_applicants: project.allow_applicants !== false,
+          };
+        });
+
+        setProjects(projectsWithDetails);
+      } else {
+        setProjects([]);
+      }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching projects:', error);
+      setProjects([]);
     } finally {
       setLoading(false);
     }
@@ -471,11 +475,17 @@ export default function ProjectsPage() {
     if (!user) return;
     
     try {
-      // Mock liked projects for demo - in real app, fetch from database
-      const mockLikedProjects = ["1", "3", "6"]; // Some projects are liked by default
-      setLikedProjects(mockLikedProjects);
+      const { data, error } = await supabase
+        .from("project_likes")
+        .select("project_id")
+        .eq("user_id", user.id);
+      
+      if (error) throw error;
+      if (data) {
+        setLikedProjects(data.map((item: { project_id: string }) => item.project_id));
+      }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching liked projects:', error);
     }
   };
 
@@ -483,11 +493,15 @@ export default function ProjectsPage() {
     if (!user) return;
     
     try {
-      // Mock saved projects for demo - in real app, fetch from database
-      const mockSavedProjects = ["2", "4", "7"]; // Some projects are saved by default
-      setSavedProjects(mockSavedProjects);
+      const saved = localStorage.getItem(`saved_projects_${user.id}`);
+      if (saved) {
+        setSavedProjects(JSON.parse(saved));
+      } else {
+        setSavedProjects([]);
+      }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching saved projects:', error);
+      setSavedProjects([]);
     }
   };
 
@@ -499,35 +513,40 @@ export default function ProjectsPage() {
         ? data.skills_required.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0)
         : [];
 
-      // Create new project object
-      const newProject: Project = {
-        id: Date.now().toString(), // Simple ID generation
-        title: data.title,
-        description: data.description,
-        project_type: data.project_type,
-        category: data.category,
-        status: data.status,
-        location: data.location,
-        budget_min: data.budget_min && data.budget_min > 0 ? data.budget_min : null,
-        budget_max: data.budget_max && data.budget_max > 0 ? data.budget_max : null,
-        budget_currency: "₹",
-        duration_minutes: data.duration_minutes && data.duration_minutes > 0 ? data.duration_minutes : null,
-        episodes: data.episodes && data.episodes > 0 ? data.episodes : null,
-        team_size: Math.floor(Math.random() * 10) + 5, // Random team size for demo
-        tags: [],
-        skills_required: skillsArray,
-        created_by: user.id,
-        featured: false,
-        popular: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        likes_count: 0,
-        is_liked: false,
-        is_member: false
-      };
+      // Insert new project into Supabase table
+      const { data: insertedData, error } = await supabase
+        .from("projects")
+        .insert([{
+          title: data.title,
+          description: data.description,
+          project_type: data.project_type,
+          category: data.category,
+          status: data.status,
+          project_status: data.project_status || "Public",
+          location: data.location,
+          budget_min: data.budget_min && data.budget_min > 0 ? data.budget_min : null,
+          budget_max: data.budget_max && data.budget_max > 0 ? data.budget_max : null,
+          budget_currency: "₹",
+          duration_minutes: data.duration_minutes && data.duration_minutes > 0 ? data.duration_minutes : null,
+          episodes: data.episodes && data.episodes > 0 ? data.episodes : null,
+          team_size: Math.floor(Math.random() * 10) + 5,
+          tags: [],
+          skills_required: skillsArray,
+          created_by: user.id,
+          featured: false,
+          popular: false
+        }])
+        .select();
 
-      // Add to hardcoded projects array (this will be picked up in next fetch)
-      hardcodedProjects.unshift(newProject); // Add to beginning
+      if (error) {
+        console.error("Error inserting project:", error);
+        toast({
+          variant: "destructive",
+          title: "Error Creating Project",
+          description: error.message
+        });
+        return;
+      }
       
       toast({
         title: "Success",
@@ -558,22 +577,27 @@ export default function ProjectsPage() {
 
     try {
       const isSaved = savedProjects.includes(projectId);
+      let updatedSaved: string[];
 
       if (isSaved) {
         // Unsave project
-        setSavedProjects(prev => prev.filter(id => id !== projectId));
+        updatedSaved = savedProjects.filter(id => id !== projectId);
+        setSavedProjects(updatedSaved);
         toast({
           title: "Project Unsaved",
           description: "Project has been removed from your saved list"
         });
       } else {
         // Save project
-        setSavedProjects(prev => [...prev, projectId]);
+        updatedSaved = [...savedProjects, projectId];
+        setSavedProjects(updatedSaved);
         toast({
           title: "Project Saved",
           description: "Project has been added to your saved list"
         });
       }
+
+      localStorage.setItem(`saved_projects_${user.id}`, JSON.stringify(updatedSaved));
 
       // Refresh projects to update counts
       fetchProjects();
@@ -719,6 +743,11 @@ export default function ProjectsPage() {
   const getFilteredProjects = () => {
     let filtered = projects;
 
+    // Display only projects with public status, except in the 'created' tab where the user manages their own projects
+    if (activeTab !== "created") {
+      filtered = filtered.filter(project => project.project_status === "Public");
+    }
+
     // Filter by tab
     if (activeTab === "joined") {
       filtered = filtered.filter(project => project.is_member);
@@ -807,7 +836,23 @@ export default function ProjectsPage() {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return `${diffDays} days ago`;
+    
+    if (diffDays < 30) {
+      if (diffDays <= 0) return "today";
+      return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      const days = diffDays % 30;
+      const monthStr = `${months} ${months === 1 ? "month" : "months"}`;
+      const dayStr = days > 0 ? ` ${days} ${days === 1 ? "day" : "days"}` : "";
+      return `${monthStr}${dayStr} ago`;
+    } else {
+      const years = Math.floor(diffDays / 365);
+      const months = Math.floor((diffDays % 365) / 30);
+      const yearStr = `${years} ${years === 1 ? "year" : "years"}`;
+      const monthStr = months > 0 ? ` ${months} ${months === 1 ? "month" : "months"}` : "";
+      return `${yearStr}${monthStr} ago`;
+    }
   };
 
   const formatBudget = (min: number | null, max: number | null, currency: string) => {
@@ -821,12 +866,12 @@ export default function ProjectsPage() {
 
   return (
     <AppLayout pageTitle="Projects">
-      <div className="space-y-6">
+      <div className="space-y-6 text-gray-900 dark:text-gray-100">
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects</h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">
               Discover and collaborate on film and entertainment projects
             </p>
           </div>
@@ -847,16 +892,16 @@ export default function ProjectsPage() {
               placeholder="Search projects, titles, or keywords..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-yellow-200 focus:border-yellow-500"
+              className="pl-10 border-yellow-200 focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white dark:border-yellow-900/40"
             />
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50" onClick={() => setShowFilters(!showFilters)}>
+            <Button variant="outline" className="border-yellow-200 text-gray-800 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:text-gray-300 dark:hover:bg-yellow-950/20 dark:hover:text-white" onClick={() => setShowFilters(!showFilters)}>
               <Filter className="h-4 w-4 mr-2" />
               Filters
             </Button>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-40 bg-white dark:bg-background border-gray-200 dark:border-yellow-900/40 text-gray-900 dark:text-white">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -871,16 +916,16 @@ export default function ProjectsPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 bg-yellow-50 border-yellow-200">
-            <TabsTrigger value="all" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">All Projects ({projects.length})</TabsTrigger>
-            <TabsTrigger value="joined" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Joined ({projects.filter(p => p.is_member).length})</TabsTrigger>
-            <TabsTrigger value="created" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Created ({projects.filter(p => p.created_by === user?.id).length})</TabsTrigger>
-            <TabsTrigger value="saved" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Saved ({savedProjects.length})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 bg-yellow-50/50 dark:bg-background border border-yellow-200/50 dark:border-yellow-900/30">
+            <TabsTrigger value="all" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">All Projects ({projects.length})</TabsTrigger>
+            <TabsTrigger value="joined" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">Joined ({projects.filter(p => p.is_member).length})</TabsTrigger>
+            <TabsTrigger value="created" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">Created ({projects.filter(p => p.created_by === user?.id).length})</TabsTrigger>
+            <TabsTrigger value="saved" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">Saved ({savedProjects.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="space-y-4">
             <div className="flex justify-between items-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Showing {filteredProjects.length} of {projects.length} projects
               </p>
             </div>
@@ -891,7 +936,7 @@ export default function ProjectsPage() {
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
               </div>
             ) : filteredProjects.length === 0 ? (
-              <Card>
+              <Card className="bg-white dark:bg-background border-gray-200 dark:border-gray-800">
                 <CardContent className="text-center py-12">
                   <Film className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">No projects found</h3>
@@ -907,10 +952,10 @@ export default function ProjectsPage() {
               </Card>
             ) : (activeTab === "joined" || activeTab === "created" || activeTab === "saved") ? (
               // Table format for joined, created, and saved tabs
-              <div className="rounded-md border">
+              <div className="rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-background">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="border-b border-gray-200 dark:border-gray-800">
                       <TableHead>Project Title</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
@@ -922,11 +967,11 @@ export default function ProjectsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredProjects.map((project) => (
-                      <TableRow key={project.id}>
+                      <TableRow key={project.id} className="border-b border-gray-200 dark:border-gray-800">
                         <TableCell className="font-medium">
                           <div className="space-y-1">
                             <div 
-                              className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                              className="font-semibold cursor-pointer hover:text-primary transition-colors text-gray-900 dark:text-white"
                               onClick={() => {
                                 handleViewProjectDetails(project);
                               }}
@@ -939,7 +984,7 @@ export default function ProjectsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                             {getTypeIcon(project.project_type)}
                             <span className="text-sm">{project.project_type}</span>
                           </div>
@@ -947,24 +992,24 @@ export default function ProjectsPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`}></div>
-                            <Badge variant="outline" className="text-xs capitalize">
+                            <Badge variant="outline" className="text-xs capitalize border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
                               {project.status}
                             </Badge>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                             <MapPin className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">{project.location}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm font-medium text-green-600">
+                          <span className="text-sm font-medium text-green-600 dark:text-green-400">
                             {formatBudget(project.budget_min, project.budget_max, project.budget_currency)}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">{formatDate(project.created_at)}</span>
                           </div>
@@ -1025,17 +1070,20 @@ export default function ProjectsPage() {
               // Card format for "All Projects" tab
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProjects.map((project) => (
-                  <Card key={project.id} className="hover:shadow-md transition-shadow border-yellow-200">
+                  <Card key={project.id} className="hover:shadow-md transition-shadow bg-white dark:bg-background border-yellow-200 dark:border-yellow-900/40">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <CardTitle className="text-lg line-clamp-1 text-gray-900">{project.title}</CardTitle>
+                          <CardTitle className="text-lg line-clamp-1 text-gray-900 dark:text-white">{project.title}</CardTitle>
                           <div className="flex items-center gap-2 mt-1">
                             {getTypeIcon(project.project_type)}
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
                               {project.project_type} • {project.category}
                             </span>
                           </div>
+                          <p className="text-xs text-muted-foreground mt-1.5">
+                            Created by: <span className="font-medium text-yellow-600 dark:text-yellow-500">@{project.creator_username || "anonymous"}</span>
+                          </p>
                         </div>
                         <div className="flex gap-1">
                           {project.featured && (
@@ -1083,11 +1131,11 @@ export default function ProjectsPage() {
                     </CardHeader>
                     
                     <CardContent className="space-y-4">
-                      <CardDescription className="line-clamp-2">
+                      <CardDescription className="line-clamp-2 text-gray-600 dark:text-gray-400">
                         {project.description}
                       </CardDescription>
                       
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300">
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4 text-muted-foreground" />
                           <span>{project.team_size} team members</span>
@@ -1097,7 +1145,7 @@ export default function ProjectsPage() {
                           <span>{formatDate(project.created_at)}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="font-medium">Budget: {formatBudget(project.budget_min, project.budget_max, project.budget_currency)}</span>
+                          <span className="font-medium text-gray-950 dark:text-white">Budget: {formatBudget(project.budget_min, project.budget_max, project.budget_currency)}</span>
                         </div>
                         <div className="col-span-2">
                           <span className="text-muted-foreground">
@@ -1116,18 +1164,22 @@ export default function ProjectsPage() {
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </Button>
-                        {!project.is_member && project.created_by !== user?.id && (
+                        {!project.is_member && project.created_by !== user?.id && project.allow_applicants !== false && (
                           <Button 
-                            variant={appliedProjects.includes(project.id) ? "default" : "outline"}
+                            variant={appliedProjects.includes(project.id) ? "secondary" : "outline"}
                             size="sm"
                             className={appliedProjects.includes(project.id) 
-                              ? "bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white" 
-                              : "border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                              ? "bg-green-100 text-green-700 border border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-900/40 font-semibold opacity-100 disabled:opacity-100 cursor-default" 
+                              : "border-yellow-200 text-gray-700 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:hover:bg-yellow-950/20 dark:hover:text-white dark:text-gray-300"
                             }
                             onClick={() => handleJoinProject(project.id)}
                             disabled={appliedProjects.includes(project.id)}
                           >
-                            <UserPlus className="h-4 w-4 mr-2" />
+                            {appliedProjects.includes(project.id) ? (
+                              <Check className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
+                            ) : (
+                              <UserPlus className="h-4 w-4 mr-2" />
+                            )}
                             {appliedProjects.includes(project.id) ? "Applied" : "Join Project"}
                           </Button>
                         )}
@@ -1217,20 +1269,17 @@ export default function ProjectsPage() {
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Category</FormLabel>
+                        <FormLabel className="text-gray-700">Your Role</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
-                              <SelectValue placeholder="Select category" />
+                              <SelectValue placeholder="Select your role" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Feature Film">Feature Film</SelectItem>
-                            <SelectItem value="Short Film">Short Film</SelectItem>
-                            <SelectItem value="Web Series">Web Series</SelectItem>
-                            <SelectItem value="TV Series">TV Series</SelectItem>
-                            <SelectItem value="Documentary">Documentary</SelectItem>
-                            <SelectItem value="Music Video">Music Video</SelectItem>
+                            {categories.map((cat) => (
+                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -1264,19 +1313,43 @@ export default function ProjectsPage() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700">Location</FormLabel>
-                      <FormControl>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">Location</FormLabel>
+                        <FormControl>
                           <Input placeholder="e.g. Los Angeles, CA" className="border-yellow-200 focus:border-yellow-500" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="project_status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">Project Status</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || "Public"}>
+                          <FormControl>
+                            <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
+                              <SelectValue placeholder="Select project status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Public">Public</SelectItem>
+                            <SelectItem value="Private">Private</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -1374,25 +1447,11 @@ export default function ProjectsPage() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="skills_required"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700">Skills Required (comma-separated)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Director, Cinematographer, Editor" className="border-yellow-200 focus:border-yellow-500" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <div className="flex justify-end gap-4 pt-4">
                   <Button 
                     type="button" 
                     variant="outline" 
-                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                    className="border-yellow-200 text-gray-700 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:text-gray-300 dark:hover:bg-yellow-950/20 dark:hover:text-white"
                     onClick={() => setIsCreateDialogOpen(false)}
                   >
                     Cancel
@@ -1451,12 +1510,9 @@ export default function ProjectsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="Feature Film">Feature Film</SelectItem>
-                        <SelectItem value="Short Film">Short Film</SelectItem>
-                        <SelectItem value="Web Series">Web Series</SelectItem>
-                        <SelectItem value="TV Series">TV Series</SelectItem>
-                        <SelectItem value="Documentary">Documentary</SelectItem>
-                        <SelectItem value="Music Video">Music Video</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -1513,7 +1569,7 @@ export default function ProjectsPage() {
                   <div className="pt-4 border-t">
                     <Button 
                       variant="outline" 
-                      className="w-full"
+                      className="w-full border-yellow-200 text-gray-700 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:text-gray-300 dark:hover:bg-yellow-950/20 dark:hover:text-white"
                       onClick={() => setFilters({
                         projectType: "all",
                         category: "all",
@@ -1556,7 +1612,7 @@ export default function ProjectsPage() {
                         {/* Project Overview */}
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Project Overview</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                             <div className="space-y-3">
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Type:</span>
@@ -1696,7 +1752,7 @@ export default function ProjectsPage() {
                     {/* Project Overview */}
                     <div>
                       <h3 className="font-semibold mb-3 text-lg">Project Overview</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                         <div className="space-y-3">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Type:</span>
@@ -1772,14 +1828,24 @@ export default function ProjectsPage() {
                     </div>
 
                     <div className="flex gap-2 pt-4">
-                      <Button 
-                        className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
-                        onClick={() => handleJoinProject(selectedProject.id)}
-                      >
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Join Project
-                      </Button>
-                      <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50" onClick={() => handleShareProject(selectedProject)}>
+                      {appliedProjects.includes(selectedProject.id) ? (
+                        <Button 
+                          disabled
+                          className="flex-1 bg-green-100 text-green-700 border border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-900/40 font-semibold opacity-100 disabled:opacity-100 cursor-default"
+                        >
+                          <Check className="w-4 h-4 mr-2 text-green-600 dark:text-green-400" />
+                          Applied
+                        </Button>
+                      ) : (selectedProject.created_by !== user?.id && selectedProject.allow_applicants === false) ? null : (
+                        <Button 
+                          className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
+                          onClick={() => handleJoinProject(selectedProject.id)}
+                        >
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Join Project
+                        </Button>
+                      )}
+                      <Button variant="outline" className="border-yellow-200 text-gray-700 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:text-gray-300 dark:hover:bg-yellow-950/20 dark:hover:text-white" onClick={() => handleShareProject(selectedProject)}>
                         <Share2 className="w-4 h-4 mr-2" />
                         Share Project
                       </Button>

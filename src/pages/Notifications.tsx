@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Bell,
   Search,
@@ -23,114 +26,168 @@ import {
   Check,
   MoreVertical,
   Eye,
-  EyeOff
+  EyeOff,
+  Database,
+  Sparkles
 } from 'lucide-react';
+
+const mockNotifications = [
+  {
+    id: "mock-1",
+    title: "New job posted",
+    description: "Senior Director position at Netflix Studios",
+    type: "job",
+    status: "unread",
+    created_at: new Date(Date.now() - 5 * 60000).toISOString(),
+    priority: "high",
+    icon: Briefcase,
+    action: "View Job",
+    action_url: "/jobs"
+  },
+  {
+    id: "mock-2",
+    title: "Connection request",
+    description: "John Smith wants to connect with you",
+    type: "connection",
+    status: "unread",
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    priority: "medium",
+    icon: Users,
+    action: "View Profile",
+    action_url: "/connections"
+  },
+  {
+    id: "mock-3",
+    title: "Project update",
+    description: "Your project 'Indie Film' has a new comment from Sarah Johnson",
+    type: "project",
+    status: "read",
+    created_at: new Date(Date.now() - 7200000).toISOString(),
+    priority: "low",
+    icon: MessageSquare,
+    action: "View Project",
+    action_url: "/projects"
+  },
+  {
+    id: "mock-4",
+    title: "Event reminder",
+    description: "Film Festival Workshop starts in 2 hours",
+    type: "event",
+    status: "read",
+    created_at: new Date(Date.now() - 10800000).toISOString(),
+    priority: "high",
+    icon: Calendar,
+    action: "View Event",
+    action_url: "/industry-hub"
+  },
+  {
+    id: "mock-5",
+    title: "System maintenance",
+    description: "Scheduled maintenance will occur tonight from 2-4 AM PST",
+    type: "system",
+    status: "read",
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    priority: "medium",
+    icon: AlertTriangle,
+    action: "Learn More",
+    action_url: "/settings"
+  }
+];
+
+const formatRelativeTime = (dateString: string) => {
+  try {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    if (isNaN(diffMs) || diffMs < 0) return 'Just now';
+    
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSecs < 60) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return 'Recently';
+  }
+};
 
 const Notifications = () => {
   const { toast } = useToast();
+  const { profile } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Mock notifications data
-  const mockNotifications = [
-    {
-      id: 1,
-      title: "New job posted",
-      description: "Senior Director position at Netflix Studios",
-      type: "job",
-      status: "unread",
-      time: "5 minutes ago",
-      timestamp: "2024-01-15T10:30:00Z",
-      priority: "high",
-      icon: Briefcase,
-      action: "View Job"
-    },
-    {
-      id: 2,
-      title: "Connection request",
-      description: "John Smith wants to connect with you",
-      type: "connection",
-      status: "unread",
-      time: "1 hour ago",
-      timestamp: "2024-01-15T09:30:00Z",
-      priority: "medium",
-      icon: Users,
-      action: "View Profile"
-    },
-    {
-      id: 3,
-      title: "Project update",
-      description: "Your project 'Indie Film' has a new comment from Sarah Johnson",
-      type: "project",
-      status: "read",
-      time: "2 hours ago",
-      timestamp: "2024-01-15T08:30:00Z",
-      priority: "low",
-      icon: MessageSquare,
-      action: "View Project"
-    },
-    {
-      id: 4,
-      title: "Event reminder",
-      description: "Film Festival Workshop starts in 2 hours",
-      type: "event",
-      status: "read",
-      time: "3 hours ago",
-      timestamp: "2024-01-15T07:30:00Z",
-      priority: "high",
-      icon: Calendar,
-      action: "View Event"
-    },
-    {
-      id: 5,
-      title: "System maintenance",
-      description: "Scheduled maintenance will occur tonight from 2-4 AM PST",
-      type: "system",
-      status: "read",
-      time: "1 day ago",
-      timestamp: "2024-01-14T10:30:00Z",
-      priority: "medium",
-      icon: AlertTriangle,
-      action: "Learn More"
-    },
-    {
-      id: 6,
-      title: "Profile view",
-      description: "Mike Chen viewed your profile",
-      type: "profile",
-      status: "read",
-      time: "2 days ago",
-      timestamp: "2024-01-13T15:30:00Z",
-      priority: "low",
-      icon: Eye,
-      action: "View Profile"
-    },
-    {
-      id: 7,
-      title: "Job application update",
-      description: "Your application for 'Video Editor' position has been reviewed",
-      type: "job",
-      status: "read",
-      time: "3 days ago",
-      timestamp: "2024-01-12T14:30:00Z",
-      priority: "high",
-      icon: Briefcase,
-      action: "View Application"
-    },
-    {
-      id: 8,
-      title: "New message",
-      description: "You have a new message from Alex Rodriguez",
-      type: "message",
-      status: "read",
-      time: "4 days ago",
-      timestamp: "2024-01-11T16:30:00Z",
-      priority: "medium",
-      icon: MessageSquare,
-      action: "View Message"
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isUsingMock, setIsUsingMock] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!profile?.id) {
+        setNotifications(mockNotifications);
+        setIsUsingMock(true);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', profile.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.warn("Notifications table query failed, falling back to mock data.", error);
+          setNotifications(mockNotifications);
+          setIsUsingMock(true);
+        } else {
+          setNotifications(data || []);
+          setIsUsingMock(false);
+        }
+      } catch (err) {
+        console.error("Failed to load notifications:", err);
+        setNotifications(mockNotifications);
+        setIsUsingMock(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let subscription: any;
+    if (profile?.id) {
+      subscription = supabase
+        .channel('public:notifications')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'notifications',
+          filter: `user_id=eq.${profile.id}`
+        }, () => {
+          fetchNotifications();
+        })
+        .subscribe();
     }
-  ];
+
+    return () => {
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+    };
+  }, [profile?.id]);
 
   const notificationTypes = [
     { value: 'all', label: 'All Types' },
@@ -138,7 +195,6 @@ const Notifications = () => {
     { value: 'connection', label: 'Connections' },
     { value: 'project', label: 'Projects' },
     { value: 'event', label: 'Events' },
-    { value: 'message', label: 'Messages' },
     { value: 'profile', label: 'Profile' },
     { value: 'system', label: 'System' }
   ];
@@ -151,9 +207,9 @@ const Notifications = () => {
 
   const getPriorityBadge = (priority: string) => {
     const priorityConfig = {
-      high: { color: 'bg-red-100 text-red-800', label: 'High' },
-      medium: { color: 'bg-yellow-100 text-yellow-800', label: 'Medium' },
-      low: { color: 'bg-green-100 text-green-800', label: 'Low' }
+      high: { color: 'bg-red-150 text-red-800 dark:bg-red-950/40 dark:text-red-300', label: 'High' },
+      medium: { color: 'bg-yellow-150 text-yellow-800 dark:bg-yellow-950/40 dark:text-yellow-300', label: 'Medium' },
+      low: { color: 'bg-green-150 text-green-800 dark:bg-green-950/40 dark:text-green-300', label: 'Low' }
     };
     const config = priorityConfig[priority as keyof typeof priorityConfig] || priorityConfig.medium;
     return (
@@ -169,35 +225,115 @@ const Notifications = () => {
       connection: Users,
       project: MessageSquare,
       event: Calendar,
-      message: MessageSquare,
       profile: Eye,
       system: AlertTriangle
     };
     return typeConfig[type as keyof typeof typeConfig] || Bell;
   };
 
-  const handleMarkAsRead = (notificationId: number) => {
-    toast({
-      title: "Notification marked as read",
-      description: "The notification has been marked as read.",
-    });
+  const handleMarkAsRead = async (notificationId: string | number) => {
+    if (isUsingMock) {
+      setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, status: 'read' } : n));
+      toast({
+        title: "Notification marked as read",
+        description: "The notification has been marked as read.",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ status: 'read' })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, status: 'read' } : n));
+      toast({
+        title: "Notification marked as read",
+        description: "The notification has been marked as read.",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to mark notification as read.",
+      });
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    toast({
-      title: "All notifications marked as read",
-      description: "All unread notifications have been marked as read.",
-    });
+  const handleMarkAllAsRead = async () => {
+    if (isUsingMock) {
+      setNotifications(prev => prev.map(n => ({ ...n, status: 'read' })));
+      toast({
+        title: "All notifications marked as read",
+        description: "All unread notifications have been marked as read.",
+      });
+      return;
+    }
+
+    if (!profile?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ status: 'read' })
+        .eq('user_id', profile.id)
+        .eq('status', 'unread');
+
+      if (error) throw error;
+
+      setNotifications(prev => prev.map(n => ({ ...n, status: 'read' })));
+      toast({
+        title: "All notifications marked as read",
+        description: "All unread notifications have been marked as read.",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to mark all notifications as read.",
+      });
+    }
   };
 
-  const handleDeleteNotification = (notificationId: number) => {
-    toast({
-      title: "Notification deleted",
-      description: "The notification has been deleted.",
-    });
+  const handleDeleteNotification = async (notificationId: string | number) => {
+    if (isUsingMock) {
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      toast({
+        title: "Notification deleted",
+        description: "The notification has been deleted.",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      toast({
+        title: "Notification deleted",
+        description: "The notification has been deleted.",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete notification.",
+      });
+    }
   };
 
-  const filteredNotifications = mockNotifications.filter(notification => {
+  const filteredNotifications = notifications.filter(notification => {
     const matchesSearch = notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          notification.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' || notification.type === filterType;
@@ -205,16 +341,33 @@ const Notifications = () => {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const unreadCount = mockNotifications.filter(n => n.status === 'unread').length;
+  const unreadCount = filteredNotifications.filter(n => n.status === 'unread').length;
 
   return (
     <AppLayout>
       <div className="space-y-6">
+        {/* SQL Config Banner for dynamic database setup */}
+        {isUsingMock && (
+          <div className="bg-gradient-to-r from-yellow-500/10 via-yellow-600/5 to-transparent border border-yellow-200/50 p-4 rounded-xl flex items-start gap-3 shadow-xs">
+            <div className="p-2 rounded-lg bg-yellow-500/15 text-yellow-600 flex-shrink-0">
+              <Database className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-gray-950 dark:text-white text-sm flex items-center gap-1.5">
+                Dynamic Database Notifications Available <Sparkles className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+              </h4>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
+                Unlock fully dynamic real-time notifications by running the SQL configuration in your Supabase SQL editor. A custom SQL blueprint has been generated for you in <code className="bg-yellow-500/10 px-1.5 py-0.5 rounded font-mono font-medium text-yellow-700 dark:text-yellow-400">setup_notifications.sql</code>.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-            <p className="text-gray-600 text-sm mt-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h1>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
               {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
             </p>
           </div>
@@ -321,7 +474,7 @@ const Notifications = () => {
                           <div className="flex items-center gap-3 text-xs text-gray-500">
                             <div className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              {notification.time}
+                              {notification.created_at ? formatRelativeTime(notification.created_at) : (notification.time || "Recently")}
                             </div>
                             {getPriorityBadge(notification.priority)}
                             {notification.status === 'unread' && (
@@ -351,8 +504,21 @@ const Notifications = () => {
                           >
                             <XCircle className="w-4 h-4" />
                           </Button>
-                          <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                            {notification.action}
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                            onClick={() => {
+                              if (notification.action_url) {
+                                navigate(notification.action_url);
+                              } else {
+                                if (notification.type === 'job') navigate('/jobs');
+                                else if (notification.type === 'connection') navigate('/connections');
+                                else if (notification.type === 'project') navigate('/projects');
+                              }
+                            }}
+                          >
+                            {notification.action || (notification.type === 'connection' ? 'View Requests' : 'View Detail')}
                           </Button>
                         </div>
                       </div>
