@@ -21,8 +21,10 @@ import {
   Building2,
   MapPin
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminJobs() {
   // Available tags for jobs
@@ -35,49 +37,43 @@ export default function AdminJobs() {
     { value: "sponsored", label: "Sponsored", color: "yellow" }
   ];
 
-  // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [editingTags, setEditingTags] = useState<{ id: number; tags: string[] } | null>(null);
+  const [editingTags, setEditingTags] = useState<{ id: string; tags: string[] } | null>(null);
 
-  // Mock jobs data
-  const jobs = [
-    {
-      id: 1,
-      title: "Cinematographer",
-      description: "Experienced cinematographer needed for feature film",
-      category: "Cinematography & Camera",
-      location: "Los Angeles",
-      date: "2024-03-12",
-      status: "Active",
-      creator: {
-        id: 1,
-        name: "Film Studio A",
-        username: "filmstudioa",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=filmstudioa",
-        category: "Production Company"
-      },
-      tags: ["Featured", "Full Time", "Urgent"]
-    },
-    {
-      id: 2,
-      title: "Sound Engineer",
-      description: "Sound engineer needed for post-production",
-      category: "Music & Sound",
-      location: "New York",
-      date: "2024-03-11",
-      status: "Pending",
-      creator: {
-        id: 2,
-        name: "Production Co",
-        username: "productionco",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=productionco",
-        category: "Production House"
-      },
-      tags: ["Remote", "Part Time"]
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('jobs')
+        .select(`
+          *,
+          creator:profiles(id, full_name, username, avatar_url, role)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setJobs(data || []);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load jobs from database.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -105,36 +101,49 @@ export default function AdminJobs() {
     }
   };
 
-  const handleViewJob = (jobId: number) => {
-    console.log("View job:", jobId);
-    // Implement view job functionality
+  const handleViewJob = (jobId: string) => {
+    window.open(`/jobs/${jobId}`, '_blank');
   };
 
-  const handleApproveJob = (jobId: number) => {
-    console.log("Approve job:", jobId);
-    // Implement approve job functionality
+  const handleApproveJob = async (jobId: string) => {
+    try {
+      await supabase.from("jobs").update({ status: "Active" }).eq("id", jobId);
+      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: "Active" } : j));
+      toast({ title: "Job approved" });
+    } catch (e) {}
   };
 
-  const handleRejectJob = (jobId: number) => {
-    console.log("Reject job:", jobId);
-    // Implement reject job functionality
+  const handleRejectJob = async (jobId: string) => {
+    try {
+      await supabase.from("jobs").update({ status: "Rejected" }).eq("id", jobId);
+      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: "Rejected" } : j));
+      toast({ title: "Job rejected" });
+    } catch (e) {}
   };
 
-  const handleDeleteJob = (jobId: number) => {
-    console.log("Delete job:", jobId);
-    // Implement delete job functionality
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm("Are you sure you want to delete this job?")) return;
+    try {
+      await supabase.from("jobs").delete().eq("id", jobId);
+      setJobs(prev => prev.filter(j => j.id !== jobId));
+      toast({ title: "Job deleted" });
+    } catch (e) {}
   };
 
-  const handleEditTags = (jobId: number, currentTags: string[]) => {
-    setEditingTags({ id: jobId, tags: currentTags });
+  const handleEditTags = (jobId: string, currentTags: string[]) => {
+    setEditingTags({ id: jobId, tags: currentTags || [] });
   };
 
-  const handleSaveJobTags = (jobId: number) => {
-    // Here you would typically make an API call to update the job's tags
-    const jobToUpdate = jobs.find(j => j.id === jobId);
-    if (jobToUpdate && editingTags) {
-      jobToUpdate.tags = editingTags.tags;
+  const handleSaveJobTags = async (jobId: string) => {
+    try {
+      if (!editingTags) return;
+      const { error } = await supabase.from('jobs').update({ skills_required: editingTags.tags }).eq('id', jobId);
+      if (error) throw error;
+      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, skills_required: editingTags.tags } : j));
       setEditingTags(null);
+      toast({ title: "Tags updated" });
+    } catch (e) {
+      toast({ title: "Error", variant: "destructive" });
     }
   };
 
@@ -168,19 +177,25 @@ export default function AdminJobs() {
 
   // Filter jobs based on search and filters
   const filteredJobs = jobs.filter(job => {
+    const title = job.job_title || "";
+    const desc = job.job_description || "";
+    const comp = job.company_name || "";
+    const loc = job.location || "";
+    
     const matchesSearch = 
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.creator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || job.category.toLowerCase() === categoryFilter.toLowerCase();
-    const matchesStatus = statusFilter === "all" || job.status.toLowerCase() === statusFilter.toLowerCase();
+      title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      desc.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      comp.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      loc.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = categoryFilter === "all" || (job.industry || "").toLowerCase() === categoryFilter.toLowerCase();
+    const matchesStatus = statusFilter === "all" || (job.status || "Active").toLowerCase() === statusFilter.toLowerCase();
     
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
   return (
-    <AdminLayout pageTitle="Jobs Management">
+    <AdminLayout pageTitle="Jobs Management" pageName="Jobs">
       <div className="space-y-6">
         {/* Page Header */}
         <div>
@@ -258,20 +273,28 @@ export default function AdminJobs() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredJobs.map((job) => {
-                    const StatusIcon = getStatusIcon(job.status);
+                  {isLoading ? (
+                    <TableRow><TableCell colSpan={8} className="text-center py-8">Loading jobs...</TableCell></TableRow>
+                  ) : filteredJobs.map((job) => {
+                    const StatusIcon = getStatusIcon(job.status || "Active");
+                    const jobTags = Array.isArray(job.skills_required) ? job.skills_required : [];
+                    const creatorName = job.creator?.full_name || job.company_name || "Unknown";
+                    const creatorUsername = job.creator?.username || "";
+                    
                     return (
                       <TableRow key={job.id}>
-                        <TableCell className="font-medium">#{job.id}</TableCell>
+                        <TableCell className="font-medium">
+                          <span className="truncate w-16 block" title={job.id}>{job.id.substring(0, 8)}</span>
+                        </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="font-medium">{job.title}</span>
-                            <span className="text-sm text-muted-foreground truncate max-w-xs">{job.description}</span>
+                            <span className="font-medium">{job.job_title}</span>
+                            <span className="text-sm text-muted-foreground truncate max-w-xs">{job.job_description}</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-yellow-50 text-yellow-700 hover:bg-yellow-100">
-                            {job.category}
+                            {job.industry || "General"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -280,8 +303,8 @@ export default function AdminJobs() {
                               <Building2 className="h-4 w-4 text-yellow-600" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium">{job.creator.name}</span>
-                              <span className="text-xs text-muted-foreground">@{job.creator.username}</span>
+                              <span className="text-sm font-medium">{creatorName}</span>
+                              {creatorUsername && <span className="text-xs text-muted-foreground">@{creatorUsername}</span>}
                             </div>
                           </div>
                         </TableCell>
@@ -292,15 +315,15 @@ export default function AdminJobs() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={getStatusBadgeVariant(job.status)} className="flex items-center gap-1 w-fit">
+                          <Badge variant={getStatusBadgeVariant(job.status || "Active")} className="flex items-center gap-1 w-fit">
                             <StatusIcon className="h-3 w-3" />
-                            {job.status}
+                            {job.status || "Active"}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <div className="flex flex-wrap gap-2 flex-1">
-                              {job.tags.map((tag, index) => (
+                              {jobTags.map((tag: string, index: number) => (
                                 <Badge 
                                   key={index}
                                   variant="secondary" 
@@ -314,7 +337,7 @@ export default function AdminJobs() {
                               open={editingTags?.id === job.id}
                               onOpenChange={(open) => {
                                 if (open) {
-                                  handleEditTags(job.id, job.tags);
+                                  handleEditTags(job.id, jobTags);
                                 } else {
                                   setEditingTags(null);
                                 }
@@ -383,7 +406,7 @@ export default function AdminJobs() {
                               <Eye className="h-4 w-4" />
                             </Button>
                             
-                            {job.status === "Pending" && (
+                            {(!job.status || job.status === "Pending") && (
                               <>
                                 <Button
                                   variant="ghost"

@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +29,7 @@ import {
   Linkedin,
   Twitter,
   Instagram,
+  Lock,
   Youtube,
   Facebook,
   Camera,
@@ -96,6 +98,7 @@ interface ProfileData {
     followers: number;
   };
   skills: string[];
+  tags: string[];
   experience: Experience[];
   education: Education[];
   achievements: Achievement[];
@@ -103,6 +106,43 @@ interface ProfileData {
   portfolio: PortfolioItem[];
   directoryFiles: DirectoryFile[];
   systemRole?: "user" | "admin";
+  
+  // New Personal Information
+  dateOfBirth?: string;
+  languages?: string[];
+  gender?: string;
+  nationality?: string;
+  birthCity?: string;
+  birthState?: string;
+  birthCountry?: string;
+  totalExperience?: string;
+  availableForTravel?: boolean;
+  availability?: string;
+
+  // New Physical Details
+  height?: string;
+  weight?: string;
+  eyeColor?: string;
+  hairColor?: string;
+  skinTone?: string;
+
+  // Current Location
+  currentCity?: string;
+  currentState?: string;
+  currentCountry?: string;
+
+  // Privacy Settings
+  privacyShowPhone?: boolean;
+  privacyShowEmail?: boolean;
+  privacyShowDob?: boolean;
+  privacyShowDirectory?: boolean;
+  privacyShowLocation?: boolean;
+  allowMessagesFrom?: string;
+  allowConnectionsFrom?: string;
+  allowProfileViews?: boolean;
+  
+  // Short ID
+  shortId?: string;
 }
 
 export interface DirectoryFile {
@@ -167,6 +207,7 @@ interface PortfolioItem {
 
 const emptyProfileData: ProfileData = {
   id: "",
+  shortId: "",
   user_id: "",
   name: "",
   username: "",
@@ -189,17 +230,29 @@ const emptyProfileData: ProfileData = {
   online: true,
   stats: { connections: 0, projects: 0, posts: 0, followers: 0 },
   skills: [],
+  tags: [],
   experience: [],
   education: [],
   achievements: [],
   recentActivity: [],
   portfolio: [],
+  languages: [],
+  availableForTravel: false,
+  privacyShowPhone: true,
+  privacyShowEmail: true,
+  privacyShowDob: true,
+  privacyShowDirectory: true,
+  privacyShowLocation: true,
+  allowMessagesFrom: 'everyone',
+  allowConnectionsFrom: 'everyone',
+  allowProfileViews: true,
 };
 
 // Map DB profile row -> ProfileData
 function rowToProfile(row: any, authEmail?: string | null): ProfileData {
   return {
     id: row?.id ?? "",
+    shortId: row?.short_id ?? "",
     user_id: row?.user_id ?? "",
     name: row?.full_name ?? [row?.first_name, row?.last_name].filter(Boolean).join(" ").trim() ?? "",
     username: row?.username ?? "",
@@ -227,12 +280,48 @@ function rowToProfile(row: any, authEmail?: string | null): ProfileData {
       followers: row?.followers_count ?? 0,
     },
     skills: Array.isArray(row?.skills) ? row.skills : [],
+    tags: Array.isArray(row?.tags) ? row.tags : [],
     experience: Array.isArray(row?.experiences) ? row.experiences : [],
     education: Array.isArray(row?.education) ? row.education : [],
     achievements: Array.isArray(row?.achievements) ? row.achievements : [],
     portfolio: Array.isArray(row?.portfolio) ? row.portfolio : [],
     recentActivity: [],
+    directoryFiles: [],
     systemRole: (row?.role === "admin" || row?.role === "ADMIN") ? "admin" : "user",
+    
+    // Personal Information
+    dateOfBirth: row?.date_of_birth ?? "",
+    languages: Array.isArray(row?.languages) ? row.languages : [],
+    gender: row?.gender ?? "",
+    nationality: row?.nationality ?? "",
+    birthCity: row?.birth_city ?? row?.city ?? "", // fallback to city if birth_city is null
+    birthState: row?.birth_state ?? row?.state ?? "",
+    birthCountry: row?.birth_country ?? row?.country ?? "",
+    totalExperience: row?.total_experience ?? "",
+    availableForTravel: row?.available_for_travel ?? false,
+    availability: row?.availability ?? "",
+    
+    // Physical Details
+    height: row?.height ?? "",
+    weight: row?.weight ?? "",
+    eyeColor: row?.eye_color ?? "",
+    hairColor: row?.hair_color ?? "",
+    skinTone: row?.skin_tone ?? "",
+
+    // Current Location
+    currentCity: row?.current_city ?? "",
+    currentState: row?.current_state ?? "",
+    currentCountry: row?.current_country ?? "",
+
+    // Privacy Settings
+    privacyShowPhone: row?.settingsData?.privacy_settings?.showPhone ?? true,
+    privacyShowEmail: row?.settingsData?.privacy_settings?.showEmail ?? true,
+    privacyShowDob: row?.settingsData?.privacy_settings?.showBirthday ?? true,
+    privacyShowDirectory: row?.settingsData?.privacy_settings?.showDirectory ?? true,
+    privacyShowLocation: row?.settingsData?.privacy_settings?.showLocation ?? true,
+    allowMessagesFrom: row?.settingsData?.privacy_settings?.allowMessages ?? 'everyone',
+    allowConnectionsFrom: row?.settingsData?.privacy_settings?.allowConnectionRequests ?? 'everyone',
+    allowProfileViews: row?.settingsData?.privacy_settings?.allowProfileViews ?? true,
   };
 }
 
@@ -266,6 +355,36 @@ function profileToRow(p: ProfileData, userId: string) {
     achievements: p.achievements ?? [],
     portfolio: p.portfolio ?? [],
     updated_at: new Date().toISOString(),
+    
+    // Personal Information
+    date_of_birth: p.dateOfBirth || null,
+    languages: p.languages ?? [],
+    gender: p.gender || null,
+    nationality: p.nationality || null,
+    birth_city: p.birthCity || null,
+    birth_state: p.birthState || null,
+    birth_country: p.birthCountry || null,
+    total_experience: p.totalExperience || null,
+    available_for_travel: p.availableForTravel ?? false,
+    availability: p.availability || null,
+    
+    // Physical Details
+    height: p.height || null,
+    weight: p.weight || null,
+    eye_color: p.eyeColor || null,
+    hair_color: p.hairColor || null,
+    skin_tone: p.skinTone || null,
+    
+    // Current Location
+    current_city: p.currentCity || null,
+    current_state: p.currentState || null,
+    current_country: p.currentCountry || null,
+    
+    // Privacy Settings
+    privacy_show_phone: p.privacyShowPhone ?? true,
+    privacy_show_email: p.privacyShowEmail ?? true,
+    privacy_show_dob: p.privacyShowDob ?? true,
+    privacy_show_directory: p.privacyShowDirectory ?? true,
   };
 }
 
@@ -859,6 +978,7 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<ProfileData>(emptyProfileData);
+  const [isConnected, setIsConnected] = useState(false);
   const [connectionsCount, setConnectionsCount] = useState<number>(0);
   const [projectsCount, setProjectsCount] = useState<number>(0);
   const [jobsCount, setJobsCount] = useState<number>(0);
@@ -868,6 +988,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [editForm, setEditForm] = useState<ProfileData>(emptyProfileData);
   const [expandedEditExperience, setExpandedEditExperience] = useState<Set<string>>(new Set());
   const [expandedEditAchievements, setExpandedEditAchievements] = useState<Set<string>>(new Set());
@@ -936,6 +1057,8 @@ export default function ProfilePage() {
   const usernameParam = searchParams.get("u");
 
   const isOwnProfile = !userIdParam && !usernameParam || (profile.user_id === user?.id) || (profile.id === user?.id);
+  const canMessage = profile.allowMessagesFrom === "everyone" || (profile.allowMessagesFrom === "connections" && isConnected);
+  const canConnect = profile.allowConnectionsFrom === "everyone" || (profile.allowConnectionsFrom === "connections" && isConnected);
 
   const renderSocialValidation = (value: string | undefined, platform: string) => {
     if (!value) return null;
@@ -1059,6 +1182,8 @@ export default function ProfilePage() {
         const isValidUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(actualUserIdParam);
         if (isValidUuid) {
           query = query.or(`user_id.eq.${actualUserIdParam},id.eq.${actualUserIdParam}`);
+        } else if (/^[A-Za-z0-9]{6}$/.test(actualUserIdParam)) {
+          query = query.eq("short_id", actualUserIdParam);
         } else {
           query = query.eq("username", actualUserIdParam);
         }
@@ -1077,10 +1202,43 @@ export default function ProfilePage() {
 
       let resolvedUserId = "";
       if (data) {
+        const { data: sData } = await supabase.from('settings').select('*').eq('profile_id', data.id).maybeSingle();
+        data.settingsData = sData;
+
         const mapped = rowToProfile(data, user.email);
         setProfile(mapped);
         setEditForm(mapped);
         resolvedUserId = mapped.user_id || mapped.id;
+        
+        // Update URL bar to show 6-digit short ID
+        if (mapped.shortId && window.location.pathname.startsWith("/profile")) {
+          window.history.replaceState(null, '', `/profile/${mapped.shortId}`);
+        }
+
+        // Check if current user is connected and log profile view
+        if (user && user.id && user.id !== resolvedUserId) {
+          const { data: connData } = await supabase
+            .from("connections")
+            .select("status")
+            .eq("status", "accepted")
+            .or(`and(user_id.eq.${user.id},connected_user_id.eq.${resolvedUserId}),and(user_id.eq.${resolvedUserId},connected_user_id.eq.${user.id})`)
+            .maybeSingle();
+            
+          if (connData) {
+            setIsConnected(true);
+          }
+
+          if (mapped.allowProfileViews) {
+            await supabase.from("notifications").insert({
+              user_id: resolvedUserId,
+              title: "Profile View",
+              description: `Someone viewed your profile.`,
+              type: "profile",
+              action: "view",
+              action_url: `/profile/${user.id}`
+            });
+          }
+        }
       } else {
         // No profile yet — seed with auth email so user can edit/save
         const seeded = { ...emptyProfileData, email: user.email ?? "", name: (user.user_metadata as any)?.full_name ?? "" };
@@ -1206,6 +1364,41 @@ export default function ProfilePage() {
     setEditForm(profile);
     setSkillsInput((profile.skills || []).join(", "));
     setShowEditProfile(true);
+  };
+
+  const handleImageUpload = (file: File) => {
+    // TODO: implement
+  };
+
+  const handlePrivacyToggle = async (field: 'privacyShowPhone' | 'privacyShowEmail' | 'privacyShowDob' | 'privacyShowDirectory', value: boolean) => {
+    setProfile(prev => ({ ...prev, [field]: value }));
+    setEditForm(prev => ({ ...prev, [field]: value }));
+    
+    if (user && profile.id) {
+      const dbField = field.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ [dbField]: value })
+          .eq('id', profile.id);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Privacy Updated",
+          description: "Your privacy settings have been saved.",
+        });
+      } catch (err: any) {
+        console.error("Error updating privacy:", err);
+        toast({
+          title: "Error",
+          description: "Failed to update privacy settings.",
+          variant: "destructive"
+        });
+        setProfile(prev => ({ ...prev, [field]: !value }));
+        setEditForm(prev => ({ ...prev, [field]: !value }));
+      }
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -1422,15 +1615,32 @@ export default function ProfilePage() {
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-50">{profile.name}</h1>
-                    {profile.verified && (
-                      <UserCheck className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                    )}
-                    {profile.online && (
-                      <div className="w-3 h-3 bg-green-500 rounded-full flex-shrink-0" />
-                    )}
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
+                      {profile.name}
+                      {profile.verified && (
+                        <UserCheck className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                      )}
+                      {profile.tags?.map(skill => {
+                        const tagConfig = [
+                          { label: "Verified", color: "bg-blue-50 text-blue-700 border-blue-200" },
+                          { label: "Popular", color: "bg-green-50 text-green-700 border-green-200" },
+                          { label: "Featured", color: "bg-purple-50 text-purple-700 border-purple-200" },
+                          { label: "Trending", color: "bg-orange-50 text-orange-700 border-orange-200" },
+                          { label: "Expert", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+                          { label: "Mentor", color: "bg-pink-50 text-pink-700 border-pink-200" },
+                          { label: "Influencer", color: "bg-cyan-50 text-cyan-700 border-cyan-200" },
+                          { label: "Rising Star", color: "bg-amber-50 text-amber-700 border-amber-200" }
+                        ].find(t => t.label === skill);
+                        if (!tagConfig) return null;
+                        return (
+                          <Badge key={skill} variant="outline" className={`${tagConfig.color} text-[10px] px-2 py-0.5 rounded-full font-medium h-fit`}>
+                            {skill}
+                          </Badge>
+                        );
+                      })}
+                    </h1>
                   </div>
-                  <div className="flex items-center gap-2 text-sm mb-2">
+                  <div className="flex items-center gap-2 text-sm mb-2 flex-wrap">
                     <span className="text-gray-600 dark:text-zinc-400">@{profile.username}</span>
                     <span className="text-gray-300 dark:text-zinc-600">•</span>
                     <span className="text-gray-700 dark:text-zinc-300 font-medium">{profile.role}</span>
@@ -1538,29 +1748,8 @@ export default function ProfilePage() {
                       {profile.twitter ? (followersCounts.twitter || "...") : "NA"}
                     </span>
                   </div>
-                </div>
 
-                {!isOwnProfile && (
-                  <div className="flex gap-2 mt-1">
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
-                      className="bg-white hover:bg-gray-50 border-gray-300 dark:bg-background dark:border-gray-700 dark:text-gray-200"
-                      onClick={() => navigate(`/messages?u=${encodeURIComponent(profile.username)}`)}
-                    >
-                      <MessageSquare className="w-4 h-4 mr-1" />
-                      Message
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      onClick={handleConnect}
-                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
-                    >
-                      <UserPlus className="w-4 h-4 mr-1" />
-                      Connect
-                    </Button>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
             
@@ -1585,16 +1774,49 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {isOwnProfile && (
-                <Button 
-                  size="sm" 
-                  variant="secondary" 
-                  className="bg-white hover:bg-gray-50 border-gray-300 dark:bg-background dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 shadow-sm flex items-center gap-1 self-end sm:self-auto"
-                  onClick={handleEditProfile}
-                >
-                  <Edit className="w-4 h-4" />
-                  Edit Profile
-                </Button>
+              {isOwnProfile ? (
+                <div className="flex gap-2 self-end sm:self-auto">
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="bg-white hover:bg-gray-50 border-gray-300 dark:bg-background dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 shadow-sm flex items-center gap-1"
+                    onClick={handleEditProfile}
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit Profile
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="bg-white hover:bg-gray-50 border-gray-300 dark:bg-background dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 shadow-sm flex items-center gap-1"
+                    onClick={() => setShowShareModal(true)}
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    onClick={() => navigate(`/messages?u=${encodeURIComponent(profile.username)}`)}
+                    disabled={!canMessage}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1.5" />
+                    Message
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={handleConnect}
+                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white disabled:opacity-50"
+                    disabled={!canConnect}
+                  >
+                    <UserPlus className="w-4 h-4 mr-1.5" />
+                    Connect
+                  </Button>
+                </div>
               )}
             </div>
           </CardContent>
@@ -1660,28 +1882,143 @@ export default function ProfilePage() {
                     <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Contact Information</CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-700 dark:text-zinc-300">{profile.email}</span>
+                    <div className="flex items-start gap-2 text-sm">
+                      <Mail className="w-4 h-4 text-gray-500 mt-0.5" />
+                      <div className="flex flex-row items-start gap-3 w-full">
+                        <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Email Address</span>
+                        <span className="text-gray-700 dark:text-zinc-300 font-medium break-all">
+                          {isOwnProfile || profile.privacyShowEmail ? profile.email : "XXXXXX@XXXX.XXX"}
+                        </span>
+                      </div>
                     </div>
                     {profile.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-4 h-4 text-gray-500" />
-                        <span className="text-gray-700 dark:text-zinc-300">{profile.phone}</span>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Phone className="w-4 h-4 text-gray-500 mt-0.5" />
+                        <div className="flex flex-row items-start gap-3 w-full">
+                          <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Phone Number</span>
+                          <span className="text-gray-700 dark:text-zinc-300 font-medium">
+                            {isOwnProfile || profile.privacyShowPhone ? profile.phone : "XXXXXX"}
+                          </span>
+                        </div>
                       </div>
                     )}
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-700 dark:text-zinc-300">{profile.location}</span>
+                    <div className="flex items-start gap-2 text-sm">
+                      <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
+                      <div className="flex flex-row items-start gap-3 w-full">
+                        <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Current Location</span>
+                        <span className="text-gray-700 dark:text-zinc-300 font-medium">
+                          {isOwnProfile || profile.privacyShowLocation !== false ? (
+                            [profile.currentCity, profile.currentState, profile.currentCountry].filter(Boolean).length > 0
+                              ? [profile.currentCity, profile.currentState, profile.currentCountry].filter(Boolean).join(", ")
+                              : "-"
+                          ) : "XXXXXX"}
+                        </span>
+                      </div>
                     </div>
                     {profile.website && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Globe className="w-4 h-4 text-gray-500" />
-                        <a href={profile.website} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-yellow-500 hover:underline text-sm">
-                          {profile.website}
-                        </a>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Globe className="w-4 h-4 text-gray-500 mt-0.5" />
+                        <div className="flex flex-row items-start gap-3 w-full">
+                          <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Website</span>
+                          <a href={profile.website} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-yellow-500 hover:underline text-sm font-medium break-all">
+                            {profile.website}
+                          </a>
+                        </div>
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+
+                {/* Personal Information */}
+                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Personal Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                    <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Date of Birth & Age</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">
+                        {isOwnProfile || profile.privacyShowDob !== false ? (
+                          profile.dateOfBirth ? (
+                            <>
+                              {profile.dateOfBirth} 
+                              {!isNaN(new Date(profile.dateOfBirth).getTime()) && ` (${Math.abs(new Date(Date.now() - new Date(profile.dateOfBirth).getTime()).getUTCFullYear() - 1970)} years old)`}
+                            </>
+                          ) : "-"
+                        ) : (
+                          profile.dateOfBirth && !isNaN(new Date(profile.dateOfBirth).getTime()) 
+                            ? `${Math.abs(new Date(Date.now() - new Date(profile.dateOfBirth).getTime()).getUTCFullYear() - 1970)} years old`
+                            : "-"
+                        )}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Gender</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.gender || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Nationality</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.nationality || "-"}</span>
+                    </div>
+                    <div className="md:col-span-2 grid grid-cols-[140px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Languages Known</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">
+                        {profile.languages && profile.languages.length > 0 ? profile.languages.join(", ") : "-"}
+                      </span>
+                    </div>
+                    <div className="md:col-span-2 grid grid-cols-[140px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Native Location</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">
+                        {isOwnProfile || profile.privacyShowLocation !== false ? (
+                          [profile.birthCity, profile.birthState, profile.birthCountry].filter(Boolean).length > 0
+                            ? [profile.birthCity, profile.birthState, profile.birthCountry].filter(Boolean).join(", ")
+                            : "-"
+                        ) : "XXXXXX"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Total Experience</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.totalExperience || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Available for Travel</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">
+                        {profile.availableForTravel !== undefined ? (profile.availableForTravel ? "Yes" : "No") : "-"}
+                      </span>
+                    </div>
+                    <div className="md:col-span-2 grid grid-cols-[140px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Availability</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.availability || "-"}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Physical Details */}
+                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Physical Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-8 text-sm">
+                    <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Height</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.height || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Weight</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.weight || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Eye Colour</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.eyeColor || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Hair Colour</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.hairColor || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Skin Tone</span>
+                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.skinTone || "-"}</span>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -1924,8 +2261,16 @@ export default function ProfilePage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      {(() => {
+                    {!isOwnProfile && !profile.privacyShowDirectory ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center bg-gray-50 dark:bg-zinc-800/50 rounded-lg border border-gray-100 dark:border-zinc-800">
+                        <Lock className="w-12 h-12 text-gray-300 dark:text-zinc-600 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-zinc-100">Directory Locked</h3>
+                        <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">This user has chosen to keep their directory private.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                          {(() => {
                         const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter).sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
                         const paginated = filtered.slice((directoryPage - 1) * 9, directoryPage * 9);
                         if (filtered.length === 0) return <p className="text-sm text-gray-500 dark:text-zinc-400 col-span-full">No files found.</p>;
@@ -1962,6 +2307,8 @@ export default function ProfilePage() {
                         </div>
                       );
                     })()}
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -1969,6 +2316,72 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Share / Privacy Modal */}
+      <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Share Profile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-gray-900">Privacy Settings</h4>
+              <p className="text-sm text-gray-500">Toggle what information is visible when others view your profile.</p>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="privacy-phone" className="text-sm font-medium">Show Phone Number</Label>
+                <Switch 
+                  id="privacy-phone" 
+                  checked={profile.privacyShowPhone} 
+                  onCheckedChange={(val) => handlePrivacyToggle('privacyShowPhone', val)}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="privacy-email" className="text-sm font-medium">Show Email Address</Label>
+                <Switch 
+                  id="privacy-email" 
+                  checked={profile.privacyShowEmail} 
+                  onCheckedChange={(val) => handlePrivacyToggle('privacyShowEmail', val)}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="privacy-dob" className="text-sm font-medium">Show Date of Birth & Age</Label>
+                <Switch 
+                  id="privacy-dob" 
+                  checked={profile.privacyShowDob} 
+                  onCheckedChange={(val) => handlePrivacyToggle('privacyShowDob', val)}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="privacy-dir" className="text-sm font-medium">Show Directory Files</Label>
+                <Switch 
+                  id="privacy-dir" 
+                  checked={profile.privacyShowDirectory} 
+                  onCheckedChange={(val) => handlePrivacyToggle('privacyShowDirectory', val)}
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Button 
+                className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
+                onClick={() => {
+                  const url = `${window.location.origin}/profile/${profile.shortId || profile.id}`;
+                  navigator.clipboard.writeText(url);
+                  toast({
+                    title: "Link Copied",
+                    description: "Profile link has been copied to your clipboard.",
+                  });
+                  setShowShareModal(false);
+                }}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Copy Profile Link
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Profile Popup */}
       <Dialog open={showEditProfile} onOpenChange={setShowEditProfile}>
@@ -2055,12 +2468,30 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="location">Location</Label>
+                    <Label htmlFor="currentCity">Current City</Label>
                     <Input
-                      id="location"
-                      value={editForm.location}
-                      onChange={(e) => handleFormChange('location', e.target.value)}
-                      placeholder="Enter your location"
+                      id="currentCity"
+                      value={editForm.currentCity || ''}
+                      onChange={(e) => handleFormChange('currentCity', e.target.value)}
+                      placeholder="e.g. Los Angeles"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="currentState">Current State</Label>
+                    <Input
+                      id="currentState"
+                      value={editForm.currentState || ''}
+                      onChange={(e) => handleFormChange('currentState', e.target.value)}
+                      placeholder="e.g. California"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="currentCountry">Current Country</Label>
+                    <Input
+                      id="currentCountry"
+                      value={editForm.currentCountry || ''}
+                      onChange={(e) => handleFormChange('currentCountry', e.target.value)}
+                      placeholder="e.g. USA"
                     />
                   </div>
                   <div>
@@ -2098,6 +2529,168 @@ export default function ProfilePage() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+                
+                <h3 className="text-lg font-semibold text-gray-900 mt-6 pt-4 border-t">Personal Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      value={editForm.dateOfBirth || ''}
+                      onChange={(e) => handleFormChange('dateOfBirth', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select value={editForm.gender || ''} onValueChange={(value) => handleFormChange('gender', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                        <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="nationality">Nationality</Label>
+                    <Input
+                      id="nationality"
+                      value={editForm.nationality || ''}
+                      onChange={(e) => handleFormChange('nationality', e.target.value)}
+                      placeholder="e.g. Indian"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="languages">Languages Known (comma separated)</Label>
+                    <Input
+                      id="languages"
+                      value={(editForm.languages || []).join(', ')}
+                      onChange={(e) => handleFormChange('languages', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                      placeholder="English, Hindi, Telugu..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="birthCity">Birth City</Label>
+                    <Input
+                      id="birthCity"
+                      value={editForm.birthCity || ''}
+                      onChange={(e) => handleFormChange('birthCity', e.target.value)}
+                      placeholder="e.g. Hyderabad"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="birthState">Birth State</Label>
+                    <Input
+                      id="birthState"
+                      value={editForm.birthState || ''}
+                      onChange={(e) => handleFormChange('birthState', e.target.value)}
+                      placeholder="e.g. Telangana"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="birthCountry">Birth Country</Label>
+                    <Input
+                      id="birthCountry"
+                      value={editForm.birthCountry || ''}
+                      onChange={(e) => handleFormChange('birthCountry', e.target.value)}
+                      placeholder="e.g. India"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="totalExperience">Total Experience</Label>
+                    <Input
+                      id="totalExperience"
+                      value={editForm.totalExperience || ''}
+                      onChange={(e) => handleFormChange('totalExperience', e.target.value)}
+                      placeholder="e.g. 5 Years"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="availableForTravel">Available for Travel</Label>
+                    <Select 
+                      value={editForm.availableForTravel ? "yes" : "no"} 
+                      onValueChange={(value) => handleFormChange('availableForTravel', value === "yes")}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-3">
+                    <Label htmlFor="availability">Availability</Label>
+                    <Select value={editForm.availability || ''} onValueChange={(value) => handleFormChange('availability', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Availability" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Full time">Full time</SelectItem>
+                        <SelectItem value="Part time">Part time</SelectItem>
+                        <SelectItem value="Only on weekends">Only on weekends</SelectItem>
+                        <SelectItem value="Available immediately">Available immediately</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-semibold text-gray-900 mt-6 pt-4 border-t">Physical Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="height">Height</Label>
+                    <Input
+                      id="height"
+                      value={editForm.height || ''}
+                      onChange={(e) => handleFormChange('height', e.target.value)}
+                      placeholder="e.g. 5'10&quot;"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="weight">Weight</Label>
+                    <Input
+                      id="weight"
+                      value={editForm.weight || ''}
+                      onChange={(e) => handleFormChange('weight', e.target.value)}
+                      placeholder="e.g. 70 kg"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="eyeColor">Eye Colour</Label>
+                    <Input
+                      id="eyeColor"
+                      value={editForm.eyeColor || ''}
+                      onChange={(e) => handleFormChange('eyeColor', e.target.value)}
+                      placeholder="e.g. Brown"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="hairColor">Hair Colour</Label>
+                    <Input
+                      id="hairColor"
+                      value={editForm.hairColor || ''}
+                      onChange={(e) => handleFormChange('hairColor', e.target.value)}
+                      placeholder="e.g. Black"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="skinTone">Skin Tone</Label>
+                    <Input
+                      id="skinTone"
+                      value={editForm.skinTone || ''}
+                      onChange={(e) => handleFormChange('skinTone', e.target.value)}
+                      placeholder="e.g. Fair, Medium, Dark"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                   <div>
                     <Label htmlFor="company">Company</Label>
                     <Input

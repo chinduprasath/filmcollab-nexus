@@ -21,7 +21,8 @@ import {
   Moon,
   Sun,
   Monitor,
-  Building2
+  Building2,
+  MapPin
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "next-themes";
@@ -51,14 +52,15 @@ const navigationItems = [
   {
     section: "CONTENT",
     items: [
-      { name: "Directory", icon: UserCheck, href: "/directory" },
-      { name: "Companies Directory", icon: Building2, href: "/studios" }
+      { name: "Talent Hub", icon: Search, href: "/discover" },
+      { name: "Talent Directory", icon: UserCheck, href: "/directory" },
+      { name: "Companies Directory", icon: Building2, href: "/studios" },
+      { name: "Shooting Locations", icon: MapPin, href: "/locations" }
     ]
   },
   {
     section: "NETWORKING",
     items: [
-      { name: "Discover", icon: Search, href: "/discover" },
       { name: "Messages", icon: MessageCircle, href: "/messages" },
       { name: "Connections", icon: Heart, href: "/connections" }
     ]

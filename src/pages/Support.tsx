@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +35,9 @@ import {
 
 const Support = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const [tickets, setTickets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('create');
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,53 +52,33 @@ const Support = () => {
     attachments: []
   });
 
-  // Mock tickets data
-  const mockTickets = [
-    {
-      id: 'TKT-001',
-      subject: 'Account login issues',
-      category: 'Account',
-      priority: 'high',
-      status: 'open',
-      createdAt: '2024-01-10',
-      updatedAt: '2024-01-10',
-      description: 'Unable to login to my account. Getting error message.',
-      replies: 2
-    },
-    {
-      id: 'TKT-002',
-      subject: 'Feature request: Dark mode',
-      category: 'Feature Request',
-      priority: 'low',
-      status: 'in-progress',
-      createdAt: '2024-01-08',
-      updatedAt: '2024-01-09',
-      description: 'Would love to have a dark mode option for the interface.',
-      replies: 1
-    },
-    {
-      id: 'TKT-003',
-      subject: 'Billing question',
-      category: 'Billing',
-      priority: 'medium',
-      status: 'resolved',
-      createdAt: '2024-01-05',
-      updatedAt: '2024-01-07',
-      description: 'Question about my subscription renewal.',
-      replies: 3
-    },
-    {
-      id: 'TKT-004',
-      subject: 'Project upload error',
-      category: 'Technical',
-      priority: 'high',
-      status: 'open',
-      createdAt: '2024-01-12',
-      updatedAt: '2024-01-12',
-      description: 'Getting error when trying to upload project files.',
-      replies: 0
+  const fetchTickets = async () => {
+    if (!profile) return;
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false });
+        
+      console.log("Support.tsx fetchTickets - profile.id:", profile.id);
+      console.log("Support.tsx fetchTickets - returned data:", data);
+
+      if (error) {
+        console.error("Tickets fetch error:", error);
+        throw error;
+      }
+      setTickets(data || []);
+    } catch (err: any) {
+      console.error('Error fetching tickets:', err);
     }
-  ];
+  };
+
+  useEffect(() => {
+    if (profile) {
+      fetchTickets();
+    }
+  }, [profile]);
 
   const categories = [
     'Account',
@@ -130,15 +116,37 @@ const Support = () => {
       return;
     }
 
+    if (!user || !profile) {
+      toast({
+        title: "Error",
+        description: "You must be fully logged in to create a ticket.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.from('tickets').insert({
+        user_id: profile.id,
+        subject: ticketForm.subject,
+        category: ticketForm.category,
+        priority: ticketForm.priority,
+        description: ticketForm.description
+      });
+      
+      if (error) {
+        console.error("Insert ticket error:", error);
+        throw error;
+      }
       
       toast({
         title: "Ticket Created",
         description: "Your support ticket has been submitted successfully.",
       });
+      
+      fetchTickets();
+      setActiveTab('tickets');
       
       // Reset form
       setTicketForm({
@@ -148,10 +156,11 @@ const Support = () => {
         description: '',
         attachments: []
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Create ticket exception:", error);
       toast({
         title: "Error",
-        description: "Failed to create ticket. Please try again.",
+        description: `Failed to create ticket: ${error?.message || "Unknown error"}`,
         variant: "destructive",
       });
     } finally {
@@ -177,7 +186,7 @@ const Support = () => {
     );
   };
 
-  const filteredTickets = mockTickets.filter(ticket => {
+  const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          ticket.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = filterStatus === 'all' || ticket.status === filterStatus;
@@ -199,60 +208,63 @@ const Support = () => {
           </Badge>
         </div>
 
-        {/* Quick Help Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
-            <CardContent className="p-4 text-center">
-              <MessageSquare className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
-              <h3 className="font-medium text-sm">Live Chat</h3>
-              <p className="text-xs text-gray-500 mt-1">Chat with support</p>
-            </CardContent>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
-            <CardContent className="p-4 text-center">
-              <Phone className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <h3 className="font-medium text-sm">Phone Support</h3>
-              <p className="text-xs text-gray-500 mt-1">Call us directly</p>
-            </CardContent>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
-            <CardContent className="p-4 text-center">
-              <FileText className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="font-medium text-sm">Knowledge Base</h3>
-              <p className="text-xs text-gray-500 mt-1">Browse articles</p>
-            </CardContent>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
-            <CardContent className="p-4 text-center">
-              <Calendar className="w-8 h-8 text-orange-600 mx-auto mb-2" />
-              <h3 className="font-medium text-sm">Schedule Call</h3>
-              <p className="text-xs text-gray-500 mt-1">Book a meeting</p>
-            </CardContent>
-          </Card>
-        </div>
+
 
         {/* Tabs */}
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
-          <button
-            onClick={() => setActiveTab('create')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'create'
-                ? 'bg-white text-yellow-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Create Ticket
-          </button>
-          <button
-            onClick={() => setActiveTab('tickets')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'tickets'
-                ? 'bg-white text-yellow-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            My Tickets ({mockTickets.length})
-          </button>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Tabs */}
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+            <button
+              onClick={() => setActiveTab('create')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'create'
+                  ? 'bg-white text-yellow-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Create Ticket
+            </button>
+            <button
+              onClick={() => setActiveTab('tickets')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'tickets'
+                  ? 'bg-white text-yellow-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              My Tickets ({tickets.length})
+            </button>
+          </div>
+
+          {/* Search and Filter */}
+          {activeTab === 'tickets' && (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search tickets..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-10 w-full sm:w-64"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-[140px] h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    {statuses.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Create Ticket Tab */}
@@ -352,44 +364,6 @@ const Support = () => {
         {/* My Tickets Tab */}
         {activeTab === 'tickets' && (
           <div className="space-y-4">
-            {/* Search and Filter */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input
-                        placeholder="Search tickets..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Select value={filterStatus} onValueChange={setFilterStatus}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        {statuses.map((status) => (
-                          <SelectItem key={status.value} value={status.value}>
-                            {status.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                      <Filter className="w-4 h-4 mr-1" />
-                      Filter
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Tickets List */}
             <div className="space-y-4">
               {filteredTickets.map((ticket) => (
@@ -398,9 +372,14 @@ const Support = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-lg">{ticket.subject}</h3>
+                          <h3 
+                            className="font-semibold text-lg cursor-pointer hover:text-yellow-600 transition-colors"
+                            onClick={() => navigate(`/support/${ticket.id}`)}
+                          >
+                            {ticket.subject}
+                          </h3>
                           <Badge variant="outline" className="text-xs">
-                            {ticket.id}
+                            {ticket.ticket_number}
                           </Badge>
                         </div>
                         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -413,7 +392,7 @@ const Support = () => {
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            Created {ticket.createdAt}
+                            {new Date(ticket.created_at).toLocaleDateString()}
                           </div>
                           <div className="flex items-center gap-1">
                             <MessageSquare className="w-3 h-3" />
@@ -424,10 +403,6 @@ const Support = () => {
                       <div className="flex flex-col items-end gap-2">
                         {getStatusBadge(ticket.status)}
                         {getPriorityBadge(ticket.priority)}
-                        <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -457,98 +432,6 @@ const Support = () => {
             )}
           </div>
         )}
-
-        {/* FAQ Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Frequently Asked Questions
-            </CardTitle>
-            <CardDescription>
-              Quick answers to common questions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-2">How do I reset my password?</h4>
-                  <p className="text-sm text-gray-600">
-                    Go to Settings → Security → Change Password, or use the "Forgot Password" link on the login page.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">How do I upgrade my plan?</h4>
-                  <p className="text-sm text-gray-600">
-                    Visit the Billing page and select your desired plan. You can upgrade anytime.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">How do I delete my account?</h4>
-                  <p className="text-sm text-gray-600">
-                    Contact support to request account deletion. This action cannot be undone.
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-2">What file formats are supported?</h4>
-                  <p className="text-sm text-gray-600">
-                    We support MP4, MOV, AVI for videos; JPG, PNG, GIF for images; PDF, DOC, DOCX for documents.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">How do I invite team members?</h4>
-                  <p className="text-sm text-gray-600">
-                    Go to your project settings and use the "Invite Members" feature to add team members.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Is there a mobile app?</h4>
-                  <p className="text-sm text-gray-600">
-                    Yes! Download our mobile app from the App Store or Google Play Store.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Contact Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="w-5 h-5" />
-              Contact Information
-            </CardTitle>
-            <CardDescription>
-              Reach out to us through these channels
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-4 border border-gray-200 rounded-lg">
-                <Mail className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
-                <h4 className="font-medium mb-1">Email Support</h4>
-                <p className="text-sm text-gray-600 mb-2">support@filmcollab.com</p>
-                <p className="text-xs text-gray-500">Response within 24 hours</p>
-              </div>
-              <div className="text-center p-4 border border-gray-200 rounded-lg">
-                <Phone className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <h4 className="font-medium mb-1">Phone Support</h4>
-                <p className="text-sm text-gray-600 mb-2">+1 (555) 123-4567</p>
-                <p className="text-xs text-gray-500">Mon-Fri 9AM-6PM PST</p>
-              </div>
-              <div className="text-center p-4 border border-gray-200 rounded-lg">
-                <MessageSquare className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                <h4 className="font-medium mb-1">Live Chat</h4>
-                <p className="text-sm text-gray-600 mb-2">Available 24/7</p>
-                <p className="text-xs text-gray-500">Average response: 5 minutes</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </AppLayout>
   );

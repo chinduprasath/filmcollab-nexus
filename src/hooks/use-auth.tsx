@@ -47,6 +47,13 @@ interface UserRole {
   created_at: string;
 }
 
+export interface AdminPermissions {
+  id: string;
+  role: string;
+  status: string;
+  permissions: Record<string, any>;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -58,6 +65,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   linkProfile: (userId: string) => Promise<void>;
   isAdmin: () => boolean;
+  adminPermissions: AdminPermissions | null;
+  hasPermission: (page: string, action?: string) => boolean;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   signInAsGuest: (isAdminRole?: boolean) => void;
 }
@@ -69,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [adminPermissions, setAdminPermissions] = useState<AdminPermissions | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -106,25 +116,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           supabase
             .from('profiles')
             .select('*')
-            .eq('user_id', userId)
+            .eq('id', userId)
             .maybeSingle() as unknown as Promise<{ data: Profile | null; error: null | { message: string } }>,
-          1500,
+          10000,
           { data: null, error: null }
         ),
         withTimeout(
           supabase
             .from('user_roles')
             .select('*')
-            .eq('user_id', userId) as unknown as Promise<{ data: UserRole[] | null; error: null | { message: string } }>,
-          1500,
-          { data: null, error: null }
+            .eq('user_id', userId) as unknown as Promise<{ data: UserRole[]; error: null | { message: string } }>,
+          10000,
+          { data: [], error: null }
         )
       ]);
 
-      const profileData = profileResult?.data;
-      const profileError = profileResult?.error;
-      const roleData = roleResult?.data;
-      const roleError = roleResult?.error;
+      const { data: profileData, error: profileError } = profileResult;
+      const { data: roleData, error: roleError } = roleResult;
+
+      // Fetch admin permissions if applicable
+      let adminPermsData = null;
+      if (profileData && (profileData.role === 'admin' || (roleData && roleData.some(r => r.role === 'admin')))) {
+        const permsResult = await withTimeout(
+          supabase
+            .from('admin_team_members')
+            .select('*')
+            .eq('profile_id', profileData.id)
+            .maybeSingle(),
+          10000,
+          { data: null, error: null }
+        );
+        adminPermsData = permsResult.data;
+        setAdminPermissions(adminPermsData as AdminPermissions);
+      } else {
+        setAdminPermissions(null);
+      }
 
       if (profileError) {
         console.warn('Profile fetch warning or timeout:', profileError);
@@ -163,10 +189,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: email,
           role: role,
           username: email.split('@')[0] || `user_${userId.slice(0, 5)}`,
-          followers_count: 0,
-          projects_count: 0,
-          posts_count: 0,
-          likes_count: 0,
+          follower_count: 0,
+          project_count: 0,
         };
 
         const { data: insertedProfile, error: insertError } = await withTimeout(
@@ -191,10 +215,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: email,
             role: role,
             username: email.split('@')[0] || `user_${userId.slice(0, 5)}`,
-            followers_count: 0,
-            projects_count: 0,
-            posts_count: 0,
-            likes_count: 0,
+            follower_count: 0,
+            project_count: 0,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           } as unknown as Profile;
@@ -220,6 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null);
           setUser(null);
           setUserRole(null);
+          setAdminPermissions(null);
           setLoading(false);
           return;
         }
@@ -296,9 +319,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchProfile(userId);
   };
 
-  const isAdmin = useCallback(() => {
-    return userRole?.role === 'admin';
-  }, [userRole]);
+  const isAdmin = () => {
+    return userRole?.role === 'admin' || profile?.role === 'admin' || localStorage.getItem("registering_admin") === "true";
+  };
+
+  const hasPermission = (page: string, action?: string) => {
+    if (!isAdmin()) return false;
+    
+    // Superadmin bypass (if there's no admin_team_members entry, assume they are superadmin, or if explicitly set)
+    if (!adminPermissions) {
+      // For now, if you are an admin and not in the team members table, you have full access
+      return true;
+    }
+    
+    if (adminPermissions.status !== 'Active') return false;
+    
+    // Admins have full access
+    if (adminPermissions.role === 'Admin') return true;
+
+    const pagePerms = adminPermissions.permissions?.[page];
+    if (!pagePerms) return false;
+    
+    if (action) {
+      return !!pagePerms[action];
+    }
+    
+    return !!pagePerms.view;
+  };
 
   useEffect(() => {
     console.log('useAuth useEffect running');
@@ -370,7 +417,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const timeoutId = setTimeout(() => {
       console.log('Fallback timeout - setting loading to false');
       setLoading(false);
-    }, 4000);
+    }, 15000);
 
     return () => {
       subscription.unsubscribe();
@@ -511,7 +558,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signOut = async () => {
+  const signOutAndClear = async () => {
     try {
       localStorage.removeItem("guest_session");
       // Clear all state first
@@ -519,10 +566,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       setProfile(null);
       setUserRole(null);
+      setAdminPermissions(null);
       setLoading(false);
       
-      // Sign out from Supabase (run in background, do not block the UI!)
-      supabase.auth.signOut().catch(e => console.warn("Background signout error:", e));
+      // Sign out from Supabase and await it to ensure localStorage is cleared
+      await supabase.auth.signOut().catch(e => console.warn("Signout error:", e));
       
       toast({
         title: "Signed out",
@@ -617,22 +665,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        profile,
-        userRole,
-        loading,
-        signIn,
-        signUp,
-        signOut,
-        linkProfile,
-        isAdmin,
-        resetPassword,
-        signInAsGuest,
-      }}
-    >
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      profile, 
+      userRole, 
+      loading, 
+      signIn, 
+      signUp, 
+      signOut: signOutAndClear, 
+      linkProfile,
+      isAdmin,
+      adminPermissions,
+      hasPermission,
+      resetPassword,
+      signInAsGuest
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -7,6 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Eye, 
   Trash2,
@@ -17,10 +27,16 @@ import {
   Search,
   Tags,
   User,
-  Check
+  Check,
+  MoreVertical,
+  Bell,
+  Ban
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function AdminProjects() {
   // Available tags for projects
@@ -37,43 +53,48 @@ export default function AdminProjects() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [editingTags, setEditingTags] = useState<{ id: number; tags: string[] } | null>(null);
+  const [editingTags, setEditingTags] = useState<{ id: string; tags: string[] } | null>(null);
+  
+  const [projects, setProjects] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Mock projects data
-  const projects = [
-    {
-      id: 1,
-      title: "Indie Film Production",
-      description: "Looking for crew members",
-      category: "Feature Film",
-      date: "2024-03-10",
-      status: "Active",
-      creator: {
-        id: 1,
-        name: "Michael Chen",
-        username: "michael",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=michael",
-        category: "Direction & Production"
-      },
-      tags: ["Featured", "Hiring", "Urgent"]
-    },
-    {
-      id: 2,
-      title: "Documentary Series",
-      description: "Environmental awareness project",
-      category: "Documentary",
-      date: "2024-03-08",
-      status: "Pending",
-      creator: {
-        id: 2,
-        name: "Leo Martinez",
-        username: "leo",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=leo",
-        category: "Cinematography & Camera"
-      },
-      tags: ["Trending", "Collab"]
+  // Notification states
+  const [isNotifyDialogOpen, setIsNotifyDialogOpen] = useState(false);
+  const [notifyUser, setNotifyUser] = useState<any | null>(null);
+  const [notificationTitle, setNotificationTitle] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
+
+  const fetchProjects = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [projectsRes, profilesRes] = await Promise.all([
+        supabase.from("projects").select("*").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id, username, full_name, avatar_url")
+      ]);
+
+      if (projectsRes.error) throw projectsRes.error;
+      if (profilesRes.error) throw profilesRes.error;
+
+      setProjects(projectsRes.data || []);
+      setProfiles(profilesRes.data || []);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      toast({
+        title: "Error fetching data",
+        description: "Failed to load projects from the database.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  }, [toast]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -89,61 +110,108 @@ export default function AdminProjects() {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "Active":
+    switch (status?.toLowerCase()) {
+      case "active":
+      case "open":
         return Play;
-      case "Pending":
+      case "pending":
         return Clock;
-      case "Rejected":
-        return X;
+      case "blocked":
+      case "rejected":
+        return Ban;
       default:
         return Clock;
     }
   };
 
-  const handleViewProject = (projectId: number) => {
-    console.log("View project:", projectId);
-    // Implement view project functionality
+
+  const handleUpdateStatus = async (projectId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ status: newStatus })
+        .eq("id", projectId);
+      
+      if (error) throw error;
+      
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, status: newStatus } : p));
+      toast({
+        title: "Status Updated",
+        description: `Project status changed to ${newStatus}.`
+      });
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast({
+        title: "Update Failed",
+        description: "Could not update project status.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleApproveProject = (projectId: number) => {
-    console.log("Approve project:", projectId);
-    // Implement approve project functionality
+  const handleDeleteProject = async (projectId: string) => {
+    if (!window.confirm("Are you sure you want to delete this project? This action cannot be undone.")) return;
+    
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", projectId);
+      
+      if (error) throw error;
+      
+      setProjects(prev => prev.filter(p => p.id !== projectId));
+      toast({
+        title: "Project Deleted",
+        description: "The project has been successfully removed."
+      });
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      toast({
+        title: "Delete Failed",
+        description: "Could not delete the project.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleRejectProject = (projectId: number) => {
-    console.log("Reject project:", projectId);
-    // Implement reject project functionality
+  const handleEditTags = (projectId: string, currentTags: string[]) => {
+    setEditingTags({ id: projectId, tags: currentTags || [] });
   };
 
-  const handleDeleteProject = (projectId: number) => {
-    console.log("Delete project:", projectId);
-    // Implement delete project functionality
-  };
-
-  const handleEditTags = (projectId: number, currentTags: string[]) => {
-    setEditingTags({ id: projectId, tags: currentTags });
-  };
-
-  const handleSaveProjectTags = (projectId: number) => {
-    // Here you would typically make an API call to update the project's tags
-    const projectToUpdate = projects.find(p => p.id === projectId);
-    if (projectToUpdate && editingTags) {
-      projectToUpdate.tags = editingTags.tags;
+  const handleSaveProjectTags = async (projectId: string) => {
+    if (!editingTags) return;
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ tags: editingTags.tags })
+        .eq("id", projectId);
+      
+      if (error) throw error;
+      
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, tags: editingTags.tags } : p));
       setEditingTags(null);
+      toast({
+        title: "Tags Updated",
+        description: "Project tags have been successfully saved."
+      });
+    } catch (error) {
+      console.error("Error updating tags:", error);
+      toast({
+        title: "Update Failed",
+        description: "Could not save project tags.",
+        variant: "destructive"
+      });
     }
   };
 
   const handleTagToggle = (tag: string) => {
     if (!editingTags) return;
-
     setEditingTags(current => {
       if (!current) return null;
-
       const newTags = current.tags.includes(tag)
         ? current.tags.filter(t => t !== tag)
         : [...current.tags, tag];
-
       return { ...current, tags: newTags };
     });
   };
@@ -164,21 +232,75 @@ export default function AdminProjects() {
     return styles[tagConfig.color] || "bg-gray-50 text-gray-700 hover:bg-gray-100";
   };
 
+  const handleOpenNotify = (project: any, creator: any) => {
+    if (!creator) {
+      toast({
+        title: "Creator Not Found",
+        description: "Cannot send notification. Creator profile is missing.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setNotifyUser(creator);
+    setNotificationTitle(`Regarding your project: ${project.title}`);
+    setNotificationMessage("");
+    setIsNotifyDialogOpen(true);
+  };
+
+  const handleSendNotification = async () => {
+    if (!notifyUser || !notificationTitle.trim() || !notificationMessage.trim()) return;
+    try {
+      setIsSendingNotification(true);
+      const { error } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: notifyUser.id,
+          title: notificationTitle.trim(),
+          description: notificationMessage.trim(),
+          type: "system",
+          priority: "high",
+          status: "unread"
+        });
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Notification Sent",
+        description: `Successfully sent notification to ${notifyUser.username || notifyUser.full_name || 'the user'}.`
+      });
+      setIsNotifyDialogOpen(false);
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      toast({
+        title: "Failed to send notification",
+        description: "Could not write notification entry to database.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSendingNotification(false);
+    }
+  };
+
   // Filter projects based on search and filters
   const filteredProjects = projects.filter(project => {
+    const creator = profiles.find(p => p.id === project.created_by) || {};
     const matchesSearch = 
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.creator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.creator.username.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || project.category.toLowerCase() === categoryFilter.toLowerCase();
-    const matchesStatus = statusFilter === "all" || project.status.toLowerCase() === statusFilter.toLowerCase();
+      (project.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (project.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (creator.full_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (creator.username || "").toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const projectType = project.project_type || project.category || "";
+    const matchesCategory = categoryFilter === "all" || projectType.toLowerCase() === categoryFilter.toLowerCase();
+    
+    const status = project.status || "open";
+    const matchesStatus = statusFilter === "all" || status.toLowerCase() === statusFilter.toLowerCase();
     
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
   return (
-    <AdminLayout pageTitle="Projects Management">
+    <AdminLayout pageTitle="Projects Management" pageName="Projects">
       <div className="space-y-6">
         {/* Page Header */}
         <div>
@@ -231,9 +353,8 @@ export default function AdminProjects() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="active">Active/Open</SelectItem>
+                      <SelectItem value="blocked">Blocked</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -256,58 +377,91 @@ export default function AdminProjects() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProjects.map((project) => {
-                    const StatusIcon = getStatusIcon(project.status);
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mx-auto"></div>
+                        <p className="mt-2 text-sm text-gray-500">Loading projects...</p>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredProjects.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                        No projects found matching your criteria.
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredProjects.map((project) => {
+                    const status = project.status || "open";
+                    const StatusIcon = getStatusIcon(status);
+                    const creator = profiles.find(p => p.id === project.created_by) || {
+                      full_name: "Unknown User",
+                      username: "unknown",
+                      avatar_url: ""
+                    };
+                    const projectTags = Array.isArray(project.tags) ? project.tags : [];
+                    
                     return (
                       <TableRow key={project.id}>
-                        <TableCell className="font-medium">#{project.id}</TableCell>
+                        <TableCell className="font-medium text-xs font-mono">
+                          {project.id.substring(0, 8)}...
+                        </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium">{project.title}</span>
-                            <span className="text-sm text-muted-foreground truncate max-w-xs">{project.description}</span>
+                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">{project.description}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 hover:bg-yellow-100">
-                            {project.category}
+                          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 hover:bg-yellow-100 whitespace-nowrap">
+                            {project.project_type || project.category || "Uncategorized"}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                              <User className="h-4 w-4 text-yellow-600" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">{project.creator.name}</span>
-                              <span className="text-xs text-muted-foreground">@{project.creator.username}</span>
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={creator.avatar_url} />
+                              <AvatarFallback className="bg-yellow-100 text-yellow-600 text-xs">
+                                {(creator.full_name || "U")[0].toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-medium truncate w-[100px]">{creator.full_name || "Unknown"}</span>
+                              <span className="text-xs text-muted-foreground truncate w-[100px]">@{creator.username || "unknown"}</span>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{project.date}</TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {new Date(project.created_at).toLocaleDateString()}
+                        </TableCell>
                         <TableCell>
-                          <Badge variant={getStatusBadgeVariant(project.status)} className="flex items-center gap-1 w-fit">
+                          <Badge variant={getStatusBadgeVariant(status)} className="flex items-center gap-1 w-fit capitalize">
                             <StatusIcon className="h-3 w-3" />
-                            {project.status}
+                            {status}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className="flex flex-wrap gap-2 flex-1">
-                              {project.tags.map((tag, index) => (
+                            <div className="flex flex-wrap gap-1 max-w-[150px]">
+                              {projectTags.slice(0, 2).map((tag: string, index: number) => (
                                 <Badge 
                                   key={index}
                                   variant="secondary" 
-                                  className={getTagBadgeStyle(tag)}
+                                  className={cn("text-[10px] px-1.5 py-0", getTagBadgeStyle(tag))}
                                 >
                                   {tag}
                                 </Badge>
                               ))}
+                              {projectTags.length > 2 && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-gray-100 text-gray-600">
+                                  +{projectTags.length - 2}
+                                </Badge>
+                              )}
                             </div>
                             <Popover 
                               open={editingTags?.id === project.id}
                               onOpenChange={(open) => {
                                 if (open) {
-                                  handleEditTags(project.id, project.tags);
+                                  handleEditTags(project.id, projectTags);
                                 } else {
                                   setEditingTags(null);
                                 }
@@ -317,9 +471,9 @@ export default function AdminProjects() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 hover:bg-yellow-50"
+                                  className="h-7 w-7 hover:bg-yellow-50"
                                 >
-                                  <Tags className="h-4 w-4 text-yellow-600" />
+                                  <Tags className="h-3.5 w-3.5 text-yellow-600" />
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-80 p-0" align="end">
@@ -366,47 +520,41 @@ export default function AdminProjects() {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewProject(project.id)}
-                              className="h-8 w-8"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            
-                            {project.status === "Pending" && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleApproveProject(project.id)}
-                                  className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                </Button>
-                                
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleRejectProject(project.id)}
-                                  className="h-8 w-8 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                            
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteProject(project.id)}
-                              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreVertical className="h-4 w-4 text-gray-500" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+
+                              <DropdownMenuItem onClick={() => handleOpenNotify(project, creator)}>
+                                <Bell className="mr-2 h-4 w-4 text-blue-500" />
+                                Notify Creator
+                              </DropdownMenuItem>
+                              
+                              {status !== 'blocked' ? (
+                                <DropdownMenuItem onClick={() => handleUpdateStatus(project.id, 'blocked')}>
+                                  <Ban className="mr-2 h-4 w-4 text-orange-500" />
+                                  Block Project
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleUpdateStatus(project.id, 'open')}>
+                                  <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                                  Unblock Project
+                                </DropdownMenuItem>
+                              )}
+                              
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteProject(project.id)}
+                                className="text-red-600 focus:text-red-700"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Project
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     );
@@ -430,6 +578,50 @@ export default function AdminProjects() {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Notify Dialog */}
+        <Dialog open={isNotifyDialogOpen} onOpenChange={setIsNotifyDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Send Notification</DialogTitle>
+              <DialogDescription>
+                Send a direct notification to {notifyUser?.full_name || notifyUser?.username || 'the creator'}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Title</label>
+                <Input
+                  placeholder="Notification title..."
+                  value={notificationTitle}
+                  onChange={(e) => setNotificationTitle(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Message</label>
+                <Textarea
+                  placeholder="Type your message here..."
+                  value={notificationMessage}
+                  onChange={(e) => setNotificationMessage(e.target.value)}
+                  className="min-h-[100px]"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsNotifyDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                className="bg-yellow-500 hover:bg-yellow-600" 
+                onClick={handleSendNotification}
+                disabled={isSendingNotification || !notificationTitle.trim() || !notificationMessage.trim()}
+              >
+                {isSendingNotification ? "Sending..." : "Send Notification"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </AdminLayout>
   );

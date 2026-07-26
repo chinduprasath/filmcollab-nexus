@@ -841,7 +841,7 @@ export default function Jobs() {
     }
   };
 
-  const handleApplyJob = (job: Job) => {
+  const handleApplyJob = async (job: Job) => {
     if (!user) {
       toast({
         variant: "destructive",
@@ -864,6 +864,18 @@ export default function Jobs() {
         title: "Application Submitted",
         description: `Successfully applied for ${job.job_title} at ${job.company_name}!`
       });
+      
+      // Notify the job poster
+      if (job.user_id && job.user_id !== user.id) {
+        supabase.from("notifications").insert({
+          user_id: job.user_id,
+          title: "New Job Application",
+          description: `Someone applied for your job: ${job.job_title}`,
+          type: "job",
+          action_url: `/jobs?jobId=${job.id}`
+        }).then();
+      }
+      
       return updated;
     });
   };

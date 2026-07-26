@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AdminSidebarProps {
   className?: string;
@@ -44,6 +45,7 @@ export function AdminSidebar({ className, isCollapsed = false, onToggle }: Admin
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasPermission } = useAuth();
 
   const handleNavigation = (href: string) => {
     navigate(href);
@@ -97,7 +99,10 @@ export function AdminSidebar({ className, isCollapsed = false, onToggle }: Admin
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
         <div className="space-y-1">
-          {adminNavigationItems.map((item) => (
+          {adminNavigationItems.filter(item => {
+            if (item.name === "Overview") return true;
+            return hasPermission(item.name);
+          }).map((item) => (
             <Button
               key={item.name}
               variant="ghost"

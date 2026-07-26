@@ -93,6 +93,7 @@ interface User {
   is_saved?: boolean;
   connection_status?: string | null;
   connection_initiator?: string | null;
+  allow_connections_from?: string;
 }
 
 type FilterType = "all" | "verified" | "new" | "popular";
@@ -393,7 +394,7 @@ export default function DiscoverPage() {
     try {
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("*");
+        .select("*, settings(privacy_settings)");
 
       if (profilesError) {
         throw profilesError;
@@ -463,6 +464,7 @@ export default function DiscoverPage() {
         projects_count?: number | null;
         posts_count?: number | null;
         likes_count?: number | null;
+        settings?: any[];
       }
 
       const mappedUsers: User[] = ((profilesData as DBProfile[]) || [])
@@ -473,6 +475,12 @@ export default function DiscoverPage() {
           // Exclude admins
           const roleLower = (p.role || "").toLowerCase();
           if (roleLower === "admin") return false;
+          // Check profile visibility from settings
+          const privacySettings = Array.isArray(p.settings) 
+            ? (p.settings.length > 0 ? p.settings[0].privacy_settings : null)
+            : (p.settings ? (p.settings as any).privacy_settings : null);
+          const visibility = privacySettings?.profileVisibility || 'public';
+          if (visibility !== 'public') return false;
           return true;
         })
         .map((p: DBProfile) => {
@@ -504,8 +512,11 @@ export default function DiscoverPage() {
             likes_count: p.likes_count || 0,
             is_liked: likedUserIds.includes(p.id),
             is_saved: savedUserIds.includes(p.id),
-            connection_status: conn ? conn.status : null,
-            connection_initiator: conn ? conn.user_id : null,
+            connection_status: conn?.status || null,
+            connection_initiator: conn?.user_id || null,
+            allow_connections_from: Array.isArray(p.settings) 
+              ? (p.settings.length > 0 ? p.settings[0].privacy_settings?.allowConnectionRequests : null)
+              : (p.settings ? (p.settings as any).privacy_settings?.allowConnectionRequests : null),
           };
         });
 
@@ -698,6 +709,16 @@ export default function DiscoverPage() {
             title: "Connection Request Accepted",
             description: `You are now connected with ${userName}!`,
           });
+          
+          // Insert notification for the initiator
+          await supabase.from("notifications").insert({
+            user_id: initiatorId,
+            title: "Connection Accepted",
+            description: `${profile.full_name || profile.username || 'Someone'} accepted your connection request.`,
+            type: "connection",
+            action_url: `/profile/${profile.id}`
+          });
+          
           fetchUsers(); // Refresh users
           return;
         } else {
@@ -742,6 +763,16 @@ export default function DiscoverPage() {
         title: "Connection Request Sent",
         description: `Connection request sent to ${userName}`,
       });
+      
+      // Insert notification for the recipient
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        title: "New Connection Request",
+        description: `${profile.full_name || profile.username || 'Someone'} sent you a connection request.`,
+        type: "connection",
+        action_url: `/profile/${profile.id}`
+      });
+      
       fetchUsers(); // Refresh to update UI state
     } catch (error) {
       console.error('Error in handleConnect:', error);
@@ -797,6 +828,14 @@ export default function DiscoverPage() {
       const isCurrentlyLiked = currentUserItem?.is_liked || false;
 
       if (isCurrentlyLiked) {
+        // Remove notification if unliked
+        await supabase
+          .from("notifications")
+          .delete()
+          .eq("user_id", userId)
+          .eq("action_url", `/profile/${profile.id}`)
+          .eq("type", "profile");
+        
         // Unliking
         const { error: deleteError } = await supabase
           .from("user_likes")
@@ -833,6 +872,15 @@ export default function DiscoverPage() {
           });
 
         if (insertError) throw insertError;
+        
+        // Add notification for the user
+        await supabase.from("notifications").insert({
+          user_id: userId,
+          title: "New Profile Like",
+          description: `${profile.full_name || profile.username || 'Someone'} liked your profile.`,
+          type: "profile",
+          action_url: `/profile/${profile.id}`
+        });
 
         const currentLikesCount = currentUserItem?.likes_count || 0;
         const newLikesCount = currentLikesCount + 1;
@@ -1331,13 +1379,31 @@ export default function DiscoverPage() {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white truncate">
-                              @{userItem.username || userItem.full_name.toLowerCase().replace(/\s+/g, "")}
+                            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white truncate flex items-center gap-1.5 flex-wrap">
+                              {userItem.full_name}
                             </CardTitle>
                             <div className="mt-1 flex flex-col">
                               <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium flex-wrap">
-                                <span className="text-yellow-600 dark:text-yellow-500 font-semibold">
-                                  {userItem.full_name}
+                                <span className="text-yellow-600 dark:text-yellow-500 font-semibold flex items-center gap-1.5">
+                                  @{userItem.username || userItem.full_name.toLowerCase().replace(/\s+/g, "")}
+                                  {userItem.tags?.map(skill => {
+                                    const tagConfig = [
+                                      { label: "Verified", color: "bg-blue-50 text-blue-700 border-blue-200" },
+                                      { label: "Popular", color: "bg-green-50 text-green-700 border-green-200" },
+                                      { label: "Featured", color: "bg-purple-50 text-purple-700 border-purple-200" },
+                                      { label: "Trending", color: "bg-orange-50 text-orange-700 border-orange-200" },
+                                      { label: "Expert", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+                                      { label: "Mentor", color: "bg-pink-50 text-pink-700 border-pink-200" },
+                                      { label: "Influencer", color: "bg-cyan-50 text-cyan-700 border-cyan-200" },
+                                      { label: "Rising Star", color: "bg-amber-50 text-amber-700 border-amber-200" }
+                                    ].find(t => t.label === skill);
+                                    if (!tagConfig) return null;
+                                    return (
+                                      <Badge key={skill} variant="outline" className={`${tagConfig.color} text-[9px] px-1.5 py-0 rounded-full font-medium h-fit`}>
+                                        {skill}
+                                      </Badge>
+                                    );
+                                  })}
                                 </span>
                                 <span className="text-gray-300 dark:text-gray-700">•</span>
                                 <span className="text-gray-600 dark:text-gray-300 truncate">{userItem.role}</span>
@@ -1450,8 +1516,9 @@ export default function DiscoverPage() {
                         ) : (
                           <Button
                             onClick={() => handleConnect(userItem.id, userItem.full_name, userItem.connection_status, userItem.connection_initiator)}
-                            className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium text-xs transition-all h-9"
+                            className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium text-xs transition-all h-9 disabled:opacity-50"
                             size="sm"
+                            disabled={userItem.allow_connections_from === 'none' || userItem.allow_connections_from === 'connections'}
                           >
                             <UserPlus className="w-3.5 h-3.5 mr-1.5" />
                             Connect

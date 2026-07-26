@@ -31,69 +31,6 @@ import {
   Sparkles
 } from 'lucide-react';
 
-const mockNotifications = [
-  {
-    id: "mock-1",
-    title: "New job posted",
-    description: "Senior Director position at Netflix Studios",
-    type: "job",
-    status: "unread",
-    created_at: new Date(Date.now() - 5 * 60000).toISOString(),
-    priority: "high",
-    icon: Briefcase,
-    action: "View Job",
-    action_url: "/jobs"
-  },
-  {
-    id: "mock-2",
-    title: "Connection request",
-    description: "John Smith wants to connect with you",
-    type: "connection",
-    status: "unread",
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-    priority: "medium",
-    icon: Users,
-    action: "View Profile",
-    action_url: "/connections"
-  },
-  {
-    id: "mock-3",
-    title: "Project update",
-    description: "Your project 'Indie Film' has a new comment from Sarah Johnson",
-    type: "project",
-    status: "read",
-    created_at: new Date(Date.now() - 7200000).toISOString(),
-    priority: "low",
-    icon: MessageSquare,
-    action: "View Project",
-    action_url: "/projects"
-  },
-  {
-    id: "mock-4",
-    title: "Event reminder",
-    description: "Film Festival Workshop starts in 2 hours",
-    type: "event",
-    status: "read",
-    created_at: new Date(Date.now() - 10800000).toISOString(),
-    priority: "high",
-    icon: Calendar,
-    action: "View Event",
-    action_url: "/industry-hub"
-  },
-  {
-    id: "mock-5",
-    title: "System maintenance",
-    description: "Scheduled maintenance will occur tonight from 2-4 AM PST",
-    type: "system",
-    status: "read",
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    priority: "medium",
-    icon: AlertTriangle,
-    action: "Learn More",
-    action_url: "/settings"
-  }
-];
-
 const formatRelativeTime = (dateString: string) => {
   try {
     const now = new Date();
@@ -128,13 +65,11 @@ const Notifications = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isUsingMock, setIsUsingMock] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchNotifications = async () => {
       if (!profile?.id) {
-        setNotifications(mockNotifications);
-        setIsUsingMock(true);
+        setNotifications([]);
         setLoading(false);
         return;
       }
@@ -148,17 +83,12 @@ const Notifications = () => {
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.warn("Notifications table query failed, falling back to mock data.", error);
-          setNotifications(mockNotifications);
-          setIsUsingMock(true);
+          console.error("Notifications table query failed", error);
         } else {
           setNotifications(data || []);
-          setIsUsingMock(false);
         }
       } catch (err) {
         console.error("Failed to load notifications:", err);
-        setNotifications(mockNotifications);
-        setIsUsingMock(true);
       } finally {
         setLoading(false);
       }
@@ -231,17 +161,7 @@ const Notifications = () => {
     return typeConfig[type as keyof typeof typeConfig] || Bell;
   };
 
-  const handleMarkAsRead = async (notificationId: string | number) => {
-    if (isUsingMock) {
-      setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, status: 'read' } : n));
-      toast({
-        title: "Notification marked as read",
-        description: "The notification has been marked as read.",
-      });
-      return;
-    }
-
-    try {
+  const handleMarkAsRead = async (notificationId: string | number) => {    try {
       const { error } = await supabase
         .from('notifications')
         .update({ status: 'read' })
@@ -264,17 +184,7 @@ const Notifications = () => {
     }
   };
 
-  const handleMarkAllAsRead = async () => {
-    if (isUsingMock) {
-      setNotifications(prev => prev.map(n => ({ ...n, status: 'read' })));
-      toast({
-        title: "All notifications marked as read",
-        description: "All unread notifications have been marked as read.",
-      });
-      return;
-    }
-
-    if (!profile?.id) return;
+  const handleMarkAllAsRead = async () => {    if (!profile?.id) return;
 
     try {
       const { error } = await supabase
@@ -300,17 +210,7 @@ const Notifications = () => {
     }
   };
 
-  const handleDeleteNotification = async (notificationId: string | number) => {
-    if (isUsingMock) {
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      toast({
-        title: "Notification deleted",
-        description: "The notification has been deleted.",
-      });
-      return;
-    }
-
-    try {
+  const handleDeleteNotification = async (notificationId: string | number) => {    try {
       const { error } = await supabase
         .from('notifications')
         .delete()
@@ -346,23 +246,6 @@ const Notifications = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        {/* SQL Config Banner for dynamic database setup */}
-        {isUsingMock && (
-          <div className="bg-gradient-to-r from-yellow-500/10 via-yellow-600/5 to-transparent border border-yellow-200/50 p-4 rounded-xl flex items-start gap-3 shadow-xs">
-            <div className="p-2 rounded-lg bg-yellow-500/15 text-yellow-600 flex-shrink-0">
-              <Database className="w-5 h-5" />
-            </div>
-            <div className="flex-1">
-              <h4 className="font-semibold text-gray-950 dark:text-white text-sm flex items-center gap-1.5">
-                Dynamic Database Notifications Available <Sparkles className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-              </h4>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
-                Unlock fully dynamic real-time notifications by running the SQL configuration in your Supabase SQL editor. A custom SQL blueprint has been generated for you in <code className="bg-yellow-500/10 px-1.5 py-0.5 rounded font-mono font-medium text-yellow-700 dark:text-yellow-400">setup_notifications.sql</code>.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -374,7 +257,7 @@ const Notifications = () => {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">
               <Bell className="w-3 h-3 mr-1" />
-              {mockNotifications.length} Total
+              {notifications.length} Total
             </Badge>
             {unreadCount > 0 && (
               <Button 

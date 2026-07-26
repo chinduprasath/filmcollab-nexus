@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,6 +43,7 @@ import {
 
 const Settings = () => {
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const [activeTab, setActiveTab] = useState('privacy');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -226,10 +229,29 @@ const Settings = () => {
     showBirthday: false,
     allowMessages: 'everyone',
     allowConnectionRequests: 'everyone',
-    showOnlineStatus: true,
     allowProfileViews: true,
     allowSearchEngines: false
   });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      if (profile?.id) {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('*')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
+          
+        if (data) {
+          if (data.privacy_settings) setPrivacySettings(prev => ({ ...prev, ...data.privacy_settings }));
+          if (data.notification_settings) setNotificationSettings(prev => ({ ...prev, ...data.notification_settings }));
+          if (data.appearance_settings) setAppearanceSettings(prev => ({ ...prev, ...data.appearance_settings }));
+          if (data.security_settings) setSecuritySettings(prev => ({ ...prev, ...data.security_settings }));
+        }
+      }
+    };
+    fetchSettings();
+  }, [user]);
 
   // Notification Settings State
   const [notificationSettings, setNotificationSettings] = useState({
@@ -274,14 +296,34 @@ const Settings = () => {
   const handleSave = async (section: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (profile?.id) {
+        let updateData: any = {};
+        if (section === 'Privacy') updateData.privacy_settings = privacySettings;
+        if (section === 'Notifications') updateData.notification_settings = notificationSettings;
+        if (section === 'Appearance') updateData.appearance_settings = appearanceSettings;
+        if (section === 'Security') updateData.security_settings = securitySettings;
+
+        // Upsert settings (requires profile_id as primary/unique key depending on table structure)
+        const { data: existing } = await supabase.from('settings').select('id').eq('profile_id', profile.id).maybeSingle();
+        
+        let error;
+        if (existing) {
+          const res = await supabase.from('settings').update(updateData).eq('profile_id', profile.id);
+          error = res.error;
+        } else {
+          const res = await supabase.from('settings').insert({ profile_id: profile.id, ...updateData });
+          error = res.error;
+        }
+        
+        if (error) throw error;
+      }
       
       toast({
         title: "Settings saved",
         description: `${section} settings have been updated successfully.`,
       });
     } catch (error) {
+      console.error("Error saving settings:", error);
       toast({
         title: "Error",
         description: "Failed to save settings. Please try again.",
@@ -357,13 +399,6 @@ const Settings = () => {
               <Key className="w-4 h-4" />
               Security
             </TabsTrigger>
-            <TabsTrigger 
-              value="integrations" 
-              className="flex items-center gap-2 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
-            >
-              <Globe className="w-4 h-4" />
-              Integrations
-            </TabsTrigger>
           </TabsList>
 
           {/* Privacy Settings */}
@@ -394,7 +429,6 @@ const Settings = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="public">Public</SelectItem>
-                        <SelectItem value="connections">Connections Only</SelectItem>
                         <SelectItem value="private">Private</SelectItem>
                       </SelectContent>
                     </Select>
@@ -499,20 +533,11 @@ const Settings = () => {
                   <div className="space-y-4">
                     <h4 className="font-medium">Activity & Status</h4>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label>Show Online Status</Label>
-                          <p className="text-sm text-gray-500">Let others see when you're online</p>
-                        </div>
-                        <Switch
-                          checked={privacySettings.showOnlineStatus}
-                          onCheckedChange={(checked) => handlePrivacyChange('showOnlineStatus', checked)}
-                        />
-                      </div>
+
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Allow Profile Views</Label>
-                          <p className="text-sm text-gray-500">Let others see when you view their profile</p>
+                          <p className="text-sm text-gray-500">Let me know when someone opens my profile</p>
                         </div>
                         <Switch
                           checked={privacySettings.allowProfileViews}
@@ -636,7 +661,7 @@ const Settings = () => {
                 </div>
 
                 <Button 
-                  onClick={() => handleSave('Notification')} 
+                  onClick={() => handleSave('Notifications')} 
                   disabled={isLoading}
                   className="w-full md:w-auto bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
                 >
@@ -733,205 +758,6 @@ const Settings = () => {
             </Card>
           </TabsContent>
 
-          {/* Third-Party Integrations Settings */}
-          <TabsContent value="integrations" className="space-y-6">
-            <Card className="border-yellow-100 shadow-sm">
-              <CardHeader className="bg-yellow-50/40 pb-4">
-                <CardTitle className="flex items-center gap-2 text-yellow-800">
-                  <Globe className="w-5 h-5 text-yellow-600" />
-                  Social API Integrations
-                </CardTitle>
-                <CardDescription className="text-gray-600">
-                  Configure third-party API services for accurate and real-time live social media follower counts.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-6">
-                
-                {/* Information Callout */}
-                <div className="p-4 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-sm space-y-2">
-                  <div className="flex items-center gap-2 font-semibold">
-                    <Info className="w-4 h-4 text-blue-600" />
-                    Why is this needed?
-                  </div>
-                  <p className="leading-relaxed text-gray-700">
-                    Social networks like Instagram employ strict anti-scraping blockades. While our system has free built-in scrapers, they can be unstable or rate-limited. 
-                    Integrating a <strong>free third-party API</strong> from RapidAPI guarantees <strong>100% accurate, exact follower counts with zero latency</strong>.
-                  </p>
-                  <div className="pt-1 font-medium text-gray-700">
-                    💡 <strong>The Free Method:</strong> RapidAPI providers offer a generous <strong>500 requests/month Free Tier</strong>, perfect for moderate profile verification needs!
-                  </div>
-                </div>
-
-                {/* Setup Instructions */}
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-gray-900 text-sm">How to get your Free RapidAPI Key:</h4>
-                  <ol className="list-decimal pl-5 text-xs text-gray-600 space-y-1 leading-relaxed">
-                    <li>Sign up or Log in at <a href="https://rapidapi.com" target="_blank" rel="noreferrer" className="text-yellow-600 hover:underline font-semibold">RapidAPI.com</a>.</li>
-                    <li>Search for <strong>"Instagram Bulk Scraper"</strong> (by <em>Prasit</em>) or <strong>"Instagram Scraper API2"</strong>.</li>
-                    <li>Subscribe to their <strong>Free Tier</strong> (contains 500 free requests per month, no payment required!).</li>
-                    <li>Go to the API Playground, copy the <strong>X-RapidAPI-Key</strong> from the headers section, and paste it below.</li>
-                  </ol>
-                </div>
-
-                <Separator />
-
-                {/* API Configurations Form */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="api-provider" className="text-sm font-medium text-gray-800 flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5 text-gray-500" />
-                        Preferred API Provider
-                      </Label>
-                      <Select value={rapidApiProvider} onValueChange={setRapidApiProvider}>
-                        <SelectTrigger id="api-provider" className="border-gray-200">
-                          <SelectValue placeholder="Select API Provider" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="instagram-bulk-scraper-latest">
-                            Instagram Bulk Scraper (Recommended - 500 reqs/mo Free)
-                          </SelectItem>
-                          <SelectItem value="instagram-scraper-api2">
-                            Instagram Scraper API2 (500 reqs/mo Free)
-                          </SelectItem>
-                          <SelectItem value="rocketapi-instagram">
-                            RocketAPI Instagram (Alternative)
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-gray-400">
-                        Select which API platform formats your key belongs to.
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="api-key" className="text-sm font-medium text-gray-800 flex items-center gap-1.5">
-                        <Key className="w-3.5 h-3.5 text-gray-500" />
-                        X-RapidAPI-Key
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="api-key"
-                          type={showRapidApiKey ? "text" : "password"}
-                          placeholder="Paste your X-RapidAPI-Key here..."
-                          value={rapidApiKey}
-                          onChange={(e) => setRapidApiKey(e.target.value)}
-                          className="pr-10 border-gray-200"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowRapidApiKey(!showRapidApiKey)}
-                          className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          {showRapidApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-400">
-                        We store this key client-side in your local browser state only.
-                      </p>
-                    </div>
-
-                  </div>
-
-                  <div className="flex flex-wrap gap-3 pt-2">
-                    <Button
-                      onClick={handleSaveRapidApiSettings}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white font-medium shadow-sm"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      Save API Credentials
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleClearRapidApiSettings}
-                      className="border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Reset to Default Scrapers
-                    </Button>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* API Sandbox / Live Testing */}
-                <div className="p-5 rounded-xl border border-gray-150 bg-gray-50/50 space-y-4">
-                  <div className="space-y-1">
-                    <h4 className="font-semibold text-gray-900 text-sm flex items-center gap-1.5">
-                      <RefreshCw className="w-4 h-4 text-yellow-600" />
-                      API Sandbox & Test Console
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      Test your credentials in real-time by pulling follower metrics directly from live social platforms.
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2 max-w-md">
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-2 text-sm text-gray-400 font-medium">@</span>
-                      <Input
-                        type="text"
-                        placeholder="instagram"
-                        value={testUsername}
-                        onChange={(e) => setTestUsername(e.target.value)}
-                        className="pl-7 bg-white border-gray-200"
-                      />
-                    </div>
-                    <Button
-                      onClick={handleTestRapidApi}
-                      disabled={isTestingApi}
-                      className="bg-gray-900 hover:bg-gray-800 text-white shrink-0"
-                    >
-                      {isTestingApi ? (
-                        <>
-                          <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                          Testing...
-                        </>
-                      ) : "Run Test"}
-                    </Button>
-                  </div>
-
-                  {testResult && (
-                    <div className={`p-4 rounded-lg border text-sm ${
-                      testResult.success 
-                        ? 'bg-green-50 border-green-200 text-green-900' 
-                        : 'bg-red-50 border-red-200 text-red-900'
-                    }`}>
-                      <div className="font-semibold flex items-center gap-1.5 mb-1">
-                        {testResult.success ? (
-                          <Check className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <AlertTriangle className="w-4 h-4 text-red-600" />
-                        )}
-                        {testResult.success ? "Test Succeeded!" : "Test Failed"}
-                      </div>
-                      <p className="text-xs leading-relaxed mb-2 opacity-90">
-                        {testResult.message}
-                      </p>
-                      {testResult.success && testResult.data && (
-                        <div className="grid grid-cols-2 gap-2 bg-white/70 p-2.5 rounded border border-green-100 font-mono text-xs mt-2">
-                          <div>Profile tested:</div>
-                          <div className="font-semibold">@{testResult.data.username}</div>
-                          <div>Followers count:</div>
-                          <div className="font-semibold text-green-700">{testResult.data.followers.toLocaleString()}</div>
-                          <div>Formatted display:</div>
-                          <div className="font-semibold text-blue-700">{testResult.data.formatted}</div>
-                        </div>
-                      )}
-                      {!testResult.success && testResult.data && (
-                        <div className="bg-white/70 p-2.5 rounded border border-red-100 font-mono text-[10px] overflow-auto max-h-40 mt-2">
-                          <div className="font-semibold text-red-800 mb-1">Raw Response Payload:</div>
-                          {JSON.stringify(testResult.data, null, 2)}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
     </AppLayout>

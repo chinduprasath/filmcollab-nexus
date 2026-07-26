@@ -21,6 +21,9 @@ import Posts from "./pages/posts/page";
 import Directory from "./pages/directory/page";
 import StudiosDirectory from "./pages/StudiosDirectory";
 import Community from "./pages/community/page";
+import Locations from "./pages/locations/page";
+import NewLocation from "./pages/locations/new";
+import LocationDetails from "./pages/locations/details";
 import GroupDetails from "./pages/community/GroupDetails";
 import JoinedGroupDetails from "./pages/community/JoinedGroupDetails";
 import Discover from "./pages/discover/page";
@@ -30,6 +33,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Billing from "./pages/Billing";
 import Support from "./pages/Support";
+import UserTicketDetail from "./pages/UserTicketDetail";
 import Notifications from "./pages/Notifications";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminUsers from "./pages/AdminUsers";
@@ -243,6 +247,30 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/locations"
+        element={
+          <ProtectedRoute>
+            <Locations />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/locations/new"
+        element={
+          <ProtectedRoute>
+            <NewLocation />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/locations/:id"
+        element={
+          <ProtectedRoute>
+            <LocationDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/community"
         element={
           <ProtectedRoute>
@@ -327,6 +355,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Support />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/support/:ticketId"
+        element={
+          <ProtectedRoute>
+            <UserTicketDetail />
           </ProtectedRoute>
         }
       />

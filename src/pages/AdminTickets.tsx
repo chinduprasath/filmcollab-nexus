@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,146 +5,96 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   Search,
   TicketCheck,
   Clock,
   CheckCircle2,
-  XCircle,
-  UserCog,
-  MessageSquare,
+  MoreVertical,
   Eye,
-  Edit,
-  Trash2
+  Trash2,
+  UserCog
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminTickets() {
   const navigate = useNavigate();
-  // Mock tickets data
-  const tickets = [
-    {
-      id: "TKT-001",
-      title: "Account Access Issue",
-      description: "Unable to login after password reset",
-      status: "Open",
-      assignedTo: {
-        id: 1,
-        name: "Sarah Johnson",
-        role: "Support"
-      },
-      dateCreated: "2024-03-15",
-      lastUpdated: "2024-03-15",
-      comments: [
-        {
-          id: 1,
-          author: "Sarah Johnson",
-          text: "Looking into this issue",
-          date: "2024-03-15"
-        }
-      ]
-    },
-    {
-      id: "TKT-002",
-      title: "Project Upload Failed",
-      description: "Error when trying to upload project files",
-      status: "In Progress",
-      assignedTo: {
-        id: 2,
-        name: "Mike Wilson",
-        role: "Support"
-      },
-      dateCreated: "2024-03-14",
-      lastUpdated: "2024-03-15",
-      comments: [
-        {
-          id: 1,
-          author: "Mike Wilson",
-          text: "Investigating the upload service",
-          date: "2024-03-15"
-        }
-      ]
-    },
-    {
-      id: "TKT-003",
-      title: "Payment Processing Error",
-      description: "Payment failed during subscription upgrade",
-      status: "Closed",
-      assignedTo: {
-        id: 1,
-        name: "Sarah Johnson",
-        role: "Support"
-      },
-      dateCreated: "2024-03-13",
-      lastUpdated: "2024-03-14",
-      comments: [
-        {
-          id: 1,
-          author: "Sarah Johnson",
-          text: "Issue resolved - payment processed successfully",
-          date: "2024-03-14"
-        }
-      ]
-    }
-  ];
+  const { toast } = useToast();
+  
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [assigneeFilter, setAssigneeFilter] = useState("all");
 
-  // New ticket form state
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newTicket, setNewTicket] = useState({
-    title: "",
-    description: "",
-    assignedTo: "",
-    status: "Open"
-  });
+  const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
 
-  // View/Edit ticket dialog state
-  const [selectedTicket, setSelectedTicket] = useState<any>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [newComment, setNewComment] = useState("");
+  const fetchTickets = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select(`
+          id,
+          ticket_number,
+          subject,
+          description,
+          status,
+          created_at,
+          creator:profiles!tickets_user_id_fkey(id, full_name, username),
+          assignee:profiles!tickets_assigned_to_fkey(id, full_name, role)
+        `)
+        .order("created_at", { ascending: false });
 
-  const handleAddTicket = () => {
-    // Here you would typically make an API call to add the new ticket
-    console.log("Adding new ticket:", newTicket);
-    setIsAddDialogOpen(false);
-    setNewTicket({
-      title: "",
-      description: "",
-      assignedTo: "",
-      status: "Open"
-    });
+      console.log("Fetched tickets data:", data);
+      console.log("Fetch error:", error);
+
+      if (error) throw error;
+      setTickets(data || []);
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+      toast({ title: "Failed to fetch tickets", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleViewTicket = (ticket: any) => {
-    setSelectedTicket(ticket);
-    setIsViewDialogOpen(true);
-  };
+  useEffect(() => {
+    fetchTickets();
+  }, []);
 
-  const handleAddComment = () => {
-    if (!selectedTicket || !newComment.trim()) return;
-
-    // Here you would typically make an API call to add the comment
-    console.log("Adding comment to ticket:", selectedTicket.id, newComment);
-    setNewComment("");
-  };
-
-  const handleUpdateStatus = (ticketId: string, newStatus: string) => {
-    console.log("Updating ticket status:", ticketId, newStatus);
-    // Implement status update functionality
-  };
-
-  const handleDeleteTicket = (ticketId: string) => {
-    console.log("Delete ticket:", ticketId);
-    // Implement delete functionality
+  const handleDeleteTicket = async () => {
+    if (!ticketToDelete) return;
+    try {
+      const { error } = await supabase.from("tickets").delete().eq("id", ticketToDelete);
+      if (error) throw error;
+      setTickets(prev => prev.filter(t => t.id !== ticketToDelete));
+      toast({ title: "Ticket deleted successfully" });
+    } catch (error) {
+      toast({ title: "Failed to delete ticket", variant: "destructive" });
+    } finally {
+      setTicketToDelete(null);
+    }
   };
 
   const getStatusBadgeStyle = (status: string) => {
@@ -176,192 +125,105 @@ export default function AdminTickets() {
 
   // Filter tickets based on search and filters
   const filteredTickets = tickets.filter(ticket => {
+    const ticketId = ticket.ticket_number || "";
+    const subject = ticket.subject || "";
     const matchesSearch = 
-      ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.description.toLowerCase().includes(searchTerm.toLowerCase());
+      ticketId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      subject.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || ticket.status.toLowerCase().replace(" ", "-") === statusFilter.toLowerCase();
-    const matchesAssignee = assigneeFilter === "all" || ticket.assignedTo.name.toLowerCase() === assigneeFilter.toLowerCase();
     
-    return matchesSearch && matchesStatus && matchesAssignee;
+    return matchesSearch && matchesStatus;
   });
 
   return (
-    <AdminLayout pageTitle="Support Tickets">
+    <AdminLayout pageTitle="Support Tickets" pageName="Tickets">
       <div className="space-y-6">
-        {/* Page Header */}
         <div>
           <h1 className="text-3xl font-bold text-foreground">Support Tickets</h1>
           <p className="text-muted-foreground mt-1">Manage and track support tickets</p>
         </div>
 
-        {/* Main Content Card */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl">Tickets</CardTitle>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-yellow-500 hover:bg-yellow-600 text-white">
-                  <TicketCheck className="h-4 w-4 mr-2" />
-                  Create Ticket
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Ticket</DialogTitle>
-                  <DialogDescription>
-                    Create a new support ticket and assign it to a team member.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Title</Label>
-                    <Input
-                      value={newTicket.title}
-                      onChange={(e) => setNewTicket({ ...newTicket, title: e.target.value })}
-                      placeholder="Enter ticket title"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Description</Label>
-                    <Textarea
-                      value={newTicket.description}
-                      onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
-                      placeholder="Enter ticket description"
-                      rows={4}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Assign To</Label>
-                    <Select
-                      value={newTicket.assignedTo}
-                      onValueChange={(value) => setNewTicket({ ...newTicket, assignedTo: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select team member" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sarah">Sarah Johnson</SelectItem>
-                        <SelectItem value="mike">Mike Wilson</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAddDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                    onClick={handleAddTicket}
-                  >
-                    Create Ticket
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <CardTitle className="text-xl">All Tickets</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Search and Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Search tickets..."
+                  placeholder="Search by ticket number or title..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
-              
-              <div className="flex gap-4 items-center">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Status:</label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="open">Open</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Assignee:</label>
-                  <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Assignees</SelectItem>
-                      <SelectItem value="sarah johnson">Sarah Johnson</SelectItem>
-                      <SelectItem value="mike wilson">Mike Wilson</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Status:</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Tickets Table */}
-            <div className="border rounded-lg">
+            <div className="border rounded-lg overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Ticket ID</TableHead>
-                    <TableHead>Title</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Creator</TableHead>
                     <TableHead>Assigned To</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Last Updated</TableHead>
+                    <TableHead>Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTickets.map((ticket) => {
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">Loading tickets...</TableCell>
+                    </TableRow>
+                  ) : filteredTickets.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">No tickets found.</TableCell>
+                    </TableRow>
+                  ) : filteredTickets.map((ticket) => {
                     const StatusIcon = getStatusIcon(ticket.status);
                     return (
-                      <TableRow key={ticket.id}>
-                        <TableCell className="font-medium">{ticket.id}</TableCell>
+                      <TableRow 
+                        key={ticket.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => navigate(`/admin-dashboard/tickets/${ticket.id}`)}
+                      >
+                        <TableCell className="font-medium">{ticket.ticket_number || "TKT-UNKNOWN"}</TableCell>
                         <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <div
-                              role="button"
-                              tabIndex={0}
-                              className="font-medium text-left hover:text-yellow-600 cursor-pointer"
-                              onClick={() => {
-                                console.log("Navigating to:", `/admin-dashboard/tickets/${ticket.id}`);
-                                navigate(`/admin-dashboard/tickets/${ticket.id}`);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  console.log("Navigating to:", `/admin-dashboard/tickets/${ticket.id}`);
-                                  navigate(`/admin-dashboard/tickets/${ticket.id}`);
-                                }
-                              }}
-                            >
-                              {ticket.title}
-                            </div>
-                            <span className="text-sm text-muted-foreground truncate max-w-xs">
-                              {ticket.description}
-                            </span>
+                          <div className="flex flex-col max-w-[200px]">
+                            <span className="font-medium truncate">{ticket.subject}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                              <UserCog className="h-4 w-4 text-yellow-600" />
+                           {ticket.creator?.full_name || "Unknown"}
+                        </TableCell>
+                        <TableCell>
+                          {ticket.assignee ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                                <UserCog className="h-4 w-4 text-yellow-600" />
+                              </div>
+                              <span className="text-sm font-medium">{ticket.assignee.full_name}</span>
                             </div>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">{ticket.assignedTo.name}</span>
-                              <span className="text-xs text-muted-foreground">{ticket.assignedTo.role}</span>
-                            </div>
-                          </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground italic">Unassigned</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className={getStatusBadgeStyle(ticket.status)}>
@@ -370,33 +232,30 @@ export default function AdminTickets() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col">
-                            <span className="text-sm">{ticket.lastUpdated}</span>
-                            <span className="text-xs text-muted-foreground">
-                              Created: {ticket.dateCreated}
-                            </span>
-                          </div>
+                          <span className="text-sm">{new Date(ticket.created_at).toLocaleDateString()}</span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewTicket(ticket)}
-                              className="h-8 w-8"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteTicket(ticket.id)}
-                              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                className="h-8 w-8 p-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/admin-dashboard/tickets/${ticket.id}`); }}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700" onClick={(e) => { e.stopPropagation(); setTicketToDelete(ticket.id); }}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     );
@@ -404,116 +263,30 @@ export default function AdminTickets() {
                 </TableBody>
               </Table>
             </div>
-
-            {/* Results Summary */}
             <div className="flex justify-between items-center mt-4 text-sm text-muted-foreground">
               <span>Showing {filteredTickets.length} tickets</span>
-              <div className="flex items-center gap-2">
-                <span>Rows per page:</span>
-                <select className="w-16 h-8 px-2 border rounded text-sm">
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* View/Edit Ticket Dialog */}
-        {selectedTicket && (
-          <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <span>{selectedTicket.id}</span>
-                  <Badge variant="secondary" className={getStatusBadgeStyle(selectedTicket.status)}>
-                    {selectedTicket.status}
-                  </Badge>
-                </DialogTitle>
-                <DialogDescription>
-                  Created on {selectedTicket.dateCreated}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold">{selectedTicket.title}</h3>
-                  <p className="text-muted-foreground mt-1">{selectedTicket.description}</p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Assigned To</h4>
-                    <Select
-                      value={selectedTicket.assignedTo.id.toString()}
-                      onValueChange={(value) => console.log("Reassign to:", value)}
-                    >
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">Sarah Johnson</SelectItem>
-                        <SelectItem value="2">Mike Wilson</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Status</h4>
-                    <Select
-                      value={selectedTicket.status.toLowerCase().replace(" ", "-")}
-                      onValueChange={(value) => handleUpdateStatus(selectedTicket.id, value)}
-                    >
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="open">Open</SelectItem>
-                        <SelectItem value="in-progress">In Progress</SelectItem>
-                        <SelectItem value="closed">Closed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="font-medium">Comments</h4>
-                  <div className="space-y-4">
-                    {selectedTicket.comments.map((comment: any) => (
-                      <div key={comment.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                          <UserCog className="h-4 w-4 text-yellow-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">{comment.author}</span>
-                            <span className="text-sm text-muted-foreground">{comment.date}</span>
-                          </div>
-                          <p className="text-sm mt-1">{comment.text}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Add a comment..."
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={handleAddComment}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Comment
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+        {/* Delete Confirmation Alert */}
+        <AlertDialog open={!!ticketToDelete} onOpenChange={(open) => !open && setTicketToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the ticket
+                and all of its associated messages.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteTicket} className="bg-red-600 hover:bg-red-700 text-white">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

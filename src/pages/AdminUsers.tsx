@@ -87,6 +87,7 @@ interface UserProfile {
   is_verified?: boolean | null;
   created_at?: string | null;
   skills?: string[] | null;
+  tags?: string[] | null;
   role?: string | null;
 }
 
@@ -361,8 +362,8 @@ export default function AdminUsers() {
     // Tags match (matches ALL selected tags)
     let matchesTags = true;
     if (selectedFilterTags.length > 0) {
-      const userSkills = Array.isArray(user.skills) ? user.skills : [];
-      matchesTags = selectedFilterTags.every(tag => userSkills.includes(tag));
+      const userTags = Array.isArray(user.tags) ? user.tags : [];
+      matchesTags = selectedFilterTags.every(tag => userTags.includes(tag));
     }
     
     return matchesSearch && matchesCategory && matchesStatus && matchesDate && matchesTags;
@@ -476,24 +477,15 @@ export default function AdminUsers() {
   const handleSaveUserTags = async (userId: string) => {
     if (!editingTags) return;
     try {
-      // Find the user profile to get all of their skills
-      const user = profiles.find(u => u.id === userId);
-      if (!user) return;
-
-      // Extract skills that are NOT admin-managed tags to preserve them
-      const nonAdminSkills = (user.skills || []).filter(s => !availableTags.some(t => t.label === s));
-      
-      // Combine user's unique creative skills with the selected admin-assigned tags
-      const updatedSkills = [...nonAdminSkills, ...editingTags.tags];
-
       const { error } = await supabase
         .from("profiles")
-        .update({ skills: updatedSkills })
+        .update({ tags: editingTags.tags })
         .eq("id", userId);
       
       if (error) throw error;
       
-      setProfiles(prev => prev.map(u => u.id === userId ? { ...u, skills: updatedSkills } : u));
+      
+      setProfiles(prev => prev.map(u => u.id === userId ? { ...u, tags: editingTags.tags } : u));
       setEditingTags(null);
       toast({
         title: "Tags updated",
@@ -612,8 +604,8 @@ export default function AdminUsers() {
     const experiences = Array.isArray(selectedProfile.experiences) ? selectedProfile.experiences : [];
     const education = Array.isArray(selectedProfile.education) ? selectedProfile.education : [];
     const displayId = getUserDisplayId(selectedProfile.id);
-    const selectedUserTags = (Array.isArray(selectedProfile.skills) ? selectedProfile.skills : []).filter(s => availableTags.some(t => t.label === s));
-    const creativeSkills = (Array.isArray(selectedProfile.skills) ? selectedProfile.skills : []).filter(s => !availableTags.some(t => t.label === s));
+    const selectedUserTags = Array.isArray(selectedProfile.tags) ? selectedProfile.tags : [];
+    const creativeSkills = Array.isArray(selectedProfile.skills) ? selectedProfile.skills : [];
 
     const onToggleVerification = async () => {
       await handleToggleVerification(selectedProfile);
@@ -1178,7 +1170,7 @@ export default function AdminUsers() {
   }
 
   return (
-    <AdminLayout pageTitle="Users Management">
+    <AdminLayout pageTitle="Users Management" pageName="Users">
       <div className="space-y-6">
         {/* Page Header Row with integrated Search and Filter Button */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
@@ -1245,8 +1237,7 @@ export default function AdminUsers() {
                   </TableHeader>
                   <TableBody>
                     {filteredUsers.map((user) => {
-                      // Filter profile skills to ONLY show tags matching admin availableTags
-                      const userTags = (Array.isArray(user.skills) ? user.skills : []).filter(s => availableTags.some(t => t.label === s));
+                      const userTags = Array.isArray(user.tags) ? user.tags : [];
                       const displayUsername = user.username || user.full_name || user.email?.split("@")[0] || "creative_user";
                       const displayId = getUserDisplayId(user.id);
                       

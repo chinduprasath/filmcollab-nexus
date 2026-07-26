@@ -648,6 +648,17 @@ export default function ProjectsPage() {
       // Add to applied projects
       setAppliedProjects(prev => [...prev, projectId]);
       
+      const project = projects.find(p => p.id === projectId);
+      if (project && project.creator_id && project.creator_id !== user.id) {
+        supabase.from("notifications").insert({
+          user_id: project.creator_id,
+          title: "New Project Application",
+          description: `Someone applied to join your project: ${project.title}`,
+          type: "project",
+          action_url: `/projects?projectId=${project.id}`
+        }).then();
+      }
+      
       toast({
         title: "Application submitted",
         description: "Your application has been submitted successfully."
