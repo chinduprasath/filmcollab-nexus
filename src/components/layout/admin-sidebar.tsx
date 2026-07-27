@@ -32,13 +32,13 @@ const adminNavigationItems = [
   { name: "Overview", icon: BarChart3, href: "/admin-dashboard" },
   { name: "Analytics", icon: BarChart3, href: "/admin-dashboard/analytics" },
   { name: "Users", icon: Users, href: "/admin-dashboard/users" },
-  { name: "Posts", icon: FileText, href: "/admin-dashboard/posts" },
   { name: "Projects", icon: FolderOpen, href: "/admin-dashboard/projects" },
   { name: "Jobs", icon: Briefcase, href: "/admin-dashboard/jobs" },
-  { name: "Communities", icon: UsersRound, href: "/admin-dashboard/communities" },
-  { name: "Directory", icon: Image, href: "/admin-dashboard/directory" },
   { name: "Team Members", icon: UserCog, href: "/admin-dashboard/team" },
-  { name: "Tickets", icon: TicketCheck, href: "/admin-dashboard/tickets" }
+  { name: "Tickets", icon: TicketCheck, href: "/admin-dashboard/tickets" },
+  { name: "Posts", icon: FileText, href: "/admin-dashboard/posts" },
+  { name: "Communities", icon: UsersRound, href: "/admin-dashboard/communities" },
+  { name: "Directory", icon: Image, href: "/admin-dashboard/directory" }
 ];
 
 export function AdminSidebar({ className, isCollapsed = false, onToggle }: AdminSidebarProps) {

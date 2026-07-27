@@ -1192,7 +1192,7 @@ export default function ProfilePage() {
       } else {
         query = query.eq("user_id", user.id);
       }
-      const { data, error } = await query.maybeSingle();
+      const { data, error } = await query.limit(1).maybeSingle();
 
       if (error) {
         console.error("Profile load error", error);
@@ -1240,6 +1240,16 @@ export default function ProfilePage() {
           }
         }
       } else {
+        if (actualUserIdParam && actualUserIdParam !== user.id) {
+          toast({
+            title: "Profile Not Found",
+            description: "The requested profile could not be found.",
+            variant: "destructive"
+          });
+          navigate('/discover');
+          return;
+        }
+
         // No profile yet — seed with auth email so user can edit/save
         const seeded = { ...emptyProfileData, email: user.email ?? "", name: (user.user_metadata as any)?.full_name ?? "" };
         setProfile(seeded);
