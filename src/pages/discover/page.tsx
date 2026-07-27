@@ -1382,8 +1382,8 @@ export default function DiscoverPage() {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white truncate flex items-center gap-1.5 flex-wrap">
-                              {userItem.full_name}
+                            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+                              <span className="truncate">{userItem.full_name}</span>
                               {userItem.tags?.map(skill => {
                                 const tagConfig = [
                                   { label: "Verified", color: "bg-blue-50 text-blue-700 border-blue-200" },
@@ -1397,7 +1397,7 @@ export default function DiscoverPage() {
                                 ].find(t => t.label === skill);
                                 if (!tagConfig) return null;
                                 return (
-                                  <Badge key={skill} variant="outline" className={`${tagConfig.color} text-[9px] px-1.5 py-0 rounded-full font-medium h-fit`}>
+                                  <Badge key={skill} variant="outline" className={`${tagConfig.color} text-[10px] px-2 py-0.5 rounded-full font-medium h-fit leading-tight`}>
                                     {skill}
                                   </Badge>
                                 );
