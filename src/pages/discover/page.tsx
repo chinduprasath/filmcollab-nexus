@@ -78,6 +78,7 @@ interface User {
   role?: string;
   website?: string;
   skills?: string[];
+  tags?: string[];
   experience_level?: string;
   category?: string;
   portfolio_url?: string;
@@ -132,6 +133,7 @@ const mockUsers: User[] = [
     role: "Cinematographer",
     website: "https://sarahjohnson.com",
     skills: ["Cinematography", "Lighting", "Color Grading", "Film Production", "Visual Storytelling"],
+    tags: ["Featured", "Expert"],
     experience_level: "Senior",
     category: "Cinematographer / DOP",
     portfolio_url: "https://portfolio.sarahjohnson.com",
@@ -500,6 +502,7 @@ export default function DiscoverPage() {
             role: p.category || p.role || "Creator",
             website: p.website || "",
             skills: p.skills || [],
+            tags: p.tags || [],
             experience_level: p.experience_level || "Entry",
             category: p.category || "",
             portfolio_url: p.portfolio_url || "",
@@ -1381,29 +1384,29 @@ export default function DiscoverPage() {
                           <div className="flex-1 min-w-0">
                             <CardTitle className="text-base font-semibold text-gray-900 dark:text-white truncate flex items-center gap-1.5 flex-wrap">
                               {userItem.full_name}
+                              {userItem.tags?.map(skill => {
+                                const tagConfig = [
+                                  { label: "Verified", color: "bg-blue-50 text-blue-700 border-blue-200" },
+                                  { label: "Popular", color: "bg-green-50 text-green-700 border-green-200" },
+                                  { label: "Featured", color: "bg-purple-50 text-purple-700 border-purple-200" },
+                                  { label: "Trending", color: "bg-orange-50 text-orange-700 border-orange-200" },
+                                  { label: "Expert", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+                                  { label: "Mentor", color: "bg-pink-50 text-pink-700 border-pink-200" },
+                                  { label: "Influencer", color: "bg-cyan-50 text-cyan-700 border-cyan-200" },
+                                  { label: "Rising Star", color: "bg-amber-50 text-amber-700 border-amber-200" }
+                                ].find(t => t.label === skill);
+                                if (!tagConfig) return null;
+                                return (
+                                  <Badge key={skill} variant="outline" className={`${tagConfig.color} text-[9px] px-1.5 py-0 rounded-full font-medium h-fit`}>
+                                    {skill}
+                                  </Badge>
+                                );
+                              })}
                             </CardTitle>
                             <div className="mt-1 flex flex-col">
                               <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium flex-wrap">
                                 <span className="text-yellow-600 dark:text-yellow-500 font-semibold flex items-center gap-1.5">
                                   @{userItem.username || userItem.full_name.toLowerCase().replace(/\s+/g, "")}
-                                  {userItem.tags?.map(skill => {
-                                    const tagConfig = [
-                                      { label: "Verified", color: "bg-blue-50 text-blue-700 border-blue-200" },
-                                      { label: "Popular", color: "bg-green-50 text-green-700 border-green-200" },
-                                      { label: "Featured", color: "bg-purple-50 text-purple-700 border-purple-200" },
-                                      { label: "Trending", color: "bg-orange-50 text-orange-700 border-orange-200" },
-                                      { label: "Expert", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-                                      { label: "Mentor", color: "bg-pink-50 text-pink-700 border-pink-200" },
-                                      { label: "Influencer", color: "bg-cyan-50 text-cyan-700 border-cyan-200" },
-                                      { label: "Rising Star", color: "bg-amber-50 text-amber-700 border-amber-200" }
-                                    ].find(t => t.label === skill);
-                                    if (!tagConfig) return null;
-                                    return (
-                                      <Badge key={skill} variant="outline" className={`${tagConfig.color} text-[9px] px-1.5 py-0 rounded-full font-medium h-fit`}>
-                                        {skill}
-                                      </Badge>
-                                    );
-                                  })}
                                 </span>
                                 <span className="text-gray-300 dark:text-gray-700">•</span>
                                 <span className="text-gray-600 dark:text-gray-300 truncate">{userItem.role}</span>
