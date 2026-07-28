@@ -9,6 +9,12 @@ const key = keyMatch ? keyMatch[1] : null;
 
 const supabase = createClient(url, key);
 
-supabase.from('profiles').update({ tags: ["Featured", "Trending", "Expert"] }).eq('username', 'director').then(() => {
-  console.log("Updated tags for @director");
-}).catch(console.error);
+async function checkBuckets() {
+  const { data, error } = await supabase.storage.listBuckets();
+  if (error) {
+    console.error('Error fetching buckets:', error);
+  } else {
+    console.log('Buckets:', data.map(b => b.name));
+  }
+}
+checkBuckets();

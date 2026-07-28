@@ -998,6 +998,8 @@ export default function ProfilePage() {
   const [userProjects, setUserProjects] = useState<any[]>([]);
   const [directoryPage, setDirectoryPage] = useState(1);
   const [directoryFilter, setDirectoryFilter] = useState<"all"|"document"|"image"|"video"|"audio">("all");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const directoryFileInputRef = React.useRef<HTMLInputElement>(null);
   const directoryMainFileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -1411,6 +1413,55 @@ export default function ProfilePage() {
     }
   };
 
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    setIsUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('post-media')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('post-media')
+        .getPublicUrl(filePath);
+
+      const avatarUrl = data.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: avatarUrl })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => ({ ...prev, avatar: avatarUrl }));
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully.",
+      });
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: error.message || "Could not upload profile picture.",
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!user) {
       toast({ title: "Not signed in", description: "Please sign in to save your profile.", variant: "destructive" });
@@ -1616,12 +1667,33 @@ export default function ProfilePage() {
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1">
-                <Avatar className="w-24 h-24 border-4 border-white dark:border-zinc-800 shadow-lg flex-shrink-0">
-                  <AvatarImage src={profile.avatar} alt={profile.name} />
-                  <AvatarFallback className="text-xl font-semibold bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
-                    {profile.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative group">
+                  <Avatar className="w-24 h-24 border-4 border-white dark:border-zinc-800 shadow-lg flex-shrink-0">
+                    <AvatarImage src={profile.avatar} alt={profile.name} />
+                    <AvatarFallback className="text-xl font-semibold bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
+                      {profile.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  {isOwnProfile && (
+                    <>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploadingAvatar}
+                        className="absolute bottom-0 right-0 p-1.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full shadow-md transition-colors disabled:opacity-50"
+                        title="Edit profile picture"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">

@@ -456,6 +456,7 @@ export default function DiscoverPage() {
         role?: string | null;
         website?: string | null;
         skills?: string[] | null;
+        tags?: string[] | null;
         experience_level?: string | null;
         category?: string | null;
         portfolio_url?: string | null;

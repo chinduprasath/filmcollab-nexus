@@ -9,6 +9,13 @@ const key = keyMatch ? keyMatch[1] : null;
 
 const supabase = createClient(url, key);
 
-supabase.from('profiles').update({ tags: ["Featured", "Trending", "Expert"] }).eq('username', 'director').then(() => {
-  console.log("Updated tags for @director");
-}).catch(console.error);
+async function testUpload() {
+  const { data, error } = await supabase.storage.from('post-media').upload('test.txt', 'hello');
+  if (error) {
+    console.error('post-media bucket error:', error.message);
+  } else {
+    console.log('post-media upload success:', data);
+    await supabase.storage.from('post-media').remove(['test.txt']);
+  }
+}
+testUpload();
