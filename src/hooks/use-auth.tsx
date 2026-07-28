@@ -36,6 +36,8 @@ interface Profile {
   projects_count?: number | null;
   posts_count?: number | null;
   likes_count?: number | null;
+  avatar_url?: string | null;
+  cover_image_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -69,6 +71,7 @@ interface AuthContextType {
   hasPermission: (page: string, action?: string) => boolean;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   signInAsGuest: (isAdminRole?: boolean) => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -664,6 +667,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const refreshProfile = async () => {
+    if (user?.id) {
+      await fetchProfile(user.id, user);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -679,7 +688,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       adminPermissions,
       hasPermission,
       resetPassword,
-      signInAsGuest
+      signInAsGuest,
+      refreshProfile
     }}>
       {children}
     </AuthContext.Provider>

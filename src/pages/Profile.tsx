@@ -695,6 +695,7 @@ const REAL_LIFELIKE_COUNTS: Record<string, Record<string, string>> = {
     "technicalguruji": "23M",
   },
   instagram: {
+    "moneypurseadv": "12,223",
     "prasadtechinteluguofficial": "1.7M",
     "prasadtechintelugu": "1.7M",
     "cristiano": "630M",
@@ -978,7 +979,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { id: routeId } = useParams();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<ProfileData>(emptyProfileData);
   const [isConnected, setIsConnected] = useState(false);
@@ -1471,6 +1472,9 @@ export default function ProfilePage() {
       setProfile(prev => ({ ...prev, avatar: avatarUrl }));
       setIsCropDialogOpen(false);
       setAvatarToCrop(null);
+      if (refreshProfile) {
+        await refreshProfile();
+      }
       toast({
         title: "Success",
         description: "Profile picture updated successfully.",

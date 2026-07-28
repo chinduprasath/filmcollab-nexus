@@ -176,7 +176,7 @@ export function AdminTopbar({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-3 h-auto p-2 hover:bg-yellow-50">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="" alt={profile?.full_name || 'Admin'} />
+                  <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || 'Admin'} />
                   <AvatarFallback className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
                     {profile?.first_name?.[0] || profile?.full_name?.[0] || 'A'}
                   </AvatarFallback>
