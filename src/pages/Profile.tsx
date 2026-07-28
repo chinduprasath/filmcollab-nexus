@@ -14,11 +14,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import Cropper from "react-easy-crop";
+import getCroppedImg from "@/lib/cropImage";
 import {
   Edit,
   MapPin,
@@ -999,6 +1002,12 @@ export default function ProfilePage() {
   const [directoryPage, setDirectoryPage] = useState(1);
   const [directoryFilter, setDirectoryFilter] = useState<"all"|"document"|"image"|"video"|"audio">("all");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarToCrop, setAvatarToCrop] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const directoryFileInputRef = React.useRef<HTMLInputElement>(null);
   const directoryMainFileInputRef = React.useRef<HTMLInputElement>(null);
@@ -1413,24 +1422,41 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user?.id) return;
+    if (!file) return;
 
+    const fileUrl = URL.createObjectURL(file);
+    setAvatarToCrop(fileUrl);
+    setIsCropDialogOpen(true);
+    setSelectedAvatarFile(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const uploadCroppedImage = async () => {
+    if (!avatarToCrop || !croppedAreaPixels || !user?.id) return;
     setIsUploadingAvatar(true);
+    
     try {
-      const fileExt = file.name.split('.').pop();
+      const croppedBlob = await getCroppedImg(avatarToCrop, croppedAreaPixels);
+      const fileExt = 'jpg';
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
+      // Uploading to avatars bucket since the user was instructed to create it
+      // Using 'avatars' bucket instead of 'post-media'
       const { error: uploadError } = await supabase.storage
-        .from('post-media')
-        .upload(filePath, file);
+        .from('avatars')
+        .upload(filePath, croppedBlob);
 
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage
-        .from('post-media')
+        .from('avatars')
         .getPublicUrl(filePath);
 
       const avatarUrl = data.publicUrl;
@@ -1443,6 +1469,8 @@ export default function ProfilePage() {
       if (updateError) throw updateError;
 
       setProfile(prev => ({ ...prev, avatar: avatarUrl }));
+      setIsCropDialogOpen(false);
+      setAvatarToCrop(null);
       toast({
         title: "Success",
         description: "Profile picture updated successfully.",
@@ -1456,9 +1484,6 @@ export default function ProfilePage() {
       });
     } finally {
       setIsUploadingAvatar(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     }
   };
 
@@ -3351,6 +3376,58 @@ export default function ProfilePage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Avatar Crop Dialog */}
+      <Dialog open={isCropDialogOpen} onOpenChange={(open) => {
+        setIsCropDialogOpen(open);
+        if (!open) {
+          setAvatarToCrop(null);
+          setCrop({ x: 0, y: 0 });
+          setZoom(1);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adjust Profile Picture</DialogTitle>
+          </DialogHeader>
+          {avatarToCrop && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="relative w-full h-64 bg-black rounded-lg overflow-hidden">
+                <Cropper
+                  image={avatarToCrop}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={(_, croppedAreaPixels) => setCroppedAreaPixels(croppedAreaPixels as any)}
+                  cropShape="round"
+                  showGrid={false}
+                />
+              </div>
+              <div className="w-full flex items-center gap-4 px-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Zoom</span>
+                <Slider
+                  value={[zoom]}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  onValueChange={(value) => setZoom(value[0])}
+                  className="flex-1"
+                />
+              </div>
+              <div className="flex justify-end w-full gap-2 mt-4">
+                <Button variant="outline" onClick={() => setIsCropDialogOpen(false)} disabled={isUploadingAvatar}>
+                  Cancel
+                </Button>
+                <Button onClick={uploadCroppedImage} disabled={isUploadingAvatar} className="bg-yellow-500 hover:bg-yellow-600 text-white">
+                  {isUploadingAvatar ? "Saving..." : "Set as Profile Picture"}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AppLayout>
