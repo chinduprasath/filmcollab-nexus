@@ -854,11 +854,7 @@ async function fetchFollowersCount(url: string, platform: string): Promise<strin
     }
   }
 
-  // If no custom API key is configured or API lookup fails, use the stable offline deterministic generator
-  // to avoid CORS errors, DNS failures, or sandbox network restrictions.
-  if (!rapidApiKey) {
-    return extractFollowersFromUrl(url, platform);
-  }
+  // API Key check was here but removed so we can use free APIs and scrapers first
 
   // 2. TRY LIVE FREE API CALLS (to show exact live followers count of the public profile page - only attempted if API key configured but fails/falls back)
   // Instagram Scribo Free API

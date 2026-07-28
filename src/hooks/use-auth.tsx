@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           supabase
             .from('profiles')
             .select('*')
-            .eq('id', userId)
+            .eq('user_id', userId)
             .maybeSingle() as unknown as Promise<{ data: Profile | null; error: null | { message: string } }>,
           10000,
           { data: null, error: null }
