@@ -1,14 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import ReactPlayer from "react-player";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "motion/react";
+import { AddFileDialog } from "@/components/directory/AddFileDialog";
 import {
   Search,
   Image as ImageIcon,
@@ -32,7 +36,10 @@ import {
   Sun,
   X,
   Volume2,
+  Filter,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
 
 type DirType = "images" | "videos" | "documents" | "audios";
 
@@ -55,6 +62,7 @@ interface ImageItem extends BaseItem {
 interface VideoItem extends BaseItem {
   type: "videos";
   thumbnailUrl: string;
+  coverUrl?: string;
   videoUrl: string;
 }
 
@@ -374,14 +382,24 @@ LIGHTING DESIGN:
 ];
 
 export default function DirectoryPage() {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<DirType>("images");
-  const [items, setItems] = useState<DirItem[]>(initialItems);
+  const [items, setItems] = useState<DirItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"recent" | "likes" | "date">("recent");
   const [dateFilter, setDateFilter] = useState<"all" | "7d" | "30d">("all");
   const [viewingLiked, setViewingLiked] = useState<boolean>(false);
   const [likedFilter, setLikedFilter] = useState<"all" | DirType>("all");
+  
+  // Filter sidebar states
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterMinLikes, setFilterMinLikes] = useState<string>("");
+  const [filterMaxLikes, setFilterMaxLikes] = useState<string>("");
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   
   // Modals / Read mode states
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
@@ -395,31 +413,97 @@ export default function DirectoryPage() {
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
+  // Add Files state
+  const [showAddFileDialog, setShowAddFileDialog] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.id) setCurrentUserId(user.id);
+    });
+  }, []);
+
+  useEffect(() => {
+    const typeMap: Record<string, string> = {
+      'images': 'image',
+      'videos': 'video',
+      'audios': 'audio',
+      'documents': 'document'
+    };
+    const fileType = typeMap[activeTab];
+    if (fileType) {
+      supabase.from("directory_categories")
+        .select("name")
+        .eq("file_type", fileType)
+        .then(({ data, error }) => {
+          if (!error && data) {
+            const parsed = data
+              .map((d: any) => d.name.split(',').map((s: string) => s.trim()))
+              .flat()
+              .filter(Boolean);
+            setAvailableCategories(Array.from(new Set(parsed)) as string[]);
+          }
+        });
+    }
+  }, [activeTab]);
+
   // Toggle Like Handler (Requirement 4: Remove views, instead add likes)
-  const handleLikeToggle = (id: string, e: React.MouseEvent) => {
+  const handleLikeToggle = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card clicks
+    
+    const itemToUpdate = items.find(i => i.id === id);
+    if (!itemToUpdate) return;
+    
+    const liked = !itemToUpdate.likedByUser;
+    const newLikesCount = liked ? itemToUpdate.likes + 1 : Math.max(0, itemToUpdate.likes - 1);
+
     setItems((prevItems) =>
       prevItems.map((item) => {
         if (item.id === id) {
-          const liked = !item.likedByUser;
           if (liked) {
             toast.success(`Liked "${item.title}"`);
           }
           return {
             ...item,
             likedByUser: liked,
-            likes: liked ? item.likes + 1 : item.likes - 1,
+            likes: newLikesCount,
           };
         }
         return item;
       })
     );
+
+    // Sync with database
+    try {
+      const { data, error } = await supabase
+        .from('directory_files')
+        .select('stats')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      
+      const currentStats = data?.stats as any || { views: 0, likes: 0, downloads: 0 };
+      const updatedStats = {
+        ...currentStats,
+        likes: newLikesCount
+      };
+
+      await supabase
+        .from('directory_files')
+        .update({ stats: updatedStats })
+        .eq('id', id);
+    } catch (err) {
+      console.error("Failed to sync like status", err);
+    }
   };
 
-  const handleShare = (title: string, e: React.MouseEvent) => {
+  const handleShare = (id: string, title: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const url = new URL(window.location.href);
+    url.searchParams.set("item", id);
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(url.toString());
     }
     toast.success(`Link for "${title}" copied to clipboard!`);
   };
@@ -447,7 +531,14 @@ export default function DirectoryPage() {
       return diff <= cutoffDays;
     });
 
-    const byQuery = byDate.filter((it) => {
+    const byCategoryAndLikes = byDate.filter((it) => {
+      if (filterCategory !== "all" && !(it.tags || []).some(t => t.toLowerCase() === filterCategory.toLowerCase())) return false;
+      if (filterMinLikes && it.likes < parseInt(filterMinLikes)) return false;
+      if (filterMaxLikes && it.likes > parseInt(filterMaxLikes)) return false;
+      return true;
+    });
+
+    const byQuery = byCategoryAndLikes.filter((it) => {
       const q = query.toLowerCase();
       return (
         it.title.toLowerCase().includes(q) ||
@@ -462,7 +553,7 @@ export default function DirectoryPage() {
     });
 
     return sorted;
-  }, [items, activeTab, query, sortBy, dateFilter, viewingLiked, likedFilter]);
+  }, [items, activeTab, query, sortBy, dateFilter, viewingLiked, likedFilter, filterCategory, filterMinLikes, filterMaxLikes]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -482,6 +573,90 @@ export default function DirectoryPage() {
     setDocPageNum(0);
     setDocZoom(100);
   };
+
+  const closeModal = () => {
+    setSelectedImage(null);
+    setSelectedVideo(null);
+    setSelectedDoc(null);
+    if (searchParams.has("item")) {
+      setSearchParams(prev => {
+        prev.delete("item");
+        return prev;
+      }, { replace: true });
+    }
+  };
+
+  // React Query for caching directory files so it loads instantly when navigating back
+  const { data: fetchedItems, isLoading: isQueryLoading } = useQuery({
+    queryKey: ['directory_files'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
+      if (userId) setCurrentUserId(userId);
+
+      const { data, error } = await supabase
+        .from("directory_files")
+        .select(`
+          *,
+          profiles:user_id (id, full_name, username)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error && error.code !== '42P01') throw error;
+      if (!data) return [];
+
+      return data.map((item: any) => {
+        const typeMap: Record<string, DirType> = {
+          'image': 'images',
+          'video': 'videos',
+          'audio': 'audios',
+          'document': 'documents'
+        };
+        
+        const stats = item.stats as any || { likes: 0, views: 0, downloads: 0 };
+        
+        return {
+          id: item.id,
+          userId: item.profiles?.id || item.user_id,
+          title: item.title,
+          type: typeMap[item.file_type] || 'documents',
+          username: item.profiles?.username || item.profiles?.full_name || 'unknown',
+          uploadDate: new Date(item.created_at).toISOString().split('T')[0],
+          likes: stats.likes || 0,
+          likedByUser: false,
+          tags: item.tags || [],
+          description: undefined,
+          coverUrl: (stats as any)?.coverUrl,
+          thumbnailUrl: (stats as any)?.coverUrl || item.file_url,
+          videoUrl: item.file_type === 'video' ? item.file_url : undefined,
+          audioUrl: item.file_type === 'audio' ? item.file_url : undefined,
+          fileUrl: item.file_url,
+          outline: item.file_type === 'document' ? ['Document Preview'] : undefined,
+          pages: item.file_type === 'document' ? [item.description || 'No content available for preview.'] : undefined
+        } as DirItem;
+      });
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+
+  useEffect(() => {
+    if (fetchedItems) {
+      setItems(fetchedItems);
+      setLoading(false);
+    }
+  }, [fetchedItems]);
+
+  useEffect(() => {
+    const itemId = searchParams.get("item");
+    if (itemId && items.length > 0) {
+      const it = items.find(i => i.id === itemId);
+      if (it) {
+        if (it.type === "images" && selectedImage?.id !== it.id) setSelectedImage(it as ImageItem);
+        else if (it.type === "videos" && selectedVideo?.id !== it.id) setSelectedVideo(it as VideoItem);
+        else if (it.type === "documents" && selectedDoc?.id !== it.id) handleOpenDocument(it as DocumentItem);
+      }
+    }
+  }, [searchParams, items]);
 
   return (
     <AppLayout>
@@ -536,20 +711,6 @@ export default function DirectoryPage() {
                 </div>
               )}
 
-              {/* Sort Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Sort</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => { setSortBy(e.target.value as "recent" | "likes" | "date"); resetPaging(); }}
-                  className="px-2 py-1 border border-gray-300 dark:border-yellow-900/40 rounded-lg text-xs bg-white dark:bg-background text-gray-900 dark:text-white focus:border-yellow-500 focus:ring-yellow-500 h-9 font-medium"
-                >
-                  <option value="recent">Recent</option>
-                  <option value="likes">Most Liked</option>
-                  <option value="date">Upload Date</option>
-                </select>
-              </div>
-
               {/* View Liked Button */}
               <Button
                 variant={viewingLiked ? "default" : "outline"}
@@ -569,29 +730,45 @@ export default function DirectoryPage() {
             </div>
           </div>
         </div>
-
         {/* Tabs - Only displayed if not viewing liked items */}
         {!viewingLiked && (
           <div className="bg-white dark:bg-background rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40 overflow-hidden">
-            <div className="flex border-b border-gray-200 dark:border-gray-800 px-4 scrollbar-none overflow-x-auto">
-              {[
-                { id: "images", label: "Images", icon: ImageIcon },
-                { id: "videos", label: "Videos", icon: VideoIcon },
-                { id: "documents", label: "Documents", icon: FileText },
-                { id: "audios", label: "Audios", icon: Music },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id as DirType)}
-                  className={`px-5 py-4 border-b-2 font-medium transition-all flex items-center gap-2 text-sm whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? "border-yellow-600 text-yellow-600 dark:text-yellow-400 dark:border-yellow-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  }`}
+            <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-800 px-4 scrollbar-none overflow-x-auto">
+              <div className="flex">
+                {[
+                  { id: "images", label: "Images", icon: ImageIcon },
+                  { id: "videos", label: "Videos", icon: VideoIcon },
+                  { id: "documents", label: "Documents", icon: FileText },
+                  { id: "audios", label: "Audios", icon: Music },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id as DirType)}
+                    className={`px-5 py-4 border-b-2 font-medium transition-all flex items-center gap-2 text-sm whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? "border-yellow-600 text-yellow-600 dark:text-yellow-400 dark:border-yellow-500"
+                        : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    }`}
+                  >
+                    <tab.icon className="w-4 h-4" /> {tab.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center ml-4 my-2 shrink-0">
+                <Button
+                  variant="outline"
+                  onClick={() => setSidebarOpen(true)}
+                  className="mr-2 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 font-bold h-9 text-xs shadow-sm"
                 >
-                  <tab.icon className="w-4 h-4" /> {tab.label}
-                </button>
-              ))}
+                  <Filter className="w-3.5 h-3.5 mr-1.5" /> Filter
+                </Button>
+                <Button
+                  onClick={() => setShowAddFileDialog(true)}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold h-9 text-xs px-4 shadow-sm transition-colors"
+                >
+                  Add Files
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -617,9 +794,10 @@ export default function DirectoryPage() {
                   key={it.id} 
                   className="group overflow-hidden bg-white dark:bg-background border border-gray-200 dark:border-gray-850 hover:border-yellow-500 dark:hover:border-yellow-500 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 relative cursor-pointer"
                   onClick={() => {
-                    if (it.type === "images") setSelectedImage(it as ImageItem);
-                    if (it.type === "videos") setSelectedVideo(it as VideoItem);
-                    if (it.type === "documents") handleOpenDocument(it as DocumentItem);
+                    setSearchParams(prev => {
+                      prev.set("item", it.id);
+                      return prev;
+                    });
                   }}
                 >
                   {/* Media container */}
@@ -632,7 +810,7 @@ export default function DirectoryPage() {
                     >
                       {/* Share Button */}
                       <button 
-                        onClick={(e) => handleShare(it.title, e)}
+                        onClick={(e) => handleShare(it.id, it.title, e)}
                         className="p-1.5 rounded-full bg-black/60 hover:bg-black/85 text-white hover:text-yellow-400 transition-colors duration-200 shadow-sm"
                         title="Share link"
                       >
@@ -668,12 +846,19 @@ export default function DirectoryPage() {
                     {/* Video format (Requirement 1: Just video thumbnail with interactive play overlay) */}
                     {it.type === "videos" && (
                       <div className="w-full h-full relative">
-                        <img 
-                          src={(it as VideoItem).thumbnailUrl} 
-                          alt={it.title} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                          loading="lazy"
-                        />
+                        {(it as any).coverUrl ? (
+                          <img src={(it as any).coverUrl} alt={it.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        ) : (
+                          <div className="w-full h-full relative pointer-events-none">
+                            <ReactPlayer 
+                              url={(it as VideoItem).videoUrl} 
+                              width="100%" 
+                              height="100%"
+                              light={true}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 pointer-events-none"
+                            />
+                          </div>
+                        )}
                         <div className="absolute inset-0 bg-black/10 flex items-center justify-center group-hover:bg-black/20 transition-colors">
                           <div className="w-14 h-14 rounded-full bg-yellow-500/90 dark:bg-yellow-600/90 text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
                             <Play className="w-6 h-6 fill-white ml-0.5" />
@@ -684,46 +869,68 @@ export default function DirectoryPage() {
 
                     {/* Document format (Requirement 1: Visual thumb with no download icon!) */}
                     {it.type === "documents" && (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-yellow-50/70 to-orange-50/70 dark:from-yellow-950/25 dark:to-orange-950/15">
-                        <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 flex items-center justify-center shadow-sm mb-3 group-hover:scale-105 transition-transform duration-300">
-                          <FileText className="w-8 h-8" />
+                      <div className="w-full h-full relative flex flex-col items-center justify-center p-6 bg-gradient-to-br from-yellow-50/70 to-orange-50/70 dark:from-yellow-950/25 dark:to-orange-950/15 overflow-hidden">
+                        {(it as any).coverUrl ? (
+                          <img 
+                            src={(it as any).coverUrl} 
+                            alt={it.title}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
+                          />
+                        ) : (
+                          <>
+                            <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 flex items-center justify-center shadow-sm mb-3 group-hover:scale-105 transition-transform duration-300">
+                              <FileText className="w-8 h-8" />
+                            </div>
+                            <span className="text-xs font-extrabold text-yellow-700 dark:text-yellow-400 uppercase tracking-widest bg-yellow-100/50 dark:bg-yellow-950/40 px-3 py-1 rounded-full border border-yellow-200/40 dark:border-yellow-900/30 mb-1 z-10">
+                              {(it as DocumentItem).ext} Document
+                            </span>
+                            <span className="text-[11px] text-gray-500 dark:text-gray-400 text-center max-w-[160px] truncate z-10">
+                              Click to enter reader
+                            </span>
+                          </>
+                        )}
+                        <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                            <FileText className="w-5 h-5 text-white" />
+                          </div>
                         </div>
-                        <span className="text-xs font-extrabold text-yellow-700 dark:text-yellow-400 uppercase tracking-widest bg-yellow-100/50 dark:bg-yellow-950/40 px-3 py-1 rounded-full border border-yellow-200/40 dark:border-yellow-900/30 mb-1">
-                          {(it as DocumentItem).ext} Document
-                        </span>
-                        <span className="text-[11px] text-gray-500 dark:text-gray-400 text-center max-w-[160px] truncate">
-                          Click to enter reader
-                        </span>
                       </div>
                     )}
 
                     {/* Audio format (Requirement 1: Custom sleek card with player controls in media frame) */}
                     {it.type === "audios" && (
-                      <div className="w-full h-full flex flex-col justify-between p-5 bg-gradient-to-br from-yellow-50/80 to-amber-50/60 dark:from-yellow-950/30 dark:to-amber-950/15">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 flex items-center justify-center shadow-sm">
+                      <div className="w-full h-full relative flex flex-col justify-between p-5 bg-gradient-to-br from-yellow-50/80 to-amber-50/60 dark:from-yellow-950/30 dark:to-amber-950/15 overflow-hidden">
+                        {(it as any).coverUrl && (
+                          <img 
+                            src={(it as any).coverUrl} 
+                            alt={it.title}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40"
+                          />
+                        )}
+                        <div className="flex items-center gap-3 z-10">
+                          <div className="w-12 h-12 rounded-xl bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 flex items-center justify-center shadow-sm backdrop-blur-md">
                             <Music className="w-6 h-6" />
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase font-black text-yellow-600 dark:text-yellow-400 tracking-widest">
+                            <span className="text-[10px] uppercase font-black text-yellow-700 dark:text-yellow-400 tracking-widest drop-shadow-sm">
                               Audio Sequence
                             </span>
-                            <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-gray-700 dark:text-gray-300 font-medium">
                               <Volume2 className="w-3.5 h-3.5" /> Direct Play
                             </div>
                           </div>
                         </div>
 
                         {/* Interactive Waveform Audio bar inside card */}
-                        <div className="py-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="py-2 z-10" onClick={(e) => e.stopPropagation()}>
                           <audio 
                             src={(it as AudioItem).audioUrl} 
                             controls 
-                            className="w-full h-8 accent-yellow-500 dark:accent-yellow-600 rounded" 
+                            className="w-full h-8 accent-yellow-500 dark:accent-yellow-600 rounded opacity-90 hover:opacity-100 transition-opacity" 
                           />
                         </div>
 
-                        <div className="text-[10px] text-gray-500 dark:text-gray-400 italic text-center">
+                        <div className="text-[10px] text-gray-600 dark:text-gray-300 italic text-center font-medium z-10">
                           Shared reference loop
                         </div>
                       </div>
@@ -743,14 +950,14 @@ export default function DirectoryPage() {
                             className="font-semibold text-yellow-400 truncate hover:underline cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/profile?u=${encodeURIComponent(it.username)}`);
+                              if ((it as any).userId) {
+                                navigate(`/profile/${(it as any).userId}`);
+                              } else {
+                                navigate(`/profile?u=${encodeURIComponent(it.username)}`);
+                              }
                             }}
                           >
                             {it.username}
-                          </span>
-                          <span className="text-gray-400 font-extrabold">•</span>
-                          <span className="text-[10px] uppercase font-black text-gray-300 tracking-wider">
-                            {it.type}
                           </span>
                         </div>
 
@@ -821,7 +1028,7 @@ export default function DirectoryPage() {
         {selectedImage && (
           <div 
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm cursor-pointer"
-            onClick={() => setSelectedImage(null)}
+            onClick={closeModal}
           >
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -840,7 +1047,7 @@ export default function DirectoryPage() {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => setSelectedImage(null)}
+                  onClick={closeModal}
                   className="w-8 h-8 rounded-full hover:bg-white/10 text-gray-400 hover:text-white"
                 >
                   <X className="w-4 h-4" />
@@ -879,7 +1086,10 @@ export default function DirectoryPage() {
       {/* Video Player Overlay Modal (Requirement 2) */}
       <AnimatePresence>
         {selectedVideo && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
+            onClick={closeModal}
+          >
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -897,7 +1107,7 @@ export default function DirectoryPage() {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => setSelectedVideo(null)}
+                  onClick={closeModal}
                   className="w-8 h-8 rounded-full hover:bg-white/10 text-gray-400 hover:text-white"
                 >
                   <X className="w-4 h-4" />
@@ -906,11 +1116,14 @@ export default function DirectoryPage() {
 
               {/* Video Player */}
               <div className="aspect-[16/9] w-full bg-black relative flex items-center justify-center">
-                <video 
-                  src={selectedVideo.videoUrl} 
+                <ReactPlayer 
+                  url={selectedVideo.videoUrl} 
                   controls 
-                  autoPlay
-                  className="w-full h-full max-h-[70vh] object-contain"
+                  playing
+                  width="100%"
+                  height="100%"
+                  className="react-player-wrapper max-h-[70vh]"
+                  style={{ maxHeight: '70vh' }}
                 />
               </div>
 
@@ -1039,11 +1252,11 @@ export default function DirectoryPage() {
 
                   {/* Page Status indicator */}
                   <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
-                    Page {docPageNum + 1} of {selectedDoc.pages.length}
+                    Document Viewer
                   </span>
 
                   <Button
-                    onClick={() => setSelectedDoc(null)}
+                    onClick={closeModal}
                     className="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white font-semibold text-xs h-8 px-3"
                   >
                     Close Reader
@@ -1051,10 +1264,10 @@ export default function DirectoryPage() {
                 </div>
 
                 {/* Interactive Paper Page */}
-                <div className="flex-1 overflow-y-auto p-8 flex justify-center">
+                <div className="flex-1 overflow-y-auto p-8 flex justify-center h-full">
                   <div 
                     style={{ fontSize: `${(docZoom / 100) * 0.875}rem` }}
-                    className={`w-full max-w-2xl min-h-[500px] rounded-xl shadow-lg border p-10 font-sans leading-relaxed transition-all duration-300 ${
+                    className={`w-full max-w-4xl min-h-[500px] h-full rounded-xl shadow-lg border overflow-hidden transition-all duration-300 ${
                       readerTheme === "sepia" 
                         ? "bg-amber-50/90 text-amber-900 border-amber-200/60" 
                         : readerTheme === "night"
@@ -1062,45 +1275,11 @@ export default function DirectoryPage() {
                         : "bg-white text-gray-900 border-gray-200"
                     }`}
                   >
-                    {/* Simulated paper watermark */}
-                    <div className="flex items-center justify-between border-b border-dashed pb-3 mb-6 opacity-40 text-xs">
-                      <span>{selectedDoc.title}</span>
-                      <span>DRAFT 4.0</span>
-                    </div>
-
-                    {/* Rich text line splitting & formatting */}
-                    <div className="whitespace-pre-wrap font-mono tracking-tight leading-loose">
-                      {selectedDoc.pages[docPageNum]}
-                    </div>
+                    <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent((selectedDoc as DocumentItem).fileUrl || (selectedDoc as DocumentItem).url || "")}&embedded=true`} className="w-full h-full bg-white" title="Document Preview" />
                   </div>
                 </div>
 
-                {/* Bottom Navigation Control Bar */}
-                <div className="h-14 px-6 bg-white dark:bg-background border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={docPageNum === 0}
-                    onClick={() => setDocPageNum(p => Math.max(0, p - 1))}
-                    className="text-gray-600 dark:text-gray-400 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 h-8"
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-1" /> Previous Page
-                  </Button>
-                  
-                  <span className="text-gray-400">
-                    Scroll down to read entire block
-                  </span>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={docPageNum === selectedDoc.pages.length - 1}
-                    onClick={() => setDocPageNum(p => Math.min(selectedDoc.pages.length - 1, p + 1))}
-                    className="text-gray-600 dark:text-gray-400 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 h-8"
-                  >
-                    Next Page <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
+                {/* Document Viewer */}
 
               </div>
 
@@ -1108,6 +1287,90 @@ export default function DirectoryPage() {
           </div>
         )}
       </AnimatePresence>
+
+      <AddFileDialog 
+        open={showAddFileDialog} 
+        onOpenChange={setShowAddFileDialog} 
+        userId={currentUserId}
+        onUploadSuccess={() => {
+          // Re-fetch items on success without reloading
+          queryClient.invalidateQueries({ queryKey: ['directory_files'] });
+        }} 
+      />
+
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent className="bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white sm:max-w-md w-full overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-xl font-bold flex items-center gap-2">
+              <Filter className="w-5 h-5 text-yellow-500" />
+              Filters & Sort
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-8 space-y-6">
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Category</Label>
+              <select
+                value={filterCategory}
+                onChange={(e) => { setFilterCategory(e.target.value); resetPaging(); }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500"
+              >
+                <option value="all">All Categories</option>
+                {availableCategories.map((cat, idx) => (
+                  <option key={idx} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Likes Range</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={filterMinLikes}
+                  onChange={(e) => { setFilterMinLikes(e.target.value); resetPaging(); }}
+                  className="bg-background border-input"
+                />
+                <span className="text-sm text-gray-500">-</span>
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={filterMaxLikes}
+                  onChange={(e) => { setFilterMaxLikes(e.target.value); resetPaging(); }}
+                  className="bg-background border-input"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Sort By</Label>
+              <select
+                value={sortBy}
+                onChange={(e) => { setSortBy(e.target.value as "recent" | "likes" | "date"); resetPaging(); }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500"
+              >
+                <option value="recent">Recent</option>
+                <option value="likes">Most Liked</option>
+                <option value="date">Upload Date</option>
+              </select>
+            </div>
+
+            <Button 
+              onClick={() => {
+                setFilterCategory("all");
+                setFilterMinLikes("");
+                setFilterMaxLikes("");
+                setSortBy("recent");
+                resetPaging();
+              }}
+              variant="outline" 
+              className="w-full mt-4"
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   );
 }

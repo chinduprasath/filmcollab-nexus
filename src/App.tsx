@@ -46,6 +46,9 @@ import AdminTickets from "./pages/AdminTickets";
 import AdminTicketDetail from "./pages/AdminTicketDetail";
 import AdminCommunities from "./pages/AdminCommunities";
 import AdminNotifications from "./pages/AdminNotifications";
+import AdminLocations from "./pages/AdminLocations";
+import AdminLocationDetail from "./pages/AdminLocationDetail";
+import AdminSettings from "./pages/AdminSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -464,13 +467,37 @@ function AppRoutes() {
           </AdminRoute>
         }
       />
-      <Route
-        path="/admin-dashboard/notifications"
+      <Route 
+        path="/admin-dashboard/notifications" 
         element={
           <AdminRoute>
             <AdminNotifications />
           </AdminRoute>
-        }
+        } 
+      />
+      <Route 
+        path="/admin-dashboard/locations" 
+        element={
+          <AdminRoute>
+            <AdminLocations />
+          </AdminRoute>
+        } 
+      />
+      <Route 
+        path="/admin-dashboard/locations/:id" 
+        element={
+          <AdminRoute>
+            <AdminLocationDetail />
+          </AdminRoute>
+        } 
+      />
+      <Route 
+        path="/admin-dashboard/settings" 
+        element={
+          <AdminRoute>
+            <AdminSettings />
+          </AdminRoute>
+        } 
       />
 
       {/* Catch all route */}

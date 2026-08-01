@@ -38,16 +38,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+const generateProjectId = (uuid: string) => {
+  let hash = 0;
+  for (let i = 0; i < uuid.length; i++) {
+    hash = uuid.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return `project_${Math.abs(hash).toString().substring(0, 6).padStart(6, '0')}`;
+};
+
 export default function AdminProjects() {
-  // Available tags for projects
-  const availableTags = [
-    { value: "featured", label: "Featured", color: "purple" },
-    { value: "trending", label: "Trending", color: "orange" },
-    { value: "hiring", label: "Hiring", color: "green" },
-    { value: "urgent", label: "Urgent", color: "red" },
-    { value: "sponsored", label: "Sponsored", color: "yellow" },
-    { value: "collab", label: "Collab", color: "blue" }
-  ];
+  // Available tags for projects (will be fetched dynamically)
+  const [globalTags, setGlobalTags] = useState<{label: string, color: string}[]>([]);
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,6 +64,7 @@ export default function AdminProjects() {
   // Notification states
   const [isNotifyDialogOpen, setIsNotifyDialogOpen] = useState(false);
   const [notifyUser, setNotifyUser] = useState<any | null>(null);
+  const [notifyProject, setNotifyProject] = useState<any | null>(null);
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
   const [isSendingNotification, setIsSendingNotification] = useState(false);
@@ -92,8 +94,21 @@ export default function AdminProjects() {
     }
   }, [toast]);
 
+  const fetchGlobalTags = async () => {
+    try {
+      const { data, error } = await supabase.from("global_tags").select("name").order("name");
+      if (error && error.code !== '42P01') throw error;
+      if (data) {
+        setGlobalTags(data.map(t => ({ label: t.name, color: "bg-gray-100 text-gray-800" })));
+      }
+    } catch (error) {
+      console.error("Error fetching global tags:", error);
+    }
+  };
+
   useEffect(() => {
     fetchProjects();
+    fetchGlobalTags();
   }, [fetchProjects]);
 
   const getStatusBadgeVariant = (status: string) => {
@@ -184,12 +199,12 @@ export default function AdminProjects() {
     try {
       const { error } = await supabase
         .from("projects")
-        .update({ tags: editingTags.tags })
+        .update({ project_tags: editingTags.tags })
         .eq("id", projectId);
       
       if (error) throw error;
       
-      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, tags: editingTags.tags } : p));
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, project_tags: editingTags.tags } : p));
       setEditingTags(null);
       toast({
         title: "Tags Updated",
@@ -217,19 +232,7 @@ export default function AdminProjects() {
   };
 
   const getTagBadgeStyle = (tag: string): string => {
-    const tagConfig = availableTags.find(t => t.label === tag);
-    if (!tagConfig) return "bg-gray-50 text-gray-700 hover:bg-gray-100";
-
-    const styles = {
-      purple: "bg-purple-50 text-purple-700 hover:bg-purple-100",
-      orange: "bg-orange-50 text-orange-700 hover:bg-orange-100",
-      green: "bg-green-50 text-green-700 hover:bg-green-100",
-      red: "bg-red-50 text-red-700 hover:bg-red-100",
-      yellow: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100",
-      blue: "bg-blue-50 text-blue-700 hover:bg-blue-100"
-    };
-
-    return styles[tagConfig.color] || "bg-gray-50 text-gray-700 hover:bg-gray-100";
+    return "bg-gray-50 text-gray-700 hover:bg-gray-100";
   };
 
   const handleOpenNotify = (project: any, creator: any) => {
@@ -242,24 +245,34 @@ export default function AdminProjects() {
       return;
     }
     setNotifyUser(creator);
+    setNotifyProject(project);
     setNotificationTitle(`Regarding your project: ${project.title}`);
     setNotificationMessage("");
     setIsNotifyDialogOpen(true);
   };
 
   const handleSendNotification = async () => {
-    if (!notifyUser || !notificationTitle.trim() || !notificationMessage.trim()) return;
+    if (!notifyUser || !notifyProject || !notificationTitle.trim() || !notificationMessage.trim()) return;
     try {
       setIsSendingNotification(true);
+      const fullDescription = `${notificationMessage.trim()}\n\nProject Details:\nTitle: ${notifyProject.title}\nCategory: ${notifyProject.category}\nStatus: ${notifyProject.status}`;
+      
+      const targetUserId = notifyProject.created_by || notifyUser?.id;
+      
+      if (!targetUserId) {
+        throw new Error("Target user ID is missing");
+      }
+
       const { error } = await supabase
         .from("notifications")
         .insert({
-          user_id: notifyUser.id,
+          user_id: targetUserId,
           title: notificationTitle.trim(),
-          description: notificationMessage.trim(),
-          type: "system",
+          description: fullDescription,
+          type: "project",
           priority: "high",
-          status: "unread"
+          status: "unread",
+          action_url: `/projects/${notifyProject.id}`
         });
         
       if (error) throw error;
@@ -303,64 +316,55 @@ export default function AdminProjects() {
     <AdminLayout pageTitle="Projects Management" pageName="Projects">
       <div className="space-y-6">
         {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Projects Management</h1>
-          <p className="text-muted-foreground mt-1">Approve or reject project listings</p>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Projects Management</h1>
+            <p className="text-muted-foreground mt-1">Approve or reject project listings</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[130px] h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="feature film">Feature Film</SelectItem>
+                  <SelectItem value="short film">Short Film</SelectItem>
+                  <SelectItem value="documentary">Documentary</SelectItem>
+                  <SelectItem value="web series">Web Series</SelectItem>
+                  <SelectItem value="music video">Music Video</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[110px] h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active/Open</SelectItem>
+                  <SelectItem value="blocked">Blocked</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
         {/* Main Content Card */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Projects</CardTitle>
-            <p className="text-muted-foreground">Review submitted project listings</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Search and Filter Bar */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search by title, description or creator..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <div className="flex gap-4 items-center">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Category:</label>
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="feature film">Feature Film</SelectItem>
-                      <SelectItem value="short film">Short Film</SelectItem>
-                      <SelectItem value="documentary">Documentary</SelectItem>
-                      <SelectItem value="web series">Web Series</SelectItem>
-                      <SelectItem value="music video">Music Video</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Status:</label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="active">Active/Open</SelectItem>
-                      <SelectItem value="blocked">Blocked</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
+          <CardContent className="space-y-6 pt-6">
             {/* Projects Table */}
             <div className="border rounded-lg">
               <Table>
@@ -368,10 +372,10 @@ export default function AdminProjects() {
                   <TableRow>
                     <TableHead>Project ID</TableHead>
                     <TableHead>Title</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead>Project Type</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Budget</TableHead>
+                    <TableHead>Created By</TableHead>
                     <TableHead>Tags</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -393,45 +397,20 @@ export default function AdminProjects() {
                   ) : filteredProjects.map((project) => {
                     const status = project.status || "open";
                     const StatusIcon = getStatusIcon(status);
-                    const creator = profiles.find(p => p.id === project.created_by) || {
-                      full_name: "Unknown User",
-                      username: "unknown",
-                      avatar_url: ""
-                    };
-                    const projectTags = Array.isArray(project.tags) ? project.tags : [];
+                    const creator = profiles.find((p: any) => p.id === project.created_by);
                     
                     return (
                       <TableRow key={project.id}>
-                        <TableCell className="font-medium text-xs font-mono">
-                          {project.id.substring(0, 8)}...
+                        <TableCell className="font-medium text-muted-foreground whitespace-nowrap">
+                          {generateProjectId(project.id)}
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{project.title}</span>
-                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">{project.description}</span>
-                          </div>
+                          <span className="font-medium">{project.title}</span>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-yellow-50 text-yellow-700 hover:bg-yellow-100 whitespace-nowrap">
                             {project.project_type || project.category || "Uncategorized"}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={creator.avatar_url} />
-                              <AvatarFallback className="bg-yellow-100 text-yellow-600 text-xs">
-                                {(creator.full_name || "U")[0].toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-sm font-medium truncate w-[100px]">{creator.full_name || "Unknown"}</span>
-                              <span className="text-xs text-muted-foreground truncate w-[100px]">@{creator.username || "unknown"}</span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {new Date(project.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
                           <Badge variant={getStatusBadgeVariant(status)} className="flex items-center gap-1 w-fit capitalize">
@@ -440,83 +419,51 @@ export default function AdminProjects() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium whitespace-nowrap">
+                            {project.budget_min || project.budget_max 
+                              ? `${project.budget_currency || '₹'} ${project.budget_min || 0} - ${project.budget_max || 0}`
+                              : 'Not Specified'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {creator ? (
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={creator.avatar_url || ""} />
+                                <AvatarFallback className="bg-yellow-100 text-yellow-700 text-xs">
+                                  {creator.username?.substring(0, 2).toUpperCase() || "U"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium">{creator.full_name || creator.username}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Unknown</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-row items-start justify-between gap-2 min-w-[150px]">
                             <div className="flex flex-wrap gap-1 max-w-[150px]">
-                              {projectTags.slice(0, 2).map((tag: string, index: number) => (
-                                <Badge 
-                                  key={index}
-                                  variant="secondary" 
-                                  className={cn("text-[10px] px-1.5 py-0", getTagBadgeStyle(tag))}
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                              {projectTags.length > 2 && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-gray-100 text-gray-600">
-                                  +{projectTags.length - 2}
-                                </Badge>
+                              {Array.isArray(project.project_tags) && project.project_tags.length > 0 ? (
+                                project.project_tags.map((tag: string, i: number) => (
+                                  <Badge key={i} variant="secondary" className="text-[10px] px-2 py-0.5 font-semibold">
+                                    {tag}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-xs text-muted-foreground italic mt-1">No tags</span>
                               )}
                             </div>
-                            <Popover 
-                              open={editingTags?.id === project.id}
-                              onOpenChange={(open) => {
-                                if (open) {
-                                  handleEditTags(project.id, projectTags);
-                                } else {
-                                  setEditingTags(null);
-                                }
-                              }}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-full hover:bg-yellow-50 shrink-0"
+                              title="Edit Tags"
+                              onClick={() => handleEditTags(project.id, Array.isArray(project.project_tags) ? project.project_tags : [])}
                             >
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 hover:bg-yellow-50"
-                                >
-                                  <Tags className="h-3.5 w-3.5 text-yellow-600" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-80 p-0" align="end">
-                                <Command>
-                                  <CommandInput placeholder="Search tags..." />
-                                  <CommandEmpty>No tags found.</CommandEmpty>
-                                  <CommandGroup>
-                                    {availableTags.map((tag) => {
-                                      const isSelected = editingTags?.tags.includes(tag.label);
-                                      return (
-                                        <CommandItem
-                                          key={tag.value}
-                                          onSelect={() => handleTagToggle(tag.label)}
-                                          className="flex items-center gap-2"
-                                        >
-                                          <div className={cn(
-                                            "flex h-4 w-4 items-center justify-center rounded border",
-                                            isSelected ? "bg-yellow-500 border-yellow-500" : "border-gray-200"
-                                          )}>
-                                            {isSelected && <Check className="h-3 w-3 text-white" />}
-                                          </div>
-                                          <Badge 
-                                            variant="secondary"
-                                            className={getTagBadgeStyle(tag.label)}
-                                          >
-                                            {tag.label}
-                                          </Badge>
-                                        </CommandItem>
-                                      );
-                                    })}
-                                  </CommandGroup>
-                                  <div className="border-t p-2">
-                                    <Button
-                                      size="sm"
-                                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
-                                      onClick={() => handleSaveProjectTags(project.id)}
-                                    >
-                                      Save Changes
-                                    </Button>
-                                  </div>
-                                </Command>
-                              </PopoverContent>
-                            </Popover>
+                              <Tags className="h-3.5 w-3.5 text-yellow-600" />
+                            </Button>
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
@@ -528,7 +475,6 @@ export default function AdminProjects() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-
                               <DropdownMenuItem onClick={() => handleOpenNotify(project, creator)}>
                                 <Bell className="mr-2 h-4 w-4 text-blue-500" />
                                 Notify Creator
@@ -617,6 +563,64 @@ export default function AdminProjects() {
                 disabled={isSendingNotification || !notificationTitle.trim() || !notificationMessage.trim()}
               >
                 {isSendingNotification ? "Sending..." : "Send Notification"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Tags Dialog */}
+        <Dialog open={editingTags !== null} onOpenChange={(open) => !open && setEditingTags(null)}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Project Tags</DialogTitle>
+              <DialogDescription>
+                Assign or remove global tags for this project.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Command className="border rounded-md">
+                <CommandInput placeholder="Search tags..." />
+                <CommandEmpty>No tags found.</CommandEmpty>
+                <CommandGroup className="max-h-[200px] overflow-y-auto">
+                  {globalTags.map((tag) => {
+                    const isSelected = editingTags?.tags.includes(tag.label);
+                    return (
+                      <CommandItem
+                        key={tag.label}
+                        onSelect={() => handleTagToggle(tag.label)}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <div className={cn(
+                          "flex h-4 w-4 items-center justify-center rounded border",
+                          isSelected ? "bg-yellow-500 border-yellow-500" : "border-gray-200"
+                        )}>
+                          {isSelected && <Check className="h-3 w-3 text-white" />}
+                        </div>
+                        <Badge 
+                          variant="secondary"
+                          className={getTagBadgeStyle(tag.label)}
+                        >
+                          {tag.label}
+                        </Badge>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </Command>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingTags(null)}>
+                Cancel
+              </Button>
+              <Button 
+                className="bg-yellow-500 hover:bg-yellow-600 text-white" 
+                onClick={() => {
+                  if (editingTags) {
+                    handleSaveProjectTags(editingTags.id);
+                  }
+                }}
+              >
+                Save Changes
               </Button>
             </DialogFooter>
           </DialogContent>

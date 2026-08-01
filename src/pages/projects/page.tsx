@@ -1145,6 +1145,16 @@ export default function ProjectsPage() {
                       <CardDescription className="line-clamp-2 text-gray-600 dark:text-gray-400">
                         {project.description}
                       </CardDescription>
+
+                      {project.project_tags && project.project_tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {project.project_tags.map((tag: string, index: number) => (
+                            <Badge key={index} variant="secondary" className="text-[10px] px-1.5 py-0 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900/50">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                       
                       <div className="grid grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300">
                         <div className="flex items-center gap-2">
@@ -1678,6 +1688,20 @@ export default function ProjectsPage() {
                           </div>
                         </div>
 
+                        {/* Project Tags */}
+                        {selectedProject.project_tags && selectedProject.project_tags.length > 0 && (
+                          <div>
+                            <h3 className="font-semibold mb-3 text-lg">Project Tags</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedProject.project_tags.map((tag: string, index: number) => (
+                                <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Skills Required */}
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Skills Required</h3>
@@ -1817,6 +1841,20 @@ export default function ProjectsPage() {
                         </p>
                       </div>
                     </div>
+
+                    {/* Project Tags */}
+                    {selectedProject.project_tags && selectedProject.project_tags.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-3 text-lg">Project Tags</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedProject.project_tags.map((tag: string, index: number) => (
+                            <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Skills Required */}
                     <div>

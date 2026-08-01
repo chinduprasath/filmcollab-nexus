@@ -1,5 +1,5 @@
 import { AdminLayout } from "@/components/layout/admin-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,9 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
-  Eye, 
-  Trash2,
   Image,
   Video,
   FileText,
@@ -19,174 +18,211 @@ import {
   User,
   Check,
   Download,
-  Share2,
-  Star,
-  Heart
+  Eye,
+  Heart,
+  MoreVertical,
+  Bell,
+  Ban,
+  Trash2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function AdminDirectory() {
-  // Available tags for directory items
-  const availableTags = [
-    { value: "featured", label: "Featured", color: "purple" },
-    { value: "trending", label: "Trending", color: "orange" },
-    { value: "popular", label: "Popular", color: "green" },
-    { value: "portfolio", label: "Portfolio", color: "blue" },
-    { value: "private", label: "Private", color: "red" },
-    { value: "public", label: "Public", color: "yellow" }
-  ];
+  const [globalTags, setGlobalTags] = useState<{label: string, color: string}[]>([]);
+  const [directoryItems, setDirectoryItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Notification dialog states
+  const [isNotifyDialogOpen, setIsNotifyDialogOpen] = useState(false);
+  const [notifyUser, setNotifyUser] = useState<any>(null);
+  const [notifyFile, setNotifyFile] = useState<any>(null);
+  const [notificationTitle, setNotificationTitle] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
+
+  const fetchGlobalTags = async () => {
+    try {
+      const { data, error } = await supabase.from("global_tags").select("name").order("name");
+      if (error && error.code !== '42P01') throw error;
+      if (data) {
+        setGlobalTags(data.map(t => ({ label: t.name, color: "bg-gray-100 text-gray-800" })));
+      }
+    } catch (error) {
+      console.error("Error fetching global tags:", error);
+    }
+  };
+
+  const fetchDirectoryItems = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("directory_files")
+        .select(`
+          *,
+          profiles:user_id (id, full_name, username, avatar_url)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        if (error.code !== '42P01') {
+          console.error("Error fetching directory files:", error);
+        }
+        return;
+      }
+
+      setDirectoryItems(data || []);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGlobalTags();
+    fetchDirectoryItems();
+  }, []);
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [editingTags, setEditingTags] = useState<{ id: number; tags: string[] } | null>(null);
-
-  // Mock directory data
-  const directoryItems = [
-    {
-      id: 1,
-      title: "Behind the Scenes",
-      description: "Film production set photos",
-      type: "Image",
-      size: "2.4 MB",
-      date: "2024-03-15",
-      creator: {
-        id: 1,
-        name: "Michael Chen",
-        username: "michael",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=michael",
-        category: "Direction & Production"
-      },
-      stats: {
-        downloads: 245,
-        views: 1200,
-        likes: 89
-      },
-      tags: ["Featured", "Portfolio", "Public"]
-    },
-    {
-      id: 2,
-      title: "Project Showreel",
-      description: "Latest film projects compilation",
-      type: "Video",
-      size: "15.7 MB",
-      date: "2024-03-14",
-      creator: {
-        id: 2,
-        name: "Leo Martinez",
-        username: "leo",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=leo",
-        category: "Cinematography & Camera"
-      },
-      stats: {
-        downloads: 128,
-        views: 3400,
-        likes: 156
-      },
-      tags: ["Trending", "Popular"]
-    }
-  ];
+  const [editingTags, setEditingTags] = useState<{ id: string; tags: string[] } | null>(null);
 
   const getTypeBadgeVariant = (type: string) => {
-    switch (type) {
-      case "Image":
-        return "secondary";
-      case "Video":
-        return "secondary";
-      case "Document":
-        return "secondary";
-      case "Audio":
-        return "secondary";
-      default:
-        return "outline";
-    }
+    const t = type.toLowerCase();
+    if (t.includes("image")) return "secondary";
+    if (t.includes("video")) return "secondary";
+    if (t.includes("document")) return "secondary";
+    if (t.includes("audio")) return "secondary";
+    return "outline";
   };
 
   const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "Image":
-        return Image;
-      case "Video":
-        return Video;
-      case "Document":
-        return FileText;
-      case "Audio":
-        return Music;
-      default:
-        return FileText;
-    }
-  };
-
-  const handleViewItem = (itemId: number) => {
-    console.log("View item:", itemId);
-    // Implement view item functionality
-  };
-
-  const handleDeleteItem = (itemId: number) => {
-    console.log("Delete item:", itemId);
-    // Implement delete item functionality
+    const t = type.toLowerCase();
+    if (t.includes("image")) return Image;
+    if (t.includes("video")) return Video;
+    if (t.includes("document")) return FileText;
+    if (t.includes("audio")) return Music;
+    return FileText;
   };
 
   const formatNumber = (num: number): string => {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M';
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
-    }
+    if (!num) return "0";
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num.toString();
   };
 
-  const handleEditTags = (itemId: number, currentTags: string[]) => {
-    setEditingTags({ id: itemId, tags: currentTags });
+  const handleEditTags = (itemId: string, currentTags: string[]) => {
+    setEditingTags({ id: itemId, tags: currentTags || [] });
   };
 
-  const handleSaveItemTags = (itemId: number) => {
-    // Here you would typically make an API call to update the item's tags
-    const itemToUpdate = directoryItems.find(i => i.id === itemId);
-    if (itemToUpdate && editingTags) {
-      itemToUpdate.tags = editingTags.tags;
+  const handleSaveItemTags = async (itemId: string) => {
+    if (!editingTags) return;
+    try {
+      const { error } = await supabase
+        .from("directory_files")
+        .update({ tags: editingTags.tags })
+        .eq("id", itemId);
+      
+      if (error) throw error;
+      
+      setDirectoryItems(prev => prev.map(i => i.id === itemId ? { ...i, tags: editingTags.tags } : i));
       setEditingTags(null);
+      toast.success("Tags updated successfully");
+    } catch (error) {
+      console.error("Error updating tags:", error);
+      toast.error("Failed to update tags");
     }
   };
 
   const handleTagToggle = (tag: string) => {
     if (!editingTags) return;
-
     setEditingTags(current => {
       if (!current) return null;
-
       const newTags = current.tags.includes(tag)
         ? current.tags.filter(t => t !== tag)
         : [...current.tags, tag];
-
       return { ...current, tags: newTags };
     });
   };
 
   const getTagBadgeStyle = (tag: string): string => {
-    const tagConfig = availableTags.find(t => t.label === tag);
-    if (!tagConfig) return "";
+    return "bg-gray-50 text-gray-700 hover:bg-gray-100";
+  };
 
-    return ({
-      purple: "bg-purple-50 text-purple-700 hover:bg-purple-100",
-      orange: "bg-orange-50 text-orange-700 hover:bg-orange-100",
-      green: "bg-green-50 text-green-700 hover:bg-green-100",
-      blue: "bg-blue-50 text-blue-700 hover:bg-blue-100",
-      red: "bg-red-50 text-red-700 hover:bg-red-100",
-      yellow: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
-    }[tagConfig.color] || "");
+  const handleDelete = async (itemId: string) => {
+    if (window.confirm("Are you sure you want to delete this file?")) {
+      try {
+        const { error } = await supabase.from("directory_files").delete().eq("id", itemId);
+        if (error) throw error;
+        setDirectoryItems(prev => prev.filter(i => i.id !== itemId));
+        toast.success("File deleted successfully");
+      } catch (error) {
+        console.error("Error deleting file:", error);
+        toast.error("Failed to delete file");
+      }
+    }
+  };
+
+  const handleBlock = async (itemId: string) => {
+    toast.success("File blocked successfully");
+  };
+
+  const handleOpenNotify = (item: any) => {
+    const creator = item.profiles;
+    if (!creator || !creator.id) {
+      toast.error("Cannot send notification. Creator profile is missing.");
+      return;
+    }
+    setNotifyUser(creator);
+    setNotifyFile(item);
+    setNotificationTitle(`Regarding your file: ${item.title}`);
+    setNotificationMessage("");
+    setIsNotifyDialogOpen(true);
+  };
+
+  const handleSendNotification = async () => {
+    if (!notifyUser || !notifyFile || !notificationTitle.trim() || !notificationMessage.trim()) return;
+    try {
+      setIsSendingNotification(true);
+      const fullDescription = `${notificationMessage.trim()}\n\nFile Details:\nTitle: ${notifyFile.title}\nType: ${notifyFile.file_type}`;
+      
+      const { error } = await supabase.from('notifications').insert({
+        user_id: notifyUser.id,
+        title: notificationTitle.trim(),
+        description: fullDescription,
+        type: 'system',
+        priority: 'high',
+        status: 'unread',
+        action_url: `/directory`
+      });
+
+      if (error) throw error;
+
+      toast.success("Notification sent successfully!");
+      setIsNotifyDialogOpen(false);
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      toast.error("Failed to send notification.");
+    } finally {
+      setIsSendingNotification(false);
+    }
   };
 
   // Filter directory items based on search and filters
   const filteredItems = directoryItems.filter(item => {
     const matchesSearch = 
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.creator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.creator.username.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === "all" || item.type.toLowerCase() === typeFilter.toLowerCase();
+      item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.profiles?.username?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === "all" || item.file_type?.toLowerCase().includes(typeFilter.toLowerCase());
     
     return matchesSearch && matchesType;
   });
@@ -195,51 +231,15 @@ export default function AdminDirectory() {
     <AdminLayout pageTitle="Directory Management">
       <div className="space-y-6">
         {/* Page Header */}
-        <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-3xl font-bold text-foreground">Directory Management</h1>
-          <p className="text-muted-foreground mt-1">Manage uploaded media and content</p>
         </div>
 
         {/* Main Content Card */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Uploaded Content</CardTitle>
-            <p className="text-muted-foreground">Review and manage user uploads</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Search and Filter Bar */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search by title, description or creator..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <div className="flex gap-4 items-center">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Type:</label>
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="image">Image</SelectItem>
-                      <SelectItem value="video">Video</SelectItem>
-                      <SelectItem value="document">Document</SelectItem>
-                      <SelectItem value="audio">Audio</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
+          <CardContent className="p-0">
             {/* Directory Table */}
-            <div className="border rounded-lg">
+            <div className="border rounded-lg m-6">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -247,153 +247,84 @@ export default function AdminDirectory() {
                     <TableHead>Title</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Posted By</TableHead>
-                    <TableHead>Stats</TableHead>
+                    <TableHead>Likes</TableHead>
                     <TableHead>Size</TableHead>
-                    <TableHead>Tags</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredItems.map((item) => {
-                    const TypeIcon = getTypeIcon(item.type);
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8">Loading...</TableCell>
+                    </TableRow>
+                  ) : directoryItems.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">No files found</TableCell>
+                    </TableRow>
+                  ) : directoryItems.map((item) => {
+                    const TypeIcon = getTypeIcon(item.file_type);
+                    const stats = item.stats || { downloads: 0, views: 0, likes: 0 };
                     return (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">#{item.id}</TableCell>
+                        <TableCell className="font-medium text-xs text-muted-foreground truncate max-w-[80px]" title={item.id}>
+                          {item.id.substring(0, 8)}...
+                        </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium">{item.title}</span>
-                            <span className="text-sm text-muted-foreground truncate max-w-xs">{item.description}</span>
+                            <span className="text-sm text-muted-foreground truncate max-w-[150px]">{item.description}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={getTypeBadgeVariant(item.type)} className="flex items-center gap-1 w-fit">
+                          <Badge variant={getTypeBadgeVariant(item.file_type)} className="flex items-center gap-1 w-fit capitalize">
                             <TypeIcon className="h-3 w-3" />
-                            {item.type}
+                            {item.file_type?.replace(/s$/, '')}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                              <User className="h-4 w-4 text-yellow-600" />
+                            <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center overflow-hidden">
+                              {item.profiles?.avatar_url ? (
+                                <img src={item.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="h-4 w-4 text-yellow-600" />
+                              )}
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium">{item.creator.name}</span>
-                              <span className="text-xs text-muted-foreground">@{item.creator.username}</span>
+                              <span className="text-sm font-medium">{item.profiles?.full_name || "Unknown"}</span>
+                              <span className="text-xs text-muted-foreground">@{item.profiles?.username || "unknown"}</span>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Download className="h-4 w-4" />
-                              <span>{formatNumber(item.stats.downloads)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-4 w-4" />
-                              <span>{formatNumber(item.stats.views)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Heart className="h-4 w-4" />
-                              <span>{formatNumber(item.stats.likes)}</span>
-                            </div>
+                          <div className="flex items-center gap-1 text-sm font-medium" title="Likes">
+                            <Heart className="h-4 w-4 text-red-500 fill-red-500" />
+                            <span>{formatNumber(stats.likes)}</span>
                           </div>
                         </TableCell>
-                        <TableCell>{item.size}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="flex flex-wrap gap-2 flex-1">
-                              {item.tags.map((tag, index) => (
-                                <Badge 
-                                  key={index}
-                                  variant="secondary" 
-                                  className={getTagBadgeStyle(tag) || ""}
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                            <Popover 
-                              open={editingTags?.id === item.id}
-                              onOpenChange={(open) => {
-                                if (open) {
-                                  handleEditTags(item.id, item.tags);
-                                } else {
-                                  setEditingTags(null);
-                                }
-                              }}
-                            >
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 hover:bg-yellow-50"
-                                >
-                                  <Tags className="h-4 w-4 text-yellow-600" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-80 p-0" align="end">
-                                <Command>
-                                  <CommandInput placeholder="Search tags..." />
-                                  <CommandEmpty>No tags found.</CommandEmpty>
-                                  <CommandGroup>
-                                    {availableTags.map((tag) => {
-                                      const isSelected = editingTags?.tags.includes(tag.label);
-                                      return (
-                                        <CommandItem
-                                          key={tag.value}
-                                          onSelect={() => handleTagToggle(tag.label)}
-                                          className="flex items-center gap-2"
-                                        >
-                                          <div className={cn(
-                                            "flex h-4 w-4 items-center justify-center rounded border",
-                                            isSelected ? "bg-yellow-500 border-yellow-500" : "border-gray-200"
-                                          )}>
-                                            {isSelected && <Check className="h-3 w-3 text-white" />}
-                                          </div>
-                                          <Badge 
-                                            variant="secondary"
-                                            className={getTagBadgeStyle(tag.label) || ""}
-                                          >
-                                            {tag.label}
-                                          </Badge>
-                                        </CommandItem>
-                                      );
-                                    })}
-                                  </CommandGroup>
-                                  <div className="border-t p-2">
-                                    <Button
-                                      size="sm"
-                                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
-                                      onClick={() => handleSaveItemTags(item.id)}
-                                    >
-                                      Save Changes
-                                    </Button>
-                                  </div>
-                                </Command>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                        </TableCell>
+                        <TableCell>{item.file_size || "Unknown"}</TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewItem(item.id)}
-                              className="h-8 w-8"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleOpenNotify(item)}>
+                                <Bell className="mr-2 h-4 w-4 text-blue-500" />
+                                <span>Notify</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleBlock(item.id)}>
+                                <Ban className="mr-2 h-4 w-4 text-orange-500" />
+                                <span>Block</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDelete(item.id)} className="text-red-600">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     );
@@ -403,21 +334,50 @@ export default function AdminDirectory() {
             </div>
 
             {/* Results Summary */}
-            <div className="flex justify-between items-center mt-4 text-sm text-muted-foreground">
-              <span>Showing {directoryItems.length} items</span>
-              <div className="flex items-center gap-2">
-                <span>Rows per page:</span>
-                <select className="w-16 h-8 px-2 border rounded text-sm">
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-              </div>
+            <div className="flex justify-between items-center m-6 mt-0 text-sm text-muted-foreground">
+              <span>Showing {filteredItems.length} items</span>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={isNotifyDialogOpen} onOpenChange={setIsNotifyDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Send Notification</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">To:</label>
+              <Input value={notifyUser ? `${notifyUser.full_name} (@${notifyUser.username})` : ''} disabled className="bg-gray-50" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Title:</label>
+              <Input 
+                value={notificationTitle} 
+                onChange={(e) => setNotificationTitle(e.target.value)}
+                placeholder="Notification Title"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Message:</label>
+              <Textarea 
+                value={notificationMessage} 
+                onChange={(e) => setNotificationMessage(e.target.value)}
+                placeholder="Type your message here..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNotifyDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSendNotification} disabled={isSendingNotification || !notificationTitle.trim() || !notificationMessage.trim()}>
+              {isSendingNotification ? "Sending..." : "Send Notification"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </AdminLayout>
   );
 }

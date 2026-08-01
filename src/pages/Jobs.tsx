@@ -57,6 +57,7 @@ interface Job {
   salary_min?: number;
   salary_max?: number;
   skills_required?: string[];
+  job_tags?: string[];
   job_description: string;
   requirements?: string;
   benefits?: string;
@@ -415,6 +416,7 @@ export default function Jobs() {
           salary_min: job.salary_min || undefined,
           salary_max: job.salary_max || undefined,
           skills_required: job.skills_required || [],
+          job_tags: job.job_tags || [],
           job_description: job.job_description,
           benefits: job.benefits || undefined,
           posted_date: job.posted_date || new Date().toISOString(),
@@ -1195,6 +1197,19 @@ export default function Jobs() {
                       {selectedJob.skills_required.map((skill, index) => (
                         <Badge key={index} variant="outline" className="text-sm bg-gray-50 border-gray-200 text-gray-700 px-3 py-1">
                           {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedJob.job_tags && selectedJob.job_tags.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-3 border-b border-gray-100 pb-2">Tags</h3>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedJob.job_tags.map((tag, index) => (
+                        <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">
+                          {tag}
                         </Badge>
                       ))}
                     </div>
@@ -2132,7 +2147,7 @@ export default function Jobs() {
                       </p>
                       
                       {job.skills_required && job.skills_required.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1 mt-2">
                           {job.skills_required.slice(0, 3).map((skill, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {skill}
@@ -2143,6 +2158,16 @@ export default function Jobs() {
                               +{job.skills_required.length - 3} more
                             </Badge>
                           )}
+                        </div>
+                      )}
+
+                      {job.job_tags && job.job_tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {job.job_tags.map((tag, index) => (
+                            <Badge key={index} variant="secondary" className="text-[10px] px-1.5 py-0 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">
+                              {tag}
+                            </Badge>
+                          ))}
                         </div>
                       )}
                       

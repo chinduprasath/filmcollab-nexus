@@ -43,6 +43,7 @@ interface Job {
   description: string;
   requirements: string;
   skills_required: string[] | string;
+  job_tags?: string[];
   benefits: string;
   job_type: string;
   experience_level: string;
@@ -489,6 +490,19 @@ export default function JobDetails() {
                         ))}
                       </div>
                     </div>
+                    
+                    {job.job_tags && job.job_tags.length > 0 && (
+                      <div className="space-y-2 mt-4">
+                        <h4 className="font-medium text-gray-900">Tags:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {job.job_tags.map((tag, index) => (
+                            <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

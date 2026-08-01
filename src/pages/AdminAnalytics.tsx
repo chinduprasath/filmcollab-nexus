@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, Activity, TrendingUp, FolderOpen, Briefcase, UserCheck, Image as ImageIcon,
   Download, BarChart3, LineChart as LineChartIcon, Eye, Target, Zap, PieChart,
-  UserPlus, Loader2, TicketCheck, UserCog
+  UserPlus, Loader2, TicketCheck, UserCog, MapPin
 } from "lucide-react";
 
 import {
@@ -74,6 +74,7 @@ export default function AdminAnalytics() {
   const [jobsData, setJobsData] = useState<any>({ metrics: [], chartData: [] });
   const [ticketsData, setTicketsData] = useState<any>({ metrics: [], chartData: [] });
   const [teamData, setTeamData] = useState<any>({ metrics: [], chartData: [] });
+  const [locationsData, setLocationsData] = useState<any>({ metrics: [], chartData: [], typeData: [] });
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -202,6 +203,36 @@ export default function AdminAnalytics() {
         };
       }).slice(-12);
 
+      // 6. Fetch Locations Data
+      const { data: locations } = await supabase.from('shooting_locations').select('created_at, status, property_type, featured');
+      const totalLocations = locations?.length || 0;
+      const activeLocations = locations?.filter(l => l.status?.toLowerCase() === 'approved' || l.status?.toLowerCase() === 'active').length || 0;
+      const featuredLocations = locations?.filter(l => l.featured).length || 0;
+
+      const locationMonths: Record<string, { total: number }> = {};
+      const typeDistribution: Record<string, number> = {};
+      
+      locations?.forEach(l => {
+        // Timeline data
+        const month = new Date(l.created_at).toISOString().slice(0, 7);
+        if (!locationMonths[month]) locationMonths[month] = { total: 0 };
+        locationMonths[month].total += 1;
+
+        // Type data
+        const type = l.property_type || 'Unspecified';
+        typeDistribution[type] = (typeDistribution[type] || 0) + 1;
+      });
+
+      const locationChartData = Object.keys(locationMonths).sort().map(month => ({
+        date: month,
+        locations: locationMonths[month].total
+      })).slice(-12);
+
+      const locationTypeData = Object.keys(typeDistribution).map(key => ({
+        name: key,
+        value: typeDistribution[key]
+      })).sort((a, b) => b.value - a.value).slice(0, 8);
+
       // Set states
       setUsersData({
         metrics: [
@@ -252,6 +283,17 @@ export default function AdminAnalytics() {
           { title: "Customer Satisfaction", value: "98%", change: "+2%", icon: Target, color: "text-yellow-600" }
         ],
         chartData: teamChartData.length ? teamChartData : [{ date: 'No Data', members: 0 }]
+      });
+
+      setLocationsData({
+        metrics: [
+          { title: "Total Locations", value: totalLocations.toLocaleString(), change: "+8.4%", icon: MapPin, color: "text-yellow-600" },
+          { title: "Active Locations", value: activeLocations.toLocaleString(), change: "+5.2%", icon: Zap, color: "text-yellow-600" },
+          { title: "Featured", value: featuredLocations.toLocaleString(), change: "+2.1%", icon: Target, color: "text-yellow-600" },
+          { title: "Total Views", value: "124.5k", change: "+15.3%", icon: Eye, color: "text-yellow-600" }
+        ],
+        chartData: locationChartData.length ? locationChartData : [{ date: 'No Data', locations: 0 }],
+        typeData: locationTypeData.length ? locationTypeData : [{ name: 'No Data', value: 1 }]
       });
 
     } catch (error) {
@@ -313,7 +355,7 @@ export default function AdminAnalytics() {
 
         {/* Platform Analytics Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:w-full h-auto">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 lg:w-full h-auto">
             <TabsTrigger value="users" className="flex items-center gap-2 py-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Users</span>
@@ -329,6 +371,10 @@ export default function AdminAnalytics() {
             <TabsTrigger value="directory" className="flex items-center gap-2 py-2">
               <ImageIcon className="h-4 w-4" />
               <span className="hidden sm:inline">Directory</span>
+            </TabsTrigger>
+            <TabsTrigger value="locations" className="flex items-center gap-2 py-2">
+              <MapPin className="h-4 w-4" />
+              <span className="hidden sm:inline">Locations</span>
             </TabsTrigger>
             <TabsTrigger value="team" className="flex items-center gap-2 py-2">
               <UserCog className="h-4 w-4" />
@@ -622,6 +668,74 @@ export default function AdminAnalytics() {
                         <Tooltip contentStyle={{ backgroundColor: 'white', borderRadius: '0.5rem' }} />
                         <Bar dataKey="downloads" name="Total Downloads" fill={CHART_STYLES.lineChart.activeUsers} radius={[4, 4, 0, 0]} />
                       </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Locations Analytics */}
+          <TabsContent value="locations" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {locationsData.metrics.map((metric: any, index: number) => (
+                <Card key={index} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{metric.title}</CardTitle>
+                    <metric.icon className={`h-4 w-4 ${metric.color}`} />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground">{metric.value}</div>
+                    <div className="flex items-center gap-1 mt-1">
+                      <TrendingUp className="h-3 w-3 text-yellow-600" />
+                      <span className="text-xs text-yellow-600 font-medium">{metric.change}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <h3 className="text-lg font-medium flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-yellow-600" /> Location Growth
+                  </h3>
+                  <p className="text-sm text-muted-foreground">Number of locations added over time</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={locationsData.chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis dataKey="date" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                        <Tooltip contentStyle={{ backgroundColor: 'white', borderRadius: '0.5rem' }} />
+                        <Line type="monotone" dataKey="locations" name="Total Locations" stroke={CHART_STYLES.lineChart.totalUsers} strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <h3 className="text-lg font-medium flex items-center gap-2">
+                    <PieChart className="h-5 w-5 text-yellow-600" /> Property Types
+                  </h3>
+                  <p className="text-sm text-muted-foreground">Distribution of different property types</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPieChart>
+                        <Pie data={locationsData.typeData} cx="50%" cy="50%" labelLine={false} outerRadius={150} fill="#8884d8" dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                          {locationsData.typeData.map((_: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={CHART_STYLES.pieChart[index % CHART_STYLES.pieChart.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ backgroundColor: 'white', borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} itemStyle={{ color: '#1f2937', fontWeight: 500 }} />
+                      </RechartsPieChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>

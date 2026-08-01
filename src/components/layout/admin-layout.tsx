@@ -10,9 +10,10 @@ interface AdminLayoutProps {
   children: ReactNode;
   pageTitle?: string;
   pageName?: string; // Should match the name in adminNavigationItems (e.g. "Users", "Jobs")
+  contentClassName?: string;
 }
 
-export function AdminLayout({ children, pageTitle, pageName }: AdminLayoutProps) {
+export function AdminLayout({ children, pageTitle, pageName, contentClassName }: AdminLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { hasPermission } = useAuth();
@@ -47,7 +48,7 @@ export function AdminLayout({ children, pageTitle, pageName }: AdminLayoutProps)
         />
 
         {/* Content area */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className={`flex-1 overflow-auto ${contentClassName !== undefined ? contentClassName : 'p-6'}`}>
           {!isAuthorized ? (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
               <ShieldAlert className="h-16 w-16 text-red-500 mb-2" />

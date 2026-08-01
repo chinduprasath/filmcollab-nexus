@@ -15,8 +15,11 @@ import {
   Sun,
   Monitor,
   UserCog,
+  LogOut,
   TicketCheck,
-  UsersRound
+  UsersRound,
+  MapPin,
+  Settings
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -38,7 +41,9 @@ const adminNavigationItems = [
   { name: "Tickets", icon: TicketCheck, href: "/admin-dashboard/tickets" },
   { name: "Posts", icon: FileText, href: "/admin-dashboard/posts" },
   { name: "Communities", icon: UsersRound, href: "/admin-dashboard/communities" },
-  { name: "Directory", icon: Image, href: "/admin-dashboard/directory" }
+  { name: "Directory", icon: Image, href: "/admin-dashboard/directory" },
+  { name: "Locations", icon: MapPin, href: "/admin-dashboard/locations" },
+  { name: "Settings", icon: Settings, href: "/admin-dashboard/settings" }
 ];
 
 export function AdminSidebar({ className, isCollapsed = false, onToggle }: AdminSidebarProps) {

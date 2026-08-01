@@ -66,18 +66,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Available tags for users
-const availableTags = [
-  { value: "verified", label: "Verified", color: "blue" },
-  { value: "popular", label: "Popular", color: "green" },
-  { value: "featured", label: "Featured", color: "purple" },
-  { value: "trending", label: "Trending", color: "orange" },
-  { value: "expert", label: "Expert", color: "indigo" },
-  { value: "mentor", label: "Mentor", color: "pink" },
-  { value: "influencer", label: "Influencer", color: "cyan" },
-  { value: "rising-star", label: "Rising Star", color: "amber" }
-];
-
 interface UserProfile {
   id: string;
   username?: string | null;
@@ -180,6 +168,7 @@ export default function AdminUsers() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
+  const [globalTags, setGlobalTags] = useState<{label: string, color: string}[]>([]);
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
   
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -229,8 +218,21 @@ export default function AdminUsers() {
     }
   }, [toast]);
 
+  const fetchGlobalTags = async () => {
+    try {
+      const { data, error } = await supabase.from("global_tags").select("name").order("name");
+      if (error && error.code !== '42P01') throw error;
+      if (data) {
+        setGlobalTags(data.map(t => ({ label: t.name, color: "bg-gray-100 text-gray-800" })));
+      }
+    } catch (error) {
+      console.error("Error fetching global tags:", error);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchGlobalTags();
   }, [fetchUsers]);
 
   // Fetch categories list from database
@@ -501,7 +503,7 @@ export default function AdminUsers() {
     }
   };
 
-  const handleTagToggle = (tag: string) => {
+  const toggleTag = (tag: string) => {
     if (!editingTags) return;
 
     setEditingTags(current => {
@@ -516,19 +518,9 @@ export default function AdminUsers() {
   };
 
   const getTagBadgeStyle = (tag: string): string => {
-    const tagConfig = availableTags.find(t => t.label === tag);
+    const tagConfig = globalTags.find(t => t.label === tag);
     if (!tagConfig) return "bg-gray-50 text-gray-700 hover:bg-gray-100";
-
-    return ({
-      blue: "bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200",
-      green: "bg-green-50 text-green-700 hover:bg-green-100 border-green-200",
-      purple: "bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200",
-      orange: "bg-orange-50 text-orange-700 hover:bg-orange-100 border-orange-200",
-      indigo: "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200",
-      pink: "bg-pink-50 text-pink-700 hover:bg-pink-100 border-pink-200",
-      cyan: "bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border-cyan-200",
-      amber: "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200"
-    }[tagConfig.color] || "bg-gray-50 text-gray-700 hover:bg-gray-100");
+    return tagConfig.color;
   };
 
   const handleOpenNotify = (user: UserProfile) => {
@@ -1205,11 +1197,7 @@ export default function AdminUsers() {
 
         {/* Main Content Card */}
         <Card className="border-border/50 shadow-soft">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-2xl font-bold text-gray-800">Users Registry</CardTitle>
-            <p className="text-muted-foreground text-sm">Directly view details, assign custom admin-defined tags, verify, block, and notify platform users.</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 pt-6">
             {/* Users Table */}
             <div className="border rounded-lg overflow-hidden bg-white">
               {loading ? (
@@ -1308,12 +1296,12 @@ export default function AdminUsers() {
                                     <CommandInput placeholder="Search tags..." className="focus:ring-yellow-500" />
                                     <CommandEmpty>No tags found.</CommandEmpty>
                                     <CommandGroup className="max-h-[220px] overflow-y-auto">
-                                      {availableTags.map((tag) => {
+                                      {globalTags.map((tag) => {
                                         const isSelected = editingTags?.tags.includes(tag.label);
                                         return (
                                           <CommandItem
-                                            key={tag.value}
-                                            onSelect={() => handleTagToggle(tag.label)}
+                                            key={tag.label}
+                                            onSelect={() => toggleTag(tag.label)}
                                             className="flex items-center gap-2 cursor-pointer py-2 hover:bg-yellow-50"
                                           >
                                             <div className={cn(

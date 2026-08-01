@@ -11,6 +11,7 @@ import { Search, Users, UserPlus, Clock, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Connection {
   id: string;
@@ -567,9 +568,12 @@ export default function ConnectionsPage() {
                 {filteredConnections.map((c) => (
                   <div key={c.id} className="border border-gray-200 dark:border-gray-800 rounded-lg p-3 bg-white dark:bg-background flex flex-col gap-2 hover:shadow-md transition-all">
                     <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleOpenProfile(c.id)}>
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center font-semibold text-sm">
-                        {c.avatar}
-                      </div>
+                      <Avatar className="w-10 h-10 ring-2 ring-yellow-500/20">
+                        {c.avatar_url && <AvatarImage src={c.avatar_url} alt={c.name} className="object-cover" />}
+                        <AvatarFallback className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-semibold text-sm">
+                          {c.avatar}
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="min-w-0">
                         <div className="font-medium truncate text-gray-900 dark:text-white text-sm">{c.name}</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{c.role} • {c.location}</div>
@@ -634,9 +638,12 @@ export default function ConnectionsPage() {
                   .map((p) => (
                     <div key={p.id} className="border border-gray-200 dark:border-gray-800 rounded-lg p-3 bg-white dark:bg-background flex flex-col gap-2 hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleOpenProfile(p.id)}>
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center font-semibold text-sm">
-                          {p.avatar}
-                        </div>
+                        <Avatar className="w-10 h-10 ring-2 ring-yellow-500/20">
+                          {p.avatar_url && <AvatarImage src={p.avatar_url} alt={p.name} className="object-cover" />}
+                          <AvatarFallback className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-semibold text-sm">
+                            {p.avatar}
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="min-w-0">
                           <div className="font-medium truncate text-gray-900 dark:text-white text-sm">{p.name}</div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.role} • {p.location}</div>

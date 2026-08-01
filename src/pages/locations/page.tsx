@@ -30,6 +30,7 @@ interface Location {
   owner_name: string;
   likesCount: number;
   isWishlisted: boolean;
+  tags?: string[];
 }
 
 export default function ShootingLocations() {
@@ -47,7 +48,7 @@ export default function ShootingLocations() {
 
   useEffect(() => {
     fetchLocations();
-  }, [user]);
+  }, [user?.id]);
 
   const fetchLocations = async () => {
     setIsLoading(true);
@@ -60,12 +61,18 @@ export default function ShootingLocations() {
 
       if (locError) throw locError;
 
-      // 2. Fetch all likes to calculate counts and user wishlist
-      const { data: likesData, error: likesError } = await supabase
-        .from('shooting_location_likes')
-        .select('*');
+      let likesData: any[] = [];
+      try {
+        // 2. Fetch all likes to calculate counts and user wishlist
+        const { data: fetchLikesData, error: likesError } = await supabase
+          .from('shooting_location_likes')
+          .select('*');
 
-      if (likesError) throw likesError;
+        if (likesError) throw likesError;
+        likesData = fetchLikesData || [];
+      } catch (err) {
+        console.warn("Could not fetch location likes, table may not exist yet.", err);
+      }
 
       const formattedLocations: Location[] = (locationsData || []).map(loc => {
         const locationLikes = likesData?.filter(like => like.location_id === loc.id) || [];
@@ -82,7 +89,8 @@ export default function ShootingLocations() {
           image_url: loc.image_url,
           owner_name: loc.owner_name,
           likesCount: locationLikes.length,
-          isWishlisted
+          isWishlisted,
+          tags: loc.tags || []
         };
       });
 
@@ -291,6 +299,18 @@ export default function ShootingLocations() {
                       <div className="flex items-center text-gray-500 text-xs">
                         <User className="h-3 w-3 mr-1 shrink-0" /> 
                         <span className="truncate">Listed by {location.owner_name}</span>
+                      </div>
+                    )}
+                    {location.tags && location.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {location.tags.slice(0, 3).map((tag, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-gray-100 text-gray-600 font-normal">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {location.tags.length > 3 && (
+                          <span className="text-[10px] text-gray-400">+{location.tags.length - 3}</span>
+                        )}
                       </div>
                     )}
                   </div>

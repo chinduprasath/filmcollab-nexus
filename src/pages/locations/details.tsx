@@ -184,6 +184,9 @@ export default function LocationDetails() {
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-none">{location.type}</Badge>
+            {location.tags && location.tags.map((tag: string, idx: number) => (
+              <Badge key={idx} variant="secondary" className="bg-gray-100 text-gray-700 font-normal border-gray-200">{tag}</Badge>
+            ))}
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{location.name}</h1>
           <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">

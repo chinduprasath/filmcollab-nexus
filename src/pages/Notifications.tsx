@@ -234,8 +234,8 @@ const Notifications = () => {
   };
 
   const filteredNotifications = notifications.filter(notification => {
-    const matchesSearch = notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         notification.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (notification.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (notification.description || notification.message || "").toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' || notification.type === filterType;
     const matchesStatus = filterStatus === 'all' || notification.status === filterStatus;
     return matchesSearch && matchesType && matchesStatus;
@@ -352,7 +352,7 @@ const Notifications = () => {
                             {notification.title}
                           </h3>
                           <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                            {notification.description}
+                            {notification.description || notification.message}
                           </p>
                           <div className="flex items-center gap-3 text-xs text-gray-500">
                             <div className="flex items-center gap-1">

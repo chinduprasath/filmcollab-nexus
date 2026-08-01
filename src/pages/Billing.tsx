@@ -18,10 +18,30 @@ import {
   XCircle,
   AlertCircle
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Billing = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [availablePlans, setAvailablePlans] = useState<any[]>([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+
+  React.useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    try {
+      const { data, error } = await supabase.from('subscription_plans').select('*').order('monthly_price');
+      if (error && error.code !== '42P01') throw error;
+      if (data) setAvailablePlans(data);
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+    } finally {
+      setIsLoadingPlans(false);
+    }
+  };
 
   // Mock user data
   const currentPlan = {
@@ -42,66 +62,7 @@ const Billing = () => {
     ]
   };
 
-  const availablePlans = [
-    {
-      id: 'pro',
-      name: 'Pro',
-      price: 19,
-      period: 'month',
-      description: 'Perfect for independent filmmakers',
-      features: [
-        'Unlimited projects',
-        'Advanced profile customization',
-        'Priority job alerts',
-        'Advanced analytics',
-        'Priority support',
-        'Custom portfolio themes',
-        'Team collaboration (up to 3 members)',
-        'Export project data'
-      ],
-      popular: false,
-      icon: Star
-    },
-    {
-      id: 'studio',
-      name: 'Studio',
-      price: 49,
-      period: 'month',
-      description: 'For production companies and studios',
-      features: [
-        'Everything in Pro',
-        'Team collaboration (up to 10 members)',
-        'Advanced project management',
-        'Custom branding',
-        'API access',
-        'White-label solutions',
-        'Dedicated account manager',
-        'Custom integrations',
-        'Advanced reporting'
-      ],
-      popular: true,
-      icon: Crown
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: 'Custom',
-      period: 'month',
-      description: 'For large organizations',
-      features: [
-        'Everything in Studio',
-        'Unlimited team members',
-        'Custom features',
-        'On-premise deployment',
-        '24/7 dedicated support',
-        'SLA guarantee',
-        'Custom training',
-        'Advanced security'
-      ],
-      popular: false,
-      icon: Zap
-    }
-  ];
+
 
   const handleUpgrade = async (planId: string) => {
     setIsLoading(true);
@@ -206,19 +167,45 @@ const Billing = () => {
 
         {/* Available Plans */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Crown className="w-5 h-5" />
-              Upgrade Your Plan
-            </CardTitle>
-            <CardDescription>
-              Choose the plan that best fits your needs
-            </CardDescription>
+          <CardHeader className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="w-5 h-5" />
+                Upgrade Your Plan
+              </CardTitle>
+              <CardDescription>
+                Choose the plan that best fits your needs
+              </CardDescription>
+            </div>
+            
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <Button 
+                variant={billingPeriod === 'monthly' ? 'default' : 'ghost'} 
+                size="sm"
+                className={billingPeriod === 'monthly' ? 'bg-white text-gray-900 shadow-sm hover:bg-gray-50' : 'text-gray-500 hover:text-gray-900'}
+                onClick={() => setBillingPeriod('monthly')}
+              >
+                Monthly
+              </Button>
+              <Button 
+                variant={billingPeriod === 'yearly' ? 'default' : 'ghost'} 
+                size="sm"
+                className={billingPeriod === 'yearly' ? 'bg-white text-gray-900 shadow-sm hover:bg-gray-50' : 'text-gray-500 hover:text-gray-900'}
+                onClick={() => setBillingPeriod('yearly')}
+              >
+                Yearly (Save 20%)
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {availablePlans.map((plan) => {
-                const IconComponent = plan.icon;
+              {isLoadingPlans ? (
+                <div className="col-span-3 text-center py-10">
+                  <div className="w-8 h-8 animate-spin rounded-full border-4 border-yellow-500 border-t-transparent mx-auto mb-2"></div>
+                  <p className="text-muted-foreground text-sm">Loading plans...</p>
+                </div>
+              ) : availablePlans.map((plan) => {
+                const IconComponent = plan.is_custom_price ? Zap : (plan.popular ? Crown : Star);
                 return (
                   <Card key={plan.id} className={`relative ${plan.popular ? 'border-yellow-500 shadow-lg' : 'border-gray-200'}`}>
                     {plan.popular && (
@@ -237,22 +224,47 @@ const Billing = () => {
                       <CardTitle className="text-xl">{plan.name}</CardTitle>
                       <CardDescription className="text-sm">{plan.description}</CardDescription>
                       <div className="mt-4">
-                        <div className="flex items-center justify-center gap-1">
-                          <span className="text-3xl font-bold text-gray-900">
-                            {typeof plan.price === 'number' ? `$${plan.price}` : plan.price}
-                          </span>
-                          {typeof plan.price === 'number' && (
-                            <span className="text-gray-500">/{plan.period}</span>
+                        <div className="flex flex-col items-center justify-center gap-1">
+                          {plan.is_custom_price ? (
+                            <span className="text-3xl font-bold text-gray-900 dark:text-white">Custom</span>
+                          ) : (
+                            <>
+                              {billingPeriod === 'monthly' ? (
+                                <>
+                                  {plan.final_monthly_price && plan.final_monthly_price !== plan.monthly_price && (
+                                    <span className="text-sm text-gray-400 line-through">₹{plan.monthly_price}</span>
+                                  )}
+                                  <div className="flex items-end">
+                                    <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                                      ₹{plan.final_monthly_price || plan.monthly_price || 0}
+                                    </span>
+                                    <span className="text-gray-500 mb-1 ml-1">/mo</span>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  {plan.final_yearly_price && plan.final_yearly_price !== plan.yearly_price && (
+                                    <span className="text-sm text-gray-400 line-through">₹{plan.yearly_price}</span>
+                                  )}
+                                  <div className="flex items-end">
+                                    <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                                      ₹{plan.final_yearly_price || plan.yearly_price || 0}
+                                    </span>
+                                    <span className="text-gray-500 mb-1 ml-1">/yr</span>
+                                  </div>
+                                </>
+                              )}
+                            </>
                           )}
                         </div>
-                        {typeof plan.price === 'number' && (
-                          <p className="text-sm text-gray-600 mt-1">Billed monthly</p>
+                        {!plan.is_custom_price && (
+                          <p className="text-sm text-gray-600 mt-1">Billed {billingPeriod}</p>
                         )}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-3">
-                        {plan.features.map((feature, index) => (
+                        {Array.isArray(plan.features) && plan.features.map((feature: string, index: number) => (
                           <div key={index} className="flex items-start gap-2">
                             <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                             <span className="text-sm text-gray-600">{feature}</span>
@@ -260,7 +272,7 @@ const Billing = () => {
                         ))}
                       </div>
                       <div className="pt-4">
-                        {plan.id === 'enterprise' ? (
+                        {plan.is_custom_price ? (
                           <Button 
                             onClick={handleContactSales}
                             className="w-full border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
@@ -336,7 +348,7 @@ const Billing = () => {
                         <p className="text-xs text-gray-500">Dec 15, 2024</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium">$0.00</p>
+                        <p className="text-sm font-medium">₹0.00</p>
                         <Badge variant="secondary" className="text-xs">Paid</Badge>
                       </div>
                     </div>
@@ -346,7 +358,7 @@ const Billing = () => {
                         <p className="text-xs text-gray-500">Nov 15, 2024</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium">$0.00</p>
+                        <p className="text-sm font-medium">₹0.00</p>
                         <Badge variant="secondary" className="text-xs">Paid</Badge>
                       </div>
                     </div>

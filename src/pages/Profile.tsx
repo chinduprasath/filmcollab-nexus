@@ -70,6 +70,7 @@ import {
   Clock,
   X,
   Upload,
+  Trash2,
 } from "lucide-react";
 
 interface ProfileData {
@@ -971,6 +972,10 @@ async function fetchFollowersCount(url: string, platform: string): Promise<strin
   return extractFollowersFromUrl(url, platform);
 }
 
+// Simple memory cache to prevent slow reloading on back navigation
+const profileDataCache = new Map<string, any>();
+const profileStatsCache = new Map<string, any>();
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { id: routeId } = useParams();
@@ -995,6 +1000,7 @@ export default function ProfilePage() {
   const [expandedEditEducation, setExpandedEditEducation] = useState<Set<string>>(new Set());
   const [skillsInput, setSkillsInput] = useState("");
   const [directoryFiles, setDirectoryFiles] = useState<DirectoryFile[]>([]);
+  const [previewFile, setPreviewFile] = useState<DirectoryFile | null>(null);
   const [userProjects, setUserProjects] = useState<any[]>([]);
   const [directoryPage, setDirectoryPage] = useState(1);
   const [directoryFilter, setDirectoryFilter] = useState<"all"|"document"|"image"|"video"|"audio">("all");
@@ -1016,7 +1022,9 @@ export default function ProfilePage() {
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const addFileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleAddFileSubmit = () => {
+  const [isUploadingDirectoryFile, setIsUploadingDirectoryFile] = useState(false);
+
+  const handleAddFileSubmit = async () => {
     if (!selectedAddFile) {
       toast({
         title: "No file selected",
@@ -1038,28 +1046,78 @@ export default function ProfilePage() {
 
     const finalTitle = addFileTitle.trim() || selectedAddFile.name;
 
-    const newFile: DirectoryFile = {
-      id: crypto.randomUUID(),
-      name: finalTitle,
-      title: finalTitle,
-      type,
-      url: URL.createObjectURL(selectedAddFile),
-      uploadDate: new Date().toISOString(),
-      tags: parsedTags
-    };
+    try {
+      setIsUploadingDirectoryFile(true);
+      
+      const fileExt = selectedAddFile.name.split('.').pop();
+      const fileName = `${user?.id || 'anon'}/${crypto.randomUUID()}.${fileExt}`;
 
-    setDirectoryFiles(prev => [newFile, ...prev]);
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('directory_assets')
+        .upload(fileName, selectedAddFile);
 
-    setSelectedAddFile(null);
-    setAddFileTitle("");
-    setAddFileTags("");
-    setShowAddFileDialog(false);
+      if (uploadError) {
+        throw uploadError;
+      }
 
-    toast({
-      title: "File uploaded successfully",
-      description: `"${finalTitle}" has been added to your directory.`
-    });
+      const { data: publicUrlData } = supabase.storage
+        .from('directory_assets')
+        .getPublicUrl(fileName);
+
+      const fileUrl = publicUrlData.publicUrl;
+      const fileSizeStr = (selectedAddFile.size / (1024 * 1024)).toFixed(2) + " MB";
+
+      const profileDbId = profile.user_id || profile.id;
+      const newDbFile = {
+        title: finalTitle,
+        file_type: type,
+        file_url: fileUrl,
+        file_size: fileSizeStr,
+        user_id: profileDbId,
+        tags: parsedTags,
+      };
+
+      const { data: insertedFile, error: insertError } = await supabase
+        .from('directory_files')
+        .insert(newDbFile)
+        .select()
+        .single();
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      setDirectoryFiles(prev => [{
+        id: insertedFile.id,
+        name: finalTitle,
+        title: finalTitle,
+        type: type,
+        url: fileUrl,
+        uploadDate: insertedFile.created_at,
+        tags: parsedTags
+      }, ...prev]);
+
+      setSelectedAddFile(null);
+      setAddFileTitle("");
+      setAddFileTags("");
+      setShowAddFileDialog(false);
+
+      toast({
+        title: "File uploaded successfully",
+        description: `"${finalTitle}" has been added to your directory.`
+      });
+    } catch (err: any) {
+      console.error("Error uploading file:", err);
+      toast({
+        title: "Upload Failed",
+        description: err.message || "An error occurred while uploading.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploadingDirectoryFile(false);
+    }
   };
+
 
   const userIdParam = routeId || searchParams.get("id");
   const usernameParam = searchParams.get("u");
@@ -1173,27 +1231,69 @@ export default function ProfilePage() {
 
     return () => clearTimeout(timer);
   }, [editForm.instagram, editForm.youtube, editForm.facebook, editForm.twitter]);
-
   // Load profile from database
   useEffect(() => {
     const load = async () => {
-      if (!user) return;
-      setLoading(true);
-      
+      // 1. Resolve User ID
+      let resolvedUserId: string | null = null;
       let actualUserIdParam = userIdParam;
-      if (actualUserIdParam === "undefined" || actualUserIdParam === "null") {
-        actualUserIdParam = undefined;
+
+      if (!actualUserIdParam && usernameParam) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', usernameParam)
+            .maybeSingle();
+          if (data && !error) {
+            actualUserIdParam = data.id;
+          }
+        } catch (e) {
+          console.error("Error resolving username to ID", e);
+        }
+      }
+
+      if (actualUserIdParam) {
+        resolvedUserId = actualUserIdParam;
+      } else if (user?.id) {
+        resolvedUserId = user.id;
+      }
+
+      // Check cache first for instant load
+      if (resolvedUserId && profileDataCache.has(resolvedUserId)) {
+        setProfile(profileDataCache.get(resolvedUserId));
+        setEditForm(profileDataCache.get(resolvedUserId));
+        
+        if (profileStatsCache.has(resolvedUserId)) {
+          const stats = profileStatsCache.get(resolvedUserId);
+          setUserProjects(stats.projects);
+          setConnectionsCount(stats.connectionsCount);
+          setProjectsCount(stats.projectsCount);
+          setLikesCount(stats.likesCount);
+          setJobsCount(stats.jobsCount);
+        }
+        setLoading(false);
+        // We still let the fetch continue in the background to update the cache
+      } else {
+        setLoading(true);
+      }
+
+      if (!user) return;
+      
+      let actualUserIdParamSanitized = actualUserIdParam;
+      if (actualUserIdParamSanitized === "undefined" || actualUserIdParamSanitized === "null") {
+        actualUserIdParamSanitized = undefined;
       }
 
       let query = supabase.from("profiles").select("*");
-      if (actualUserIdParam) {
-        const isValidUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(actualUserIdParam);
+      if (actualUserIdParamSanitized) {
+        const isValidUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(actualUserIdParamSanitized);
         if (isValidUuid) {
-          query = query.or(`user_id.eq.${actualUserIdParam},id.eq.${actualUserIdParam}`);
-        } else if (/^[A-Za-z0-9]{6}$/.test(actualUserIdParam)) {
-          query = query.eq("short_id", actualUserIdParam);
+          query = query.or(`user_id.eq.${actualUserIdParamSanitized},id.eq.${actualUserIdParamSanitized}`);
+        } else if (/^[A-Za-z0-9]{6}$/.test(actualUserIdParamSanitized)) {
+          query = query.eq("short_id", actualUserIdParamSanitized);
         } else {
-          query = query.eq("username", actualUserIdParam);
+          query = query.eq("username", actualUserIdParamSanitized);
         }
       } else if (usernameParam) {
         query = query.eq("username", usernameParam);
@@ -1204,11 +1304,9 @@ export default function ProfilePage() {
 
       if (error) {
         console.error("Profile load error", error);
-        // Soft fallback: log the error to the console but do not display a disruptive error toast,
-        // since our seeding mechanism will safely initialize a client-side profile for the user.
       }
 
-      let resolvedUserId = "";
+      let resolvedId = "";
       if (data) {
         const { data: sData } = await supabase.from('settings').select('*').eq('profile_id', data.id).maybeSingle();
         data.settingsData = sData;
@@ -1216,7 +1314,8 @@ export default function ProfilePage() {
         const mapped = rowToProfile(data, user.email);
         setProfile(mapped);
         setEditForm(mapped);
-        resolvedUserId = mapped.user_id || mapped.id;
+        profileDataCache.set(data.id, mapped);
+        resolvedId = mapped.user_id || mapped.id;
         
         // Update URL bar to show 6-digit short ID
         if (mapped.shortId && window.location.pathname.startsWith("/profile")) {
@@ -1262,6 +1361,7 @@ export default function ProfilePage() {
         const seeded = { ...emptyProfileData, email: user.email ?? "", name: (user.user_metadata as any)?.full_name ?? "" };
         setProfile(seeded);
         setEditForm(seeded);
+        profileDataCache.set(user.id, seeded);
         resolvedUserId = user.id;
       }
 
@@ -1329,43 +1429,73 @@ export default function ProfilePage() {
           if (storedApplied) {
             const arr = JSON.parse(storedApplied);
             if (Array.isArray(arr)) {
-              setJobsCount(arr.length);
+              updateJobsCount(arr.length);
             } else {
-              setJobsCount(0);
+              updateJobsCount(0);
             }
           } else {
-            setJobsCount(0);
+            updateJobsCount(0);
           }
         } catch (e) {
           console.error("Error reading jobs count:", e);
-          setJobsCount(0);
+          updateJobsCount(0);
         }
+        
+        // Cache the stats
+        profileStatsCache.set(resolvedUserId, {
+          projects: projRes?.data || [],
+          connectionsCount: connRes?.count || data?.followers_count || 0,
+          projectsCount: projectIds ? projectIds.size : 0,
+          likesCount: likesRes?.count || data?.likes_count || 0,
+          jobsCount: jobsCountRef
+        });
       }
 
       setLoading(false);
     };
+    let jobsCountRef = 0;
+    const updateJobsCount = (val: number) => {
+      jobsCountRef = val;
+      setJobsCount(val);
+    };
+
     load();
   }, [user, userIdParam, usernameParam, toast]);
 
-
-  useEffect(() => {
-    if (user?.id) {
-      const saved = localStorage.getItem(`directory_${user.id}`);
-      if (saved) {
-        try {
-          setDirectoryFiles(JSON.parse(saved));
-        } catch(e) {
-          console.error("Failed to parse directory files", e);
-        }
+  // Initialize directory files from database
+  const fetchDirectoryFiles = async () => {
+    if (!profile?.id) return;
+    const profileDbId = profile.user_id || profile.id;
+    try {
+      const { data, error } = await supabase
+        .from("directory_files")
+        .select("*")
+        .eq("user_id", profileDbId)
+        .order("created_at", { ascending: false });
+      
+      if (error && error.code !== '42P01') {
+        console.error("Error fetching directory files:", error);
+      } else if (data) {
+        setDirectoryFiles(data.map(d => ({
+          id: d.id,
+          name: d.title,
+          title: d.title,
+          type: d.file_type as any,
+          url: d.file_url,
+          uploadDate: d.created_at,
+          tags: d.tags
+        })));
       }
+    } catch (err) {
+      console.error(err);
     }
-  }, [user?.id]);
+  };
 
   useEffect(() => {
-    if (user?.id) {
-      localStorage.setItem(`directory_${user.id}`, JSON.stringify(directoryFiles));
+    if (profile?.id) {
+      fetchDirectoryFiles();
     }
-  }, [directoryFiles, user?.id]);
+  }, [profile?.id]);
 
   const roleIcons = {
     "Director": Camera,
@@ -1518,26 +1648,6 @@ export default function ProfilePage() {
   // Quick Actions
   const handleSendMessage = () => navigate("/messages");
   const handleConnect = () => toast({ title: "Connection request sent", description: "We'll notify you once accepted." });
-  const handleDirectoryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const newFiles: DirectoryFile[] = Array.from(files).map(file => {
-      let type: "document" | "image" | "video" | "audio" = "document";
-      if (file.type.startsWith("image/")) type = "image";
-      else if (file.type.startsWith("video/")) type = "video";
-      else if (file.type.startsWith("audio/")) type = "audio";
-      return {
-        id: crypto.randomUUID(),
-        name: file.name,
-        type,
-        url: URL.createObjectURL(file),
-        uploadDate: new Date().toISOString()
-      };
-    });
-    setDirectoryFiles(prev => [...newFiles, ...prev]);
-    if (directoryFileInputRef.current) directoryFileInputRef.current.value = "";
-    if (directoryMainFileInputRef.current) directoryMainFileInputRef.current.value = "";
-  };
   const handleShareProfile = async () => {
     const url = `${window.location.origin}/profile${profile.username ? `?u=${encodeURIComponent(profile.username)}` : ""}`;
     try {
@@ -2376,35 +2486,39 @@ export default function ProfilePage() {
                       </div>
                     ) : (
                       <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                           {(() => {
                         const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter).sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
-                        const paginated = filtered.slice((directoryPage - 1) * 9, directoryPage * 9);
+                        const paginated = filtered.slice((directoryPage - 1) * 16, directoryPage * 16);
                         if (filtered.length === 0) return <p className="text-sm text-gray-500 dark:text-zinc-400 col-span-full">No files found.</p>;
                         return paginated.map(file => (
-                          <div key={file.id} className="border border-gray-200 dark:border-zinc-800 rounded-md p-3 flex flex-col gap-2 hover:bg-gray-50 dark:hover:bg-zinc-850 bg-white dark:bg-background/20">
-                            {file.type === 'image' ? <img src={file.url} alt={file.name} className="w-full h-32 object-cover rounded" /> :
-                              file.type === 'video' ? <video src={file.url} className="w-full h-32 object-cover rounded" controls /> :
-                              file.type === 'audio' ? <audio src={file.url} className="w-full mt-auto" controls /> :
-                              <div className="w-full h-32 bg-gray-100 dark:bg-zinc-800 flex items-center justify-center rounded"><FileText className="w-8 h-8 text-gray-400 dark:text-zinc-500" /></div>}
-                            <p className="text-sm font-medium truncate text-gray-900 dark:text-zinc-100" title={file.title || file.name}>{file.title || file.name}</p>
-                            {file.tags && file.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {file.tags.map((tag, idx) => (
-                                  <Badge key={idx} variant="secondary" className="text-[10px] px-1.5 py-0 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-900/40">
-                                    #{tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                            <p className="text-xs text-gray-500 dark:text-zinc-400">{new Date(file.uploadDate).toLocaleDateString()}</p>
+                          <div key={file.id} className="relative group overflow-hidden rounded-md cursor-pointer border border-gray-200 dark:border-zinc-800" onClick={() => setPreviewFile(file)}>
+                              {file.type === 'image' ? <img src={file.url} alt={file.name} className="w-full h-40 object-cover hover:scale-105 transition-transform" /> :
+                               file.type === 'video' ? <video src={file.url} className="w-full h-40 object-cover" /> :
+                               file.type === 'audio' ? <audio src={file.url} className="w-full h-40" controls /> :
+                               <div className="w-full h-40 bg-gray-100 dark:bg-zinc-800 flex items-center justify-center"><FileText className="w-8 h-8 text-gray-400 dark:text-zinc-500" /></div>}
+                               <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={async (e) => { 
+                                 e.stopPropagation(); 
+                                 if (window.confirm("Are you sure you want to delete this file?")) {
+                                   try {
+                                     await supabase.from('directory_files').delete().eq('id', file.id);
+                                     setDirectoryFiles(prev => prev.filter(f => f.id !== file.id)); 
+                                     toast.success("File deleted successfully");
+                                   } catch(err) {
+                                     console.error(err);
+                                     toast.error("Failed to delete file");
+                                   }
+                                 }
+                               }}>
+                                 <Trash2 className="h-3 w-3" />
+                               </Button>
                           </div>
                         ));
                       })()}
                     </div>
                     {(() => {
                       const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter);
-                      const totalPages = Math.ceil(filtered.length / 9);
+                      const totalPages = Math.ceil(filtered.length / 16);
                       if (totalPages <= 1) return null;
                       return (
                         <div className="flex justify-center items-center gap-2 mt-4">
@@ -2492,13 +2606,13 @@ export default function ProfilePage() {
 
       {/* Edit Profile Popup */}
       <Dialog open={showEditProfile} onOpenChange={setShowEditProfile}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-5xl h-[85vh] flex flex-col overflow-hidden">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="text-2xl font-bold">Edit Profile</DialogTitle>
           </DialogHeader>
           
-          <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 bg-gray-100">
+          <Tabs defaultValue="profile" className="w-full flex-1 flex flex-col min-h-0">
+            <TabsList className="grid w-full grid-cols-5 bg-gray-100 flex-shrink-0">
               <TabsTrigger 
                 value="profile" 
                 className="text-sm data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
@@ -2532,7 +2646,7 @@ export default function ProfilePage() {
             </TabsList>
 
             {/* Profile Tab */}
-            <TabsContent value="profile" className="space-y-6 mt-6">
+            <TabsContent value="profile" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               {/* Basic Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
@@ -2946,7 +3060,7 @@ export default function ProfilePage() {
             </TabsContent>
 
             {/* Experience Tab */}
-            <TabsContent value="experience" className="space-y-6 mt-6">
+            <TabsContent value="experience" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Work Experience</h3>
@@ -3028,7 +3142,7 @@ export default function ProfilePage() {
             </TabsContent>
 
             {/* Achievements Tab */}
-            <TabsContent value="achievements" className="space-y-6 mt-6">
+            <TabsContent value="achievements" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Achievements & Awards</h3>
@@ -3114,7 +3228,7 @@ export default function ProfilePage() {
 
 
             {/* Education Tab */}
-            <TabsContent value="education" className="space-y-6 mt-6">
+            <TabsContent value="education" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Education</h3>
@@ -3196,7 +3310,7 @@ export default function ProfilePage() {
             </TabsContent>
 
             {/* Directory Tab */}
-            <TabsContent value="directory" className="space-y-6 mt-6">
+            <TabsContent value="directory" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">Directory</h3>
                 <div className="flex gap-2 items-center">
@@ -3219,30 +3333,32 @@ export default function ProfilePage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {(() => {
                   const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter).sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
-                  const paginated = filtered.slice((directoryPage - 1) * 9, directoryPage * 9);
+                  const paginated = filtered.slice((directoryPage - 1) * 16, directoryPage * 16);
                   if (filtered.length === 0) return <p className="text-sm text-gray-500 col-span-full">No files found.</p>;
                   return paginated.map(file => (
-                    <div key={file.id} className="border border-gray-200 rounded-md p-3 flex flex-col gap-2 relative group hover:bg-gray-50 bg-white">
-                       {file.type === 'image' ? <img src={file.url} alt={file.name} className="w-full h-32 object-cover rounded" /> :
-                        file.type === 'video' ? <video src={file.url} className="w-full h-32 object-cover rounded" controls /> :
-                        file.type === 'audio' ? <audio src={file.url} className="w-full mt-auto" controls /> :
-                        <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded"><FileText className="w-8 h-8 text-gray-400" /></div>}
-                       <p className="text-sm font-medium truncate" title={file.title || file.name}>{file.title || file.name}</p>
-                       {file.tags && file.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {file.tags.map((tag, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-[10px] px-1.5 py-0 bg-yellow-50 text-yellow-700 border border-yellow-200">
-                                #{tag}
-                              </Badge>
-                            ))}
-                          </div>
-                       )}
-                       <p className="text-xs text-gray-500">{new Date(file.uploadDate).toLocaleDateString()}</p>
-                       <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setDirectoryFiles(prev => prev.filter(f => f.id !== file.id)); }}>
-                         <X className="h-4 w-4" />
+                    <div key={file.id} className="relative group overflow-hidden rounded-md cursor-pointer border border-gray-200 dark:border-zinc-800" onClick={() => setPreviewFile(file)}>
+                       {file.type === 'image' ? <img src={file.url} alt={file.name} className="w-full h-40 object-cover hover:scale-105 transition-transform" /> :
+                        file.type === 'video' ? <video src={file.url} className="w-full h-40 object-cover" /> :
+                        file.type === 'audio' ? <audio src={file.url} className="w-full h-40" controls /> :
+                        <div className="w-full h-40 bg-gray-100 dark:bg-zinc-800 flex items-center justify-center"><FileText className="w-8 h-8 text-gray-400 dark:text-zinc-500" /></div>}
+                       <p className="text-sm font-medium truncate p-2" title={file.title || file.name}>{file.title || file.name}</p>
+                       <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={async (e) => { 
+                         e.stopPropagation(); 
+                         if (window.confirm("Are you sure you want to delete this file?")) {
+                           try {
+                             await supabase.from('directory_files').delete().eq('id', file.id);
+                             setDirectoryFiles(prev => prev.filter(f => f.id !== file.id)); 
+                             toast.success("File deleted successfully");
+                           } catch(err) {
+                             console.error(err);
+                             toast.error("Failed to delete file");
+                           }
+                         }
+                       }}>
+                         <Trash2 className="h-3 w-3" />
                        </Button>
                     </div>
                   ));
@@ -3250,7 +3366,7 @@ export default function ProfilePage() {
               </div>
               {(() => {
                  const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter);
-                 const totalPages = Math.ceil(filtered.length / 9);
+                 const totalPages = Math.ceil(filtered.length / 16);
                  if (totalPages <= 1) return null;
                  return (
                    <div className="flex justify-center items-center gap-2 mt-4">
@@ -3370,9 +3486,10 @@ export default function ProfilePage() {
               </Button>
               <Button
                 onClick={handleAddFileSubmit}
+                disabled={isUploadingDirectoryFile}
                 className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium"
               >
-                Upload File
+                {isUploadingDirectoryFile ? "Uploading..." : "Upload File"}
               </Button>
             </div>
           </div>
@@ -3428,6 +3545,33 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 overflow-hidden bg-black/95 border-gray-800">
+          <div className="relative w-full h-[80vh] flex flex-col items-center justify-center">
+            <div className="absolute top-4 left-4 z-50 text-white text-sm font-semibold">{previewFile?.name || previewFile?.title}</div>
+            
+            {previewFile?.type === 'image' && (
+              <img src={previewFile.url} alt={previewFile.name} className="max-w-full max-h-full object-contain rounded-lg" />
+            )}
+            
+            {previewFile?.type === 'video' && (
+              <video src={previewFile.url} controls autoPlay className="w-full h-full" />
+            )}
+            
+            {previewFile?.type === 'audio' && (
+              <div className="w-full h-full flex items-center justify-center p-8 bg-gray-900 rounded-lg">
+                <audio src={previewFile.url} controls className="w-full max-w-md" />
+              </div>
+            )}
+            
+            {previewFile?.type === 'document' && (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 rounded-lg overflow-hidden">
+                <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewFile.url || "")}&embedded=true`} className="w-full h-full bg-white" title="Document Preview" />
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </AppLayout>
