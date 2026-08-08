@@ -10,11 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -71,6 +72,8 @@ import {
   X,
   Upload,
   Trash2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 interface ProfileData {
@@ -122,6 +125,9 @@ interface ProfileData {
   totalExperience?: string;
   availableForTravel?: boolean;
   availability?: string;
+  pricePerDay?: string;
+  pricePerHour?: string;
+  priceNegotiable?: boolean;
 
   // New Physical Details
   height?: string;
@@ -157,6 +163,7 @@ export interface DirectoryFile {
   url: string;
   uploadDate: string;
   tags?: string[];
+  additional_urls?: string[];
 }
 
 interface Experience {
@@ -304,6 +311,9 @@ function rowToProfile(row: any, authEmail?: string | null): ProfileData {
     totalExperience: row?.total_experience ?? "",
     availableForTravel: row?.available_for_travel ?? false,
     availability: row?.availability ?? "",
+    pricePerDay: row?.price_per_day?.toString() ?? "",
+    pricePerHour: row?.price_per_hour?.toString() ?? "",
+    priceNegotiable: row?.price_negotiable ?? false,
     
     // Physical Details
     height: row?.height ?? "",
@@ -371,6 +381,9 @@ function profileToRow(p: ProfileData, userId: string) {
     total_experience: p.totalExperience || null,
     available_for_travel: p.availableForTravel ?? false,
     availability: p.availability || null,
+    price_per_day: p.pricePerDay ? parseFloat(p.pricePerDay) : null,
+    price_per_hour: p.pricePerHour ? parseFloat(p.pricePerHour) : null,
+    price_negotiable: p.priceNegotiable ?? false,
     
     // Physical Details
     height: p.height || null,
@@ -1001,6 +1014,7 @@ export default function ProfilePage() {
   const [skillsInput, setSkillsInput] = useState("");
   const [directoryFiles, setDirectoryFiles] = useState<DirectoryFile[]>([]);
   const [previewFile, setPreviewFile] = useState<DirectoryFile | null>(null);
+  const [previewImageIndex, setPreviewImageIndex] = useState(0);
   const [userProjects, setUserProjects] = useState<any[]>([]);
   const [directoryPage, setDirectoryPage] = useState(1);
   const [directoryFilter, setDirectoryFilter] = useState<"all"|"document"|"image"|"video"|"audio">("all");
@@ -1018,14 +1032,15 @@ export default function ProfilePage() {
   const [showAddFileDialog, setShowAddFileDialog] = useState(false);
   const [addFileTitle, setAddFileTitle] = useState("");
   const [addFileTags, setAddFileTags] = useState("");
-  const [selectedAddFile, setSelectedAddFile] = useState<File | null>(null);
+  const [selectedAddFiles, setSelectedAddFiles] = useState<File[]>([]);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const addFileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [isUploadingDirectoryFile, setIsUploadingDirectoryFile] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean, onConfirm: () => void, title?: string, desc?: string }>({ isOpen: false, onConfirm: () => {} });
 
   const handleAddFileSubmit = async () => {
-    if (!selectedAddFile) {
+    if (selectedAddFiles.length === 0) {
       toast({
         title: "No file selected",
         description: "Please select or drag & drop a file to upload.",
@@ -1034,44 +1049,68 @@ export default function ProfilePage() {
       return;
     }
 
+    const primaryFile = selectedAddFiles[0];
     let type: "document" | "image" | "video" | "audio" = "document";
-    if (selectedAddFile.type.startsWith("image/")) type = "image";
-    else if (selectedAddFile.type.startsWith("video/")) type = "video";
-    else if (selectedAddFile.type.startsWith("audio/")) type = "audio";
+    if (primaryFile.type.startsWith("image/")) type = "image";
+    else if (primaryFile.type.startsWith("video/")) type = "video";
+    else if (primaryFile.type.startsWith("audio/")) type = "audio";
 
     const parsedTags = addFileTags
       .split(",")
       .map(t => t.trim())
       .filter(Boolean);
 
-    const finalTitle = addFileTitle.trim() || selectedAddFile.name;
+    const finalTitle = addFileTitle.trim() || primaryFile.name;
 
     try {
       setIsUploadingDirectoryFile(true);
       
-      const fileExt = selectedAddFile.name.split('.').pop();
+      let publicUrl = "";
+      let additionalUrls: string[] = [];
+
+      // Upload primary file
+      const fileExt = primaryFile.name.split('.').pop();
       const fileName = `${user?.id || 'anon'}/${crypto.randomUUID()}.${fileExt}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('directory_assets')
-        .upload(fileName, selectedAddFile);
+        .upload(fileName, primaryFile);
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabase.storage
         .from('directory_assets')
         .getPublicUrl(fileName);
 
-      const fileUrl = publicUrlData.publicUrl;
-      const fileSizeStr = (selectedAddFile.size / (1024 * 1024)).toFixed(2) + " MB";
+      publicUrl = publicUrlData.publicUrl;
+      const fileSizeStr = (primaryFile.size / (1024 * 1024)).toFixed(2) + " MB";
+
+      // Upload additional files if any
+      if (selectedAddFiles.length > 1 && type === "image") {
+        for (let i = 1; i < selectedAddFiles.length; i++) {
+          const file = selectedAddFiles[i];
+          const ext = file.name.split('.').pop();
+          const name = `${user?.id || 'anon'}/${crypto.randomUUID()}.${ext}`;
+
+          const { error: err } = await supabase.storage
+            .from('directory_assets')
+            .upload(name, file);
+
+          if (!err) {
+            const { data } = supabase.storage
+              .from('directory_assets')
+              .getPublicUrl(name);
+            additionalUrls.push(data.publicUrl);
+          }
+        }
+      }
 
       const profileDbId = profile.user_id || profile.id;
       const newDbFile = {
         title: finalTitle,
         file_type: type,
-        file_url: fileUrl,
+        file_url: publicUrl,
+        additional_urls: additionalUrls.length > 0 ? additionalUrls : [],
         file_size: fileSizeStr,
         user_id: profileDbId,
         tags: parsedTags,
@@ -1083,21 +1122,20 @@ export default function ProfilePage() {
         .select()
         .single();
 
-      if (insertError) {
-        throw insertError;
-      }
+      if (insertError) throw insertError;
 
       setDirectoryFiles(prev => [{
         id: insertedFile.id,
         name: finalTitle,
         title: finalTitle,
         type: type,
-        url: fileUrl,
+        url: publicUrl,
+        additional_urls: insertedFile.additional_urls,
         uploadDate: insertedFile.created_at,
         tags: parsedTags
       }, ...prev]);
 
-      setSelectedAddFile(null);
+      setSelectedAddFiles([]);
       setAddFileTitle("");
       setAddFileTags("");
       setShowAddFileDialog(false);
@@ -1395,9 +1433,28 @@ export default function ProfilePage() {
               .eq("liked_user_id", profileDbId)
           ]);
 
-          if (!projRes.error && projRes.data) {
-            setUserProjects(projRes.data);
+          let allUserProjects = projRes.data || [];
+          
+          if (!joinedProjRes.error && joinedProjRes.data && joinedProjRes.data.length > 0) {
+            const joinedIds = joinedProjRes.data
+              .map((p: any) => p.project_id)
+              .filter((id: string) => id && !allUserProjects.find((up: any) => up.id === id));
+              
+            if (joinedIds.length > 0) {
+              const { data: joinedProjects } = await supabase
+                .from("projects")
+                .select("*")
+                .in("id", joinedIds)
+                .order("created_at", { ascending: false });
+                
+              if (joinedProjects) {
+                allUserProjects = [...allUserProjects, ...joinedProjects];
+                allUserProjects.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+              }
+            }
           }
+          
+          setUserProjects(allUserProjects);
 
           if (!connRes.error) {
             setConnectionsCount(connRes.count ?? 0);
@@ -1443,7 +1500,7 @@ export default function ProfilePage() {
         
         // Cache the stats
         profileStatsCache.set(resolvedUserId, {
-          projects: projRes?.data || [],
+          projects: allUserProjects,
           connectionsCount: connRes?.count || data?.followers_count || 0,
           projectsCount: projectIds ? projectIds.size : 0,
           likesCount: likesRes?.count || data?.likes_count || 0,
@@ -1482,6 +1539,7 @@ export default function ProfilePage() {
           title: d.title,
           type: d.file_type as any,
           url: d.file_url,
+          additional_urls: d.additional_urls,
           uploadDate: d.created_at,
           tags: d.tags
         })));
@@ -1801,8 +1859,8 @@ export default function ProfilePage() {
         <Card className="relative overflow-hidden border-yellow-200 dark:border-zinc-800 bg-white dark:bg-background">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row md:items-center gap-4">
-              <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1">
-                <div className="relative group">
+              <div className="flex flex-col items-center md:flex-row md:items-center gap-4 flex-1 text-center md:text-left">
+                <div className="relative group mx-auto md:mx-0">
                   <Avatar className="w-24 h-24 border-4 border-white dark:border-zinc-800 shadow-lg flex-shrink-0">
                     <AvatarImage src={profile.avatar} alt={profile.name} />
                     <AvatarFallback className="text-xl font-semibold bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
@@ -1831,8 +1889,8 @@ export default function ProfilePage() {
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-50 flex flex-wrap items-center justify-center md:justify-start gap-2">
                       {profile.name}
                       {profile.verified && (
                         <UserCheck className="w-5 h-5 text-blue-500 flex-shrink-0" />
@@ -1857,12 +1915,12 @@ export default function ProfilePage() {
                       })}
                     </h1>
                   </div>
-                  <div className="flex items-center gap-2 text-sm mb-2 flex-wrap">
+                  <div className="flex items-center justify-center md:justify-start gap-2 text-sm mb-2 flex-wrap">
                     <span className="text-gray-600 dark:text-zinc-400">@{profile.username}</span>
                     <span className="text-gray-300 dark:text-zinc-600">•</span>
                     <span className="text-gray-700 dark:text-zinc-300 font-medium">{profile.role}</span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-zinc-400">
+                  <div className="flex items-center justify-center md:justify-start gap-4 text-xs text-gray-500 dark:text-zinc-400">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-3 h-3 flex-shrink-0" />
                       {profile.location}
@@ -2043,7 +2101,7 @@ export default function ProfilePage() {
         <div className="w-full space-y-4">
           <div className="w-full space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-6 bg-yellow-50 dark:bg-zinc-800 border border-yellow-200 dark:border-zinc-700 p-1 rounded-lg">
+              <TabsList className="flex w-full overflow-x-auto bg-yellow-50 dark:bg-zinc-800 border border-yellow-200 dark:border-zinc-700 p-1 rounded-lg justify-start md:grid md:grid-cols-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <TabsTrigger 
                   value="overview" 
                   className="text-xs text-gray-700 dark:text-zinc-300 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:dark:text-white"
@@ -2209,6 +2267,35 @@ export default function ProfilePage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Pricing Details */}
+                {(profile.pricePerDay || profile.pricePerHour) && (
+                  <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Pricing Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-8 text-sm">
+                      {profile.pricePerDay && (
+                        <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                          <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Price Per Day</span>
+                          <span className="text-gray-900 dark:text-zinc-100 font-medium">₹{profile.pricePerDay}</span>
+                        </div>
+                      )}
+                      {profile.pricePerHour && (
+                        <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                          <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Price Per Hour</span>
+                          <span className="text-gray-900 dark:text-zinc-100 font-medium">₹{profile.pricePerHour}</span>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-[140px_1fr] gap-2 items-start md:col-span-1">
+                        <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Negotiable</span>
+                        <span className="text-gray-900 dark:text-zinc-100 font-medium">
+                          {profile.priceNegotiable ? "Yes" : "No"}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Physical Details */}
                 <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
@@ -2493,22 +2580,37 @@ export default function ProfilePage() {
                         if (filtered.length === 0) return <p className="text-sm text-gray-500 dark:text-zinc-400 col-span-full">No files found.</p>;
                         return paginated.map(file => (
                           <div key={file.id} className="relative group overflow-hidden rounded-md cursor-pointer border border-gray-200 dark:border-zinc-800" onClick={() => setPreviewFile(file)}>
-                              {file.type === 'image' ? <img src={file.url} alt={file.name} className="w-full h-40 object-cover hover:scale-105 transition-transform" /> :
+                              {file.type === 'image' ? (
+                                <div className="relative h-40 w-full">
+                                  <img src={file.url} alt={file.name} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                                  {file.additional_urls && file.additional_urls.length > 0 && (
+                                    <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 z-10">
+                                      <ImageIcon className="w-3 h-3" />
+                                      {file.additional_urls.length + 1}
+                                    </div>
+                                  )}
+                                </div>
+                              ) :
                                file.type === 'video' ? <video src={file.url} className="w-full h-40 object-cover" /> :
                                file.type === 'audio' ? <audio src={file.url} className="w-full h-40" controls /> :
                                <div className="w-full h-40 bg-gray-100 dark:bg-zinc-800 flex items-center justify-center"><FileText className="w-8 h-8 text-gray-400 dark:text-zinc-500" /></div>}
                                <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={async (e) => { 
                                  e.stopPropagation(); 
-                                 if (window.confirm("Are you sure you want to delete this file?")) {
-                                   try {
-                                     await supabase.from('directory_files').delete().eq('id', file.id);
-                                     setDirectoryFiles(prev => prev.filter(f => f.id !== file.id)); 
-                                     toast.success("File deleted successfully");
-                                   } catch(err) {
-                                     console.error(err);
-                                     toast.error("Failed to delete file");
+                                 setDeleteConfirm({
+                                   isOpen: true,
+                                   title: "Delete File",
+                                   desc: "Are you sure you want to delete this file? This action cannot be undone.",
+                                   onConfirm: async () => {
+                                     try {
+                                       await supabase.from('directory_files').delete().eq('id', file.id);
+                                       setDirectoryFiles(prev => prev.filter(f => f.id !== file.id)); 
+                                       toast.success("File deleted successfully");
+                                     } catch(err) {
+                                       console.error(err);
+                                       toast.error("Failed to delete file");
+                                     }
                                    }
-                                 }
+                                 });
                                }}>
                                  <Trash2 className="h-3 w-3" />
                                </Button>
@@ -2612,7 +2714,7 @@ export default function ProfilePage() {
           </DialogHeader>
           
           <Tabs defaultValue="profile" className="w-full flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-5 bg-gray-100 flex-shrink-0">
+            <TabsList className="flex w-full overflow-x-auto bg-gray-100 flex-shrink-0 justify-start md:grid md:grid-cols-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <TabsTrigger 
                 value="profile" 
                 className="text-sm data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
@@ -2859,6 +2961,44 @@ export default function ProfilePage() {
                         <SelectItem value="Available immediately">Available immediately</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-semibold text-gray-900 mt-6 pt-4 border-t">Pricing Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="pricePerDay">Price Per Day (₹)</Label>
+                    <Input
+                      id="pricePerDay"
+                      type="number"
+                      min="0"
+                      value={editForm.pricePerDay || ''}
+                      onChange={(e) => handleFormChange('pricePerDay', e.target.value)}
+                      placeholder="e.g. 5000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pricePerHour">Price Per Hour (₹)</Label>
+                    <Input
+                      id="pricePerHour"
+                      type="number"
+                      min="0"
+                      value={editForm.pricePerHour || ''}
+                      onChange={(e) => handleFormChange('pricePerHour', e.target.value)}
+                      placeholder="e.g. 500"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-end pb-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="priceNegotiable" 
+                        checked={editForm.priceNegotiable} 
+                        onCheckedChange={(checked) => handleFormChange('priceNegotiable', !!checked)} 
+                      />
+                      <label htmlFor="priceNegotiable" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Price is Negotiable
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -3340,7 +3480,17 @@ export default function ProfilePage() {
                   if (filtered.length === 0) return <p className="text-sm text-gray-500 col-span-full">No files found.</p>;
                   return paginated.map(file => (
                     <div key={file.id} className="relative group overflow-hidden rounded-md cursor-pointer border border-gray-200 dark:border-zinc-800" onClick={() => setPreviewFile(file)}>
-                       {file.type === 'image' ? <img src={file.url} alt={file.name} className="w-full h-40 object-cover hover:scale-105 transition-transform" /> :
+                       {file.type === 'image' ? (
+                         <div className="relative h-40 w-full">
+                           <img src={file.url} alt={file.name} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                           {file.additional_urls && file.additional_urls.length > 0 && (
+                             <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 z-10">
+                               <ImageIcon className="w-3 h-3" />
+                               {file.additional_urls.length + 1}
+                             </div>
+                           )}
+                         </div>
+                       ) :
                         file.type === 'video' ? <video src={file.url} className="w-full h-40 object-cover" /> :
                         file.type === 'audio' ? <audio src={file.url} className="w-full h-40" controls /> :
                         <div className="w-full h-40 bg-gray-100 dark:bg-zinc-800 flex items-center justify-center"><FileText className="w-8 h-8 text-gray-400 dark:text-zinc-500" /></div>}
@@ -3404,10 +3554,10 @@ export default function ProfilePage() {
               onDrop={(e) => {
                 e.preventDefault();
                 setIsDraggingFile(false);
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                  const f = e.dataTransfer.files[0];
-                  setSelectedAddFile(f);
-                  if (!addFileTitle) setAddFileTitle(f.name.replace(/\.[^/.]+$/, ""));
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  const files = Array.from(e.dataTransfer.files);
+                  setSelectedAddFiles(files);
+                  if (!addFileTitle && files[0]) setAddFileTitle(files[0].name.replace(/\.[^/.]+$/, ""));
                 }
               }}
               onClick={() => addFileInputRef.current?.click()}
@@ -3420,21 +3570,28 @@ export default function ProfilePage() {
             >
               <input
                 type="file"
+                multiple
                 ref={addFileInputRef}
                 className="hidden"
                 onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    const f = e.target.files[0];
-                    setSelectedAddFile(f);
-                    if (!addFileTitle) setAddFileTitle(f.name.replace(/\.[^/.]+$/, ""));
+                  if (e.target.files && e.target.files.length > 0) {
+                    const files = Array.from(e.target.files);
+                    setSelectedAddFiles(files);
+                    if (!addFileTitle && files[0]) setAddFileTitle(files[0].name.replace(/\.[^/.]+$/, ""));
                   }
                 }}
               />
               <Upload className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
-              {selectedAddFile ? (
+              {selectedAddFiles.length > 0 ? (
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">{selectedAddFile.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400">{(selectedAddFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                    {selectedAddFiles.length === 1 ? selectedAddFiles[0].name : `${selectedAddFiles.length} files selected`}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-zinc-400">
+                    {selectedAddFiles.length === 1 
+                      ? `${(selectedAddFiles[0].size / (1024 * 1024)).toFixed(2)} MB` 
+                      : `${(selectedAddFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)).toFixed(2)} MB total`}
+                  </p>
                 </div>
               ) : (
                 <div>
@@ -3476,7 +3633,7 @@ export default function ProfilePage() {
                 variant="outline"
                 onClick={() => {
                   setShowAddFileDialog(false);
-                  setSelectedAddFile(null);
+                  setSelectedAddFiles([]);
                   setAddFileTitle("");
                   setAddFileTags("");
                 }}
@@ -3547,13 +3704,142 @@ export default function ProfilePage() {
           )}
         </DialogContent>
       </Dialog>
-      <Dialog open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 overflow-hidden bg-black/95 border-gray-800">
+      <Dialog open={!!previewFile} onOpenChange={(open) => {
+        if (!open) {
+          setPreviewFile(null);
+          setPreviewImageIndex(0);
+        }
+      }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 overflow-hidden bg-black/95 border-gray-800 [&>button]:text-white [&>button]:hover:bg-white/10 [&>button]:p-2 [&>button]:rounded-full">
           <div className="relative w-full h-[80vh] flex flex-col items-center justify-center">
             <div className="absolute top-4 left-4 z-50 text-white text-sm font-semibold">{previewFile?.name || previewFile?.title}</div>
             
             {previewFile?.type === 'image' && (
-              <img src={previewFile.url} alt={previewFile.name} className="max-w-full max-h-full object-contain rounded-lg" />
+              <>
+                <img 
+                  src={
+                    previewFile.additional_urls && previewFile.additional_urls.length > 0 
+                      ? [previewFile.url, ...previewFile.additional_urls][previewImageIndex] 
+                      : previewFile.url
+                  } 
+                  alt={previewFile.name} 
+                  className="max-w-full max-h-full object-contain rounded-lg" 
+                />
+                
+                {previewFile.additional_urls && previewFile.additional_urls.length > 0 && (
+                  <>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:bg-black/50 rounded-full"
+                      onClick={() => setPreviewImageIndex(p => Math.max(0, p - 1))}
+                      disabled={previewImageIndex === 0}
+                    >
+                      <ChevronLeft className="w-8 h-8" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:bg-black/50 rounded-full"
+                      onClick={() => setPreviewImageIndex(p => Math.min((previewFile.additional_urls?.length || 0), p + 1))}
+                      disabled={previewImageIndex === (previewFile.additional_urls?.length || 0)}
+                    >
+                      <ChevronRight className="w-8 h-8" />
+                    </Button>
+
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 p-2 rounded-lg flex items-center gap-2 max-w-[80vw] overflow-x-auto">
+                      {[previewFile.url, ...previewFile.additional_urls].map((url, idx) => (
+                        <div key={idx} className="relative group shrink-0">
+                          <img 
+                            src={url} 
+                            alt={`Thumbnail ${idx}`} 
+                            className={cn("w-16 h-16 object-cover rounded cursor-pointer border-2 transition-all", previewImageIndex === idx ? "border-yellow-500 scale-110" : "border-transparent opacity-60 hover:opacity-100")}
+                            onClick={() => setPreviewImageIndex(idx)}
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
+                             {idx > 0 && (
+                                <Button variant="ghost" size="icon" className="h-5 w-5 text-white p-0 hover:bg-transparent" onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const newUrls = [previewFile.url, ...(previewFile.additional_urls || [])];
+                                  const temp = newUrls[idx - 1];
+                                  newUrls[idx - 1] = newUrls[idx];
+                                  newUrls[idx] = temp;
+                                  
+                                  const newMain = newUrls[0];
+                                  const newAdd = newUrls.slice(1);
+                                  
+                                  try {
+                                    await supabase.from('directory_files').update({ file_url: newMain, additional_urls: newAdd }).eq('id', previewFile.id);
+                                    const updatedFile = { ...previewFile, url: newMain, additional_urls: newAdd };
+                                    setPreviewFile(updatedFile);
+                                    setDirectoryFiles(prev => prev.map(f => f.id === previewFile.id ? updatedFile : f));
+                                    setPreviewImageIndex(idx - 1);
+                                  } catch (err) {
+                                    toast.error("Failed to reorder");
+                                  }
+                                }}>
+                                  <ChevronLeft className="w-3 h-3" />
+                                </Button>
+                             )}
+                             <Button variant="ghost" size="icon" className="h-5 w-5 text-red-500 p-0 hover:bg-transparent" onClick={async (e) => {
+                               e.stopPropagation();
+                               setDeleteConfirm({
+                                 isOpen: true,
+                                 title: "Delete this image?",
+                                 desc: "This image will be removed from the group.",
+                                 onConfirm: async () => {
+                                   const newUrls = [previewFile.url, ...(previewFile.additional_urls || [])].filter((_, i) => i !== idx);
+                                   if (newUrls.length === 0) {
+                                     try {
+                                       await supabase.from('directory_files').delete().eq('id', previewFile.id);
+                                       setDirectoryFiles(prev => prev.filter(f => f.id !== previewFile.id));
+                                       setPreviewFile(null);
+                                     } catch(err) {}
+                                   } else {
+                                     const newMain = newUrls[0];
+                                     const newAdd = newUrls.slice(1);
+                                     try {
+                                       await supabase.from('directory_files').update({ file_url: newMain, additional_urls: newAdd }).eq('id', previewFile.id);
+                                       const updatedFile = { ...previewFile, url: newMain, additional_urls: newAdd };
+                                       setPreviewFile(updatedFile);
+                                       setDirectoryFiles(prev => prev.map(f => f.id === previewFile.id ? updatedFile : f));
+                                       if (previewImageIndex >= newUrls.length) setPreviewImageIndex(newUrls.length - 1);
+                                     } catch(err) {}
+                                   }
+                                 }
+                               });
+                             }}>
+                               <Trash2 className="w-3 h-3" />
+                             </Button>
+                             {idx < [previewFile.url, ...(previewFile.additional_urls || [])].length - 1 && (
+                                <Button variant="ghost" size="icon" className="h-5 w-5 text-white p-0 hover:bg-transparent" onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const newUrls = [previewFile.url, ...(previewFile.additional_urls || [])];
+                                  const temp = newUrls[idx + 1];
+                                  newUrls[idx + 1] = newUrls[idx];
+                                  newUrls[idx] = temp;
+                                  
+                                  const newMain = newUrls[0];
+                                  const newAdd = newUrls.slice(1);
+                                  
+                                  try {
+                                    await supabase.from('directory_files').update({ file_url: newMain, additional_urls: newAdd }).eq('id', previewFile.id);
+                                    const updatedFile = { ...previewFile, url: newMain, additional_urls: newAdd };
+                                    setPreviewFile(updatedFile);
+                                    setDirectoryFiles(prev => prev.map(f => f.id === previewFile.id ? updatedFile : f));
+                                    setPreviewImageIndex(idx + 1);
+                                  } catch (err) {}
+                                }}>
+                                  <ChevronRight className="w-3 h-3" />
+                                </Button>
+                             )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
             )}
             
             {previewFile?.type === 'video' && (
@@ -3572,6 +3858,24 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteConfirm.isOpen} onOpenChange={(isOpen) => setDeleteConfirm(prev => ({ ...prev, isOpen }))}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+          <DialogHeader>
+            <DialogTitle>{deleteConfirm.title || "Confirm Delete"}</DialogTitle>
+            <DialogDescription className="text-gray-500 dark:text-gray-400">
+              {deleteConfirm.desc || "Are you sure you want to delete this? This action cannot be undone."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => { deleteConfirm.onConfirm(); setDeleteConfirm(prev => ({ ...prev, isOpen: false })); }}>
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </AppLayout>

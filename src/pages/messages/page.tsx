@@ -27,6 +27,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { generateKeyPair, importPrivateKey, importPublicKey, deriveAESKey, encryptMessage, decryptMessage } from "@/lib/e2ee";
 
 type MessageType = "text" | "image" | "video" | "document" | "audio";
 
@@ -66,6 +67,7 @@ interface DBProfile {
   username: string | null;
   avatar_url: string | null;
   category: string | null;
+  public_key?: string | null;
 }
 
 interface DBConnection {
@@ -119,6 +121,10 @@ export default function MessagesPage() {
   const [submittingReport, setSubmittingReport] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // E2EE States
+  const [privateKey, setPrivateKey] = useState<CryptoKey | null>(null);
+  const [e2eeReady, setE2eeReady] = useState(false);
+
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -126,6 +132,47 @@ export default function MessagesPage() {
 
   // Determine current user ID
   const currentUserId = profile?.id || user?.id || "me";
+
+  // E2EE Initialization
+  useEffect(() => {
+    const initE2EE = async () => {
+      if (!user || !profile?.id) return;
+      const isGuestSession = profile.id === "guest-profile-id" || profile.id === "admin-guest-profile";
+      if (isGuestSession) return;
+
+      try {
+        let privKeyStr = localStorage.getItem(`e2ee_priv_${profile.id}`);
+        let pubKeyStr = localStorage.getItem(`e2ee_pub_${profile.id}`);
+        
+        let privKey: CryptoKey;
+        let pubKeyJwk: JsonWebKey;
+
+        if (privKeyStr && pubKeyStr) {
+          const jwk = JSON.parse(privKeyStr);
+          pubKeyJwk = JSON.parse(pubKeyStr);
+          privKey = await importPrivateKey(jwk);
+        } else {
+          // Generate new keys
+          const keys = await generateKeyPair();
+          privKeyStr = JSON.stringify(keys.privateKeyJwk);
+          pubKeyStr = JSON.stringify(keys.publicKeyJwk);
+          localStorage.setItem(`e2ee_priv_${profile.id}`, privKeyStr);
+          localStorage.setItem(`e2ee_pub_${profile.id}`, pubKeyStr);
+          pubKeyJwk = keys.publicKeyJwk;
+          privKey = await importPrivateKey(keys.privateKeyJwk);
+
+          // Attempt to save to Supabase. Ignore if column doesn't exist yet (for smooth rollout)
+          await supabase.from("profiles").update({ public_key: pubKeyStr }).eq("id", profile.id).catch(() => {});
+        }
+
+        setPrivateKey(privKey);
+        setE2eeReady(true);
+      } catch (err) {
+        console.error("E2EE Init failed:", err);
+      }
+    };
+    initE2EE();
+  }, [user, profile?.id]);
 
   // Load and merge all data
   const loadLocalData = useCallback(() => {
@@ -225,7 +272,7 @@ export default function MessagesPage() {
       // 2. Fetch profiles
       const { data: rawProfilesData } = await supabase
         .from("profiles")
-        .select("id, full_name, username, avatar_url, category");
+        .select("id, full_name, username, avatar_url, category, public_key");
 
       const profilesData = rawProfilesData as unknown as DBProfile[];
       const profilesMap = new Map<string, DBProfile>();
@@ -276,6 +323,7 @@ export default function MessagesPage() {
       const messagesData = rawMessagesData as unknown as DBMessage[];
 
       const dbConversations: Conversation[] = [];
+      const readConvs = JSON.parse(localStorage.getItem("read_conversations") || "{}");
 
       if (!msgErr && messagesData && messagesData.length > 0) {
         // Group messages by recipient
@@ -296,22 +344,49 @@ export default function MessagesPage() {
         });
 
         // Construct final conversations list
-        grouped.forEach((msgs, otherId) => {
+        const entries = Array.from(grouped.entries());
+        for (const [otherId, msgs] of entries) {
           const otherProfile = profilesMap.get(otherId);
           const name = otherProfile ? (otherProfile.full_name || otherProfile.username || "Film Professional") : "User";
           const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
           
+          let sharedKey: CryptoKey | null = null;
+          if (privateKey && otherProfile?.public_key) {
+            try {
+              const otherPubKey = await importPublicKey(JSON.parse(otherProfile.public_key));
+              sharedKey = await deriveAESKey(privateKey, otherPubKey);
+            } catch(e) {}
+          }
+
+          const decryptedMsgs = await Promise.all(msgs.map(async m => {
+             if (m.content.startsWith("ENCRYPTED:")) {
+                if (sharedKey) {
+                   try {
+                      const [, iv, cipher] = m.content.split(":");
+                      m.content = await decryptMessage(sharedKey, iv, cipher);
+                   } catch(e) {
+                      m.content = "🔒 [Encrypted Message - Unable to decrypt]";
+                   }
+                } else {
+                   m.content = "🔒 [Encrypted Message - Key missing]";
+                }
+             }
+             return m;
+          }));
+
           const isCurrentlyActive = otherId === activeId;
+          const lastReadTime = readConvs[otherId] || 0;
+
           dbConversations.push({
             id: otherId,
             username: name,
             avatar: initials || "U",
             avatarUrl: otherProfile?.avatar_url,
-            messages: msgs.map(m => isCurrentlyActive && m.sender === "them" ? { ...m, read: true } : m),
-            unread: isCurrentlyActive ? 0 : msgs.filter(m => m.sender === "them" && !m.read).length,
+            messages: decryptedMsgs.map(m => (isCurrentlyActive || new Date(m.timestamp).getTime() <= lastReadTime) && m.sender === "them" ? { ...m, read: true } : m),
+            unread: isCurrentlyActive ? 0 : decryptedMsgs.filter(m => m.sender === "them" && !m.read && new Date(m.timestamp).getTime() > lastReadTime).length,
             isOnline: false
           });
-        });
+        }
       }
 
       // Sort conversations by last message timestamp descending
@@ -332,7 +407,7 @@ export default function MessagesPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, profile?.id, currentUserId, activeId, loadLocalData]);
+  }, [user, profile?.id, currentUserId, activeId, loadLocalData, privateKey]);
 
   const saveLocalData = (newConvs: Conversation[]) => {
     localStorage.setItem("chat_conversations", JSON.stringify(newConvs));
@@ -410,6 +485,10 @@ export default function MessagesPage() {
   useEffect(() => {
     if (activeId && activeConv && activeConv.unread > 0) {
       // Clear unread count locally
+      const readConvs = JSON.parse(localStorage.getItem("read_conversations") || "{}");
+      readConvs[activeId] = Date.now();
+      localStorage.setItem("read_conversations", JSON.stringify(readConvs));
+
       setConversations((prev) => prev.map((c) =>
         c.id === activeId ? { ...c, unread: 0, messages: c.messages.map(m => ({ ...m, read: true })) } : c
       ));
@@ -481,6 +560,10 @@ export default function MessagesPage() {
     setIsMobileChatOpen(true);
 
     // Clear unread count locally
+    const readConvs = JSON.parse(localStorage.getItem("read_conversations") || "{}");
+    readConvs[id] = Date.now();
+    localStorage.setItem("read_conversations", JSON.stringify(readConvs));
+
     const updated = conversations.map((c) =>
       c.id === id ? { ...c, unread: 0, messages: c.messages.map(m => ({ ...m, read: true })) } : c
     );
@@ -595,10 +678,27 @@ export default function MessagesPage() {
 
     if (user && !isGuestSession && isValidSender && isValidReceiver) {
       try {
+        let payload = content;
+        
+        // E2EE: Attempt to encrypt the message before sending
+        if (privateKey) {
+          try {
+            const { data: rxData } = await supabase.from("profiles").select("public_key").eq("id", activeId).single();
+            if (rxData && rxData.public_key) {
+              const otherPubKey = await importPublicKey(JSON.parse(rxData.public_key));
+              const sharedKey = await deriveAESKey(privateKey, otherPubKey);
+              const encrypted = await encryptMessage(sharedKey, content);
+              payload = `ENCRYPTED:${encrypted.iv}:${encrypted.ciphertext}`;
+            }
+          } catch(e) {
+            console.warn("E2EE encryption failed during send:", e);
+          }
+        }
+
         const { error } = await supabase.from("messages").insert({
           sender_id: currentUserId,
           receiver_id: activeId,
-          content,
+          content: payload,
           type,
           is_read: false
         });
@@ -717,7 +817,7 @@ export default function MessagesPage() {
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-140px)] md:h-[calc(100vh-112px)] grid grid-cols-1 md:grid-cols-[340px_1fr] gap-4 bg-gray-50 p-4 md:p-6 -m-4 md:-m-6 overflow-hidden font-sans">
+      <div className="h-[calc(100vh-64px)] grid grid-cols-1 md:grid-cols-[340px_1fr] gap-4 bg-gray-50 p-4 md:p-6 -m-6 overflow-hidden font-sans">
         
         {/* Hidden File Input for base64 Attachment Uploads */}
         <input
@@ -996,10 +1096,12 @@ export default function MessagesPage() {
                               }`}>
                                 <span>{formatTime(m.timestamp)}</span>
                                 {isMe && (
-                                  m.read ? (
-                                    <CheckCheck className="w-3.5 h-3.5 text-yellow-200" />
+                                  m.id.startsWith('msg_temp_') ? (
+                                    <Check className="w-3.5 h-3.5 text-yellow-200/70" />
+                                  ) : m.read ? (
+                                    <CheckCheck className="w-3.5 h-3.5 text-yellow-100" />
                                   ) : (
-                                    <Check className="w-3.5 h-3.5 text-yellow-300" />
+                                    <CheckCheck className="w-3.5 h-3.5 text-yellow-200/70" />
                                   )
                                 )}
                               </div>

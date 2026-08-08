@@ -223,29 +223,31 @@ export default function ShootingLocations() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
-              <SelectTrigger className="w-full md:w-[180px] h-10">
-                <SelectValue placeholder="Property Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="house">House / Villa</SelectItem>
-                <SelectItem value="apartment">Apartment</SelectItem>
-                <SelectItem value="studio">Studio</SelectItem>
-                <SelectItem value="commercial">Commercial Building</SelectItem>
-                <SelectItem value="outdoor">Open Land / Forest</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={budgetFilter} onValueChange={setBudgetFilter}>
-              <SelectTrigger className="w-full md:w-[150px] h-10">
-                <SelectValue placeholder="Budget" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Prices</SelectItem>
-                <SelectItem value="hourly">Per Hour</SelectItem>
-                <SelectItem value="daily">Per Day</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 gap-4 w-full md:flex md:w-auto">
+              <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
+                <SelectTrigger className="w-full md:w-[180px] h-10">
+                  <SelectValue placeholder="Property Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="house">House / Villa</SelectItem>
+                  <SelectItem value="apartment">Apartment</SelectItem>
+                  <SelectItem value="studio">Studio</SelectItem>
+                  <SelectItem value="commercial">Commercial Building</SelectItem>
+                  <SelectItem value="outdoor">Open Land / Forest</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={budgetFilter} onValueChange={setBudgetFilter}>
+                <SelectTrigger className="w-full md:w-[150px] h-10">
+                  <SelectValue placeholder="Budget" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Prices</SelectItem>
+                  <SelectItem value="hourly">Per Hour</SelectItem>
+                  <SelectItem value="daily">Per Day</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         )}
 

@@ -487,19 +487,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const isAdminAttempt = email.toLowerCase().includes('admin') || window.location.pathname.includes('admin');
-      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.warn("Supabase auth sign in failed, falling back to local session bypass:", error.message);
-        
-        // Fallback to local mock login if Supabase auth fails
-        signInAsLocalMock(email, isAdminAttempt);
-        return { error: null }; // Return no error to the caller so they proceed to redirect!
+        console.warn("Supabase auth sign in failed:", error.message);
+        toast({
+          title: "Sign in failed",
+          description: "Invalid email or password.",
+          variant: "destructive"
+        });
+        return { error };
       } else {
         toast({
           title: "Welcome back!",
@@ -510,9 +510,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     } catch (error) {
       console.error('Sign in error:', error);
-      const isAdminAttempt = email.toLowerCase().includes('admin') || window.location.pathname.includes('admin');
-      signInAsLocalMock(email, isAdminAttempt);
-      return { error: null };
+      return { error: error as AuthError };
     }
   };
 

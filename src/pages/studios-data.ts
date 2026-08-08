@@ -69,25 +69,22 @@ export const SERVICES = [
   "Location Scouting"
 ];
 
-export const STATES = [
-  "Maharashtra",
-  "Tamil Nadu",
-  "Telangana",
-  "Kerala",
-  "Karnataka",
-  "Delhi",
-  "West Bengal"
-];
+export const STATE_CITY_MAP: Record<string, string[]> = {
+  "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool"],
+  "Karnataka": ["Bangalore", "Mysore", "Hubli", "Mangalore", "Belgaum"],
+  "Kerala": ["Kochi", "Thiruvananthapuram", "Kozhikode", "Thrissur", "Kollam"],
+  "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad"],
+  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
+  "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam"],
+  "Delhi": ["New Delhi", "North Delhi", "South Delhi"],
+  "West Bengal": ["Kolkata", "Howrah", "Darjeeling", "Siliguri", "Asansol"],
+  "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar"],
+  "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner"],
+  "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi", "Agra", "Noida"],
+};
 
-export const CITIES = [
-  "Mumbai",
-  "Chennai",
-  "Hyderabad",
-  "Kochi",
-  "Bangalore",
-  "Delhi",
-  "Kolkata"
-];
+export const STATES = Object.keys(STATE_CITY_MAP);
+export const CITIES = Array.from(new Set(Object.values(STATE_CITY_MAP).flat())).sort();
 
 export const LANGUAGES = [
   "Hindi",

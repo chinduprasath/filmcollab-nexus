@@ -22,7 +22,8 @@ import {
   Sun,
   Monitor,
   Building2,
-  MapPin
+  MapPin,
+  Megaphone
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "next-themes";
@@ -42,20 +43,21 @@ const navigationItems = [
     ]
   },
   {
-    section: "OPPORTUNITIES",
-    items: [
-      { name: "Jobs", icon: Briefcase, href: "/jobs" },
-      { name: "Industry Hub", icon: Calendar, href: "/industry-hub" },
-      { name: "Projects", icon: FolderOpen, href: "/projects" }
-    ]
-  },
-  {
     section: "CONTENT",
     items: [
       { name: "Talent Hub", icon: Search, href: "/discover" },
       { name: "Talent Directory", icon: UserCheck, href: "/directory" },
       { name: "Companies Directory", icon: Building2, href: "/studios" },
       { name: "Shooting Locations", icon: MapPin, href: "/locations" }
+    ]
+  },
+  {
+    section: "OPPORTUNITIES",
+    items: [
+      { name: "Casting Calls", icon: Megaphone, href: "/casting-calls" },
+      { name: "Jobs", icon: Briefcase, href: "/jobs" },
+      { name: "Industry Hub", icon: Calendar, href: "/industry-hub" },
+      { name: "Projects", icon: FolderOpen, href: "/projects" }
     ]
   },
   {
@@ -138,17 +140,20 @@ export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarPro
         return;
       }
 
-      try {
-        const { count, error } = await supabase
-          .from("messages")
-          .select("*", { count: "exact", head: true })
-          .eq("receiver_id", profile.id)
-          .eq("is_read", false);
-
-        if (!error && count !== null) {
-          setUnreadCount(count);
-        }
-      } catch (err) {
+        try {
+          const { data: unreadMsgs, error } = await supabase
+            .from("messages")
+            .select("sender_id, created_at")
+            .eq("receiver_id", profile.id)
+            .eq("is_read", false);
+  
+          if (!error && unreadMsgs) {
+            // Use local storage to parse actual read timestamps and bypass RLS failure
+            const readConvs = JSON.parse(localStorage.getItem("read_conversations") || "{}");
+            const actualUnread = unreadMsgs.filter(m => new Date(m.created_at).getTime() > (readConvs[m.sender_id] || 0)).length;
+            setUnreadCount(actualUnread);
+          }
+        } catch (err) {
         console.error("Error fetching unread count:", err);
       }
     };

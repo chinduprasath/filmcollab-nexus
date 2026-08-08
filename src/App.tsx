@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import Index from "./pages/Index";
@@ -14,6 +14,9 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Jobs from "./pages/Jobs";
 import JobDetails from "./pages/JobDetails";
+import CastingCalls from "./pages/casting-calls/page";
+import CastingCallDetails from "./pages/casting-calls/details";
+import NewCastingCall from "./pages/casting-calls/new";
 import ProjectDetails from "./pages/ProjectDetails";
 import IndustryHub from "./pages/industry-hub/page";
 import Projects from "./pages/projects/page";
@@ -56,6 +59,7 @@ const queryClient = new QueryClient();
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
   
   if (loading) {
     return (
@@ -69,7 +73,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
   
   if (!user) {
-    return <Navigate to="/auth/signin" replace />;
+    return <Navigate to="/auth/signin" state={{ from: location }} replace />;
   }
   
   return <>{children}</>;
@@ -182,6 +186,30 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Jobs />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/casting-calls"
+        element={
+          <ProtectedRoute>
+            <CastingCalls />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/casting-calls/new"
+        element={
+          <ProtectedRoute>
+            <NewCastingCall />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/casting-calls/:id"
+        element={
+          <ProtectedRoute>
+            <CastingCallDetails />
           </ProtectedRoute>
         }
       />

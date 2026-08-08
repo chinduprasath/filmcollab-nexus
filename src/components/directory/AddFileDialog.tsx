@@ -17,7 +17,7 @@ interface AddFileDialogProps {
 
 export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: AddFileDialogProps) {
   const [isDraggingFile, setIsDraggingFile] = useState(false);
-  const [selectedAddFile, setSelectedAddFile] = useState<File | null>(null);
+  const [selectedAddFiles, setSelectedAddFiles] = useState<File[]>([]);
   const [addFileTitle, setAddFileTitle] = useState("");
   const [fileType, setFileType] = useState<"image" | "video" | "document" | "audio">("image");
   const [videoUrl, setVideoUrl] = useState("");
@@ -65,7 +65,7 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
       return;
     }
 
-    if (!selectedAddFile && !(fileType === "video" && videoUrl.trim())) {
+    if (selectedAddFiles.length === 0 && !(fileType === "video" && videoUrl.trim())) {
       toast.error("Please select a file or provide a video URL.");
       return;
     }
@@ -73,27 +73,51 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
     try {
       setIsUploadingDirectoryFile(true);
       let publicUrl = "";
+      let additionalUrls: string[] = [];
       let finalName = "";
       let finalSize = "0 MB";
 
-      if (selectedAddFile) {
-        const fileExt = selectedAddFile.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `${userId}/${fileName}`;
+      if (selectedAddFiles.length > 0) {
+        // Upload the primary file (first file)
+        const primaryFile = selectedAddFiles[0];
+        const primaryExt = primaryFile.name.split('.').pop();
+        const primaryName = `${crypto.randomUUID()}.${primaryExt}`;
+        const primaryPath = `${userId}/${primaryName}`;
 
-        const { error: uploadError } = await supabase.storage
+        const { error: primaryUploadError } = await supabase.storage
           .from('directory_assets')
-          .upload(filePath, selectedAddFile);
+          .upload(primaryPath, primaryFile);
 
-        if (uploadError) throw uploadError;
+        if (primaryUploadError) throw primaryUploadError;
 
-        const { data } = supabase.storage
+        const { data: primaryData } = supabase.storage
           .from('directory_assets')
-          .getPublicUrl(filePath);
+          .getPublicUrl(primaryPath);
         
-        publicUrl = data.publicUrl;
-        finalName = selectedAddFile.name;
-        finalSize = `${(selectedAddFile.size / (1024 * 1024)).toFixed(2)} MB`;
+        publicUrl = primaryData.publicUrl;
+        finalName = primaryFile.name;
+        finalSize = `${(primaryFile.size / (1024 * 1024)).toFixed(2)} MB`;
+
+        // Upload additional files if any
+        if (selectedAddFiles.length > 1) {
+          for (let i = 1; i < selectedAddFiles.length; i++) {
+            const file = selectedAddFiles[i];
+            const ext = file.name.split('.').pop();
+            const name = `${crypto.randomUUID()}.${ext}`;
+            const path = `${userId}/${name}`;
+
+            const { error: uploadError } = await supabase.storage
+              .from('directory_assets')
+              .upload(path, file);
+
+            if (!uploadError) {
+              const { data } = supabase.storage
+                .from('directory_assets')
+                .getPublicUrl(path);
+              additionalUrls.push(data.publicUrl);
+            }
+          }
+        }
       } else {
         // Video URL
         publicUrl = videoUrl.trim();
@@ -127,6 +151,7 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
           user_id: userId,
           title: finalTitle,
           file_url: publicUrl,
+          additional_urls: additionalUrls.length > 0 ? additionalUrls : [],
           file_type: fileType,
           file_size: finalSize,
           tags: selectedCategory ? [selectedCategory] : [],
@@ -135,7 +160,7 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
 
       if (insertError) throw insertError;
 
-      setSelectedAddFile(null);
+      setSelectedAddFiles([]);
       setVideoUrl("");
       setFileType("image");
       setVideoInputMode("upload");
@@ -171,7 +196,7 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
                 value={fileType}
                 onChange={(e) => {
                   setFileType(e.target.value as any);
-                  setSelectedAddFile(null);
+                  setSelectedAddFiles([]);
                   setVideoUrl("");
                 }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -235,10 +260,15 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
             onDrop={(e) => {
               e.preventDefault();
               setIsDraggingFile(false);
-              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                const f = e.dataTransfer.files[0];
-                setSelectedAddFile(f);
-                if (!addFileTitle) setAddFileTitle(f.name.replace(/\.[^/.]+$/, ""));
+              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const files = Array.from(e.dataTransfer.files);
+                if (fileType === 'image') {
+                  setSelectedAddFiles(files);
+                  if (!addFileTitle && files[0]) setAddFileTitle(files[0].name.replace(/\.[^/.]+$/, ""));
+                } else {
+                  setSelectedAddFiles([files[0]]);
+                  if (!addFileTitle) setAddFileTitle(files[0].name.replace(/\.[^/.]+$/, ""));
+                }
               }
             }}
             onClick={() => addFileInputRef.current?.click()}
@@ -251,6 +281,7 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
           >
             <input
               type="file"
+              multiple={fileType === 'image'}
               ref={addFileInputRef}
               className="hidden"
               accept={
@@ -260,18 +291,29 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
                 fileType === 'document' ? '.pdf,.doc,.docx,.txt,.rtf,.xls,.xlsx' : undefined
               }
               onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  const f = e.target.files[0];
-                  setSelectedAddFile(f);
-                  if (!addFileTitle) setAddFileTitle(f.name.replace(/\.[^/.]+$/, ""));
+                if (e.target.files && e.target.files.length > 0) {
+                  const files = Array.from(e.target.files);
+                  if (fileType === 'image') {
+                    setSelectedAddFiles(files);
+                    if (!addFileTitle && files[0]) setAddFileTitle(files[0].name.replace(/\.[^/.]+$/, ""));
+                  } else {
+                    setSelectedAddFiles([files[0]]);
+                    if (!addFileTitle) setAddFileTitle(files[0].name.replace(/\.[^/.]+$/, ""));
+                  }
                 }
               }}
             />
             <Upload className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
-            {selectedAddFile ? (
+            {selectedAddFiles.length > 0 ? (
               <div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">{selectedAddFile.name}</p>
-                <p className="text-xs text-gray-500 dark:text-zinc-400">{(selectedAddFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                  {selectedAddFiles.length === 1 ? selectedAddFiles[0].name : `${selectedAddFiles.length} files selected`}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-zinc-400">
+                  {selectedAddFiles.length === 1 
+                    ? `${(selectedAddFiles[0].size / (1024 * 1024)).toFixed(2)} MB` 
+                    : `${(selectedAddFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)).toFixed(2)} MB total`}
+                </p>
               </div>
             ) : (
               <div>
@@ -348,7 +390,7 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
               variant="outline"
               onClick={() => {
                 onOpenChange(false);
-                setSelectedAddFile(null);
+                setSelectedAddFiles([]);
                 setAddFileTitle("");
                 setVideoUrl("");
                 setFileType("image");

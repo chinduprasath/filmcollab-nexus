@@ -50,7 +50,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Company, JobPosting, AuditionPosting, InternshipPosting, Application, Review, Project, TeamMember } from "../types/studios";
-import { CATEGORIES, SERVICES, STATES, CITIES, LANGUAGES, INITIAL_COMPANIES } from "./studios-data";
+import { CATEGORIES, SERVICES, STATES, CITIES, LANGUAGES, INITIAL_COMPANIES, STATE_CITY_MAP } from "./studios-data";
 
 export default function StudiosDirectory() {
   const navigate = useNavigate();
@@ -170,14 +170,16 @@ export default function StudiosDirectory() {
     twitter: "",
     linkedin: "",
     address: "",
-    city: CITIES[0],
+    city: STATE_CITY_MAP[STATES[0]][0],
     state: STATES[0],
     country: "India",
     mapsLocation: "",
     gstNumber: "",
     workingHours: "09:00 AM - 06:00 PM (Mon-Fri)",
-    servicesSelected: [] as string[],
-    languagesSelected: [] as string[]
+    zipCode: "",
+    officeOpenTime: "09:00",
+    officeCloseTime: "18:00",
+    servicesSelected: [] as string[]
   });
 
   // Quick helper to see if user owns a company
@@ -525,7 +527,7 @@ export default function StudiosDirectory() {
       establishedYear: parseInt(regForm.establishedYear) || new Date().getFullYear(),
       founder: regForm.founder || "Not Specified",
       services: regForm.servicesSelected.length > 0 ? regForm.servicesSelected : ["Film Production"],
-      languages: regForm.languagesSelected.length > 0 ? regForm.languagesSelected : ["English"],
+      languages: [],
       email: regForm.email,
       phone: regForm.phone,
       website: regForm.website || "https://www.filmcollab.com",
@@ -535,13 +537,13 @@ export default function StudiosDirectory() {
         twitter: regForm.twitter,
         linkedin: regForm.linkedin
       },
-      address: regForm.address,
+      address: regForm.address + (regForm.zipCode ? `, ${regForm.zipCode}` : ""),
       city: regForm.city,
       state: regForm.state,
-      country: regForm.country,
+      country: "India",
       gstNumber: regForm.gstNumber,
       mapsLocation: regForm.mapsLocation,
-      workingHours: regForm.workingHours,
+      workingHours: `${regForm.officeOpenTime} - ${regForm.officeCloseTime}`,
       verified: false,
       hiringNow: false,
       openAuditions: false,
@@ -2184,7 +2186,8 @@ export default function StudiosDirectory() {
                       />
                     </div>
                     
-                    <Select value={sortBy} onValueChange={setSortBy}>
+                    <div className="grid grid-cols-2 gap-3 w-full sm:flex sm:w-auto">
+                      <Select value={sortBy} onValueChange={setSortBy}>
                       <SelectTrigger className="w-full sm:w-[180px] h-10 bg-white border-gray-200 shrink-0">
                         <SelectValue placeholder="Sort By" />
                       </SelectTrigger>
@@ -2361,6 +2364,7 @@ export default function StudiosDirectory() {
                       </div>
                     </SheetContent>
                   </Sheet>
+                  </div>
                 </div>
               </div>
 
@@ -3164,25 +3168,14 @@ export default function StudiosDirectory() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="space-y-1.5 md:col-span-2">
                   <label className="text-xs font-semibold text-gray-700">Office Street Address *</label>
                   <Input placeholder="e.g. Plot 15, Panampilly Nagar" className="border-yellow-200" value={regForm.address} onChange={(e) => setRegForm({ ...regForm, address: e.target.value })} required />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">City *</label>
-                  <Select value={regForm.city} onValueChange={(val) => setRegForm({ ...regForm, city: val })}>
-                    <SelectTrigger className="border-yellow-200">
-                      <SelectValue placeholder="City" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CITIES.map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-gray-700">State *</label>
-                  <Select value={regForm.state} onValueChange={(val) => setRegForm({ ...regForm, state: val })}>
+                  <Select value={regForm.state} onValueChange={(val) => setRegForm({ ...regForm, state: val, city: STATE_CITY_MAP[val] ? STATE_CITY_MAP[val][0] : "" })}>
                     <SelectTrigger className="border-yellow-200">
                       <SelectValue placeholder="State" />
                     </SelectTrigger>
@@ -3191,10 +3184,25 @@ export default function StudiosDirectory() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-700">City *</label>
+                  <Select value={regForm.city} onValueChange={(val) => setRegForm({ ...regForm, city: val })}>
+                    <SelectTrigger className="border-yellow-200">
+                      <SelectValue placeholder="City" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(STATE_CITY_MAP[regForm.state] || []).map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-700">Zip Code *</label>
+                  <Input placeholder="e.g. 500001" className="border-yellow-200" value={regForm.zipCode} onChange={(e) => setRegForm({ ...regForm, zipCode: e.target.value })} required />
+                </div>
               </div>
 
               <div className="p-4 bg-gray-50 rounded-xl space-y-4">
-                <h4 className="font-bold text-gray-800 text-xs border-b pb-1">Specialties & Languages (Quick select)</h4>
+                <h4 className="font-bold text-gray-800 text-xs border-b pb-1">Company Services & Timings</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <span className="text-[11px] font-bold text-gray-500">Industry Services Offered</span>
@@ -3219,26 +3227,14 @@ export default function StudiosDirectory() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-bold text-gray-500">Filmmaking Languages</span>
-                    <div className="h-32 overflow-y-auto border p-2 bg-white rounded-lg space-y-1.5">
-                      {LANGUAGES.map((l) => (
-                        <div key={l} className="flex items-center gap-1.5">
-                          <input
-                            type="checkbox"
-                            id={`reg_l_${l}`}
-                            checked={regForm.languagesSelected.includes(l)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setRegForm({ ...regForm, languagesSelected: [...regForm.languagesSelected, l] });
-                              } else {
-                                setRegForm({ ...regForm, languagesSelected: regForm.languagesSelected.filter(item => item !== l) });
-                              }
-                            }}
-                          />
-                          <label htmlFor={`reg_l_${l}`} className="text-[10px] text-gray-700">{l}</label>
-                        </div>
-                      ))}
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-gray-700">Office Open Time</label>
+                      <Input type="time" className="border-yellow-200" value={regForm.officeOpenTime} onChange={(e) => setRegForm({ ...regForm, officeOpenTime: e.target.value })} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-gray-700">Office Close Time</label>
+                      <Input type="time" className="border-yellow-200" value={regForm.officeCloseTime} onChange={(e) => setRegForm({ ...regForm, officeCloseTime: e.target.value })} required />
                     </div>
                   </div>
                 </div>

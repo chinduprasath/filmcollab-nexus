@@ -95,6 +95,10 @@ interface User {
   connection_status?: string | null;
   connection_initiator?: string | null;
   allow_connections_from?: string;
+  total_experience?: string;
+  price_per_day?: number;
+  price_per_hour?: number;
+  price_negotiable?: boolean;
 }
 
 type FilterType = "all" | "verified" | "new" | "popular";
@@ -467,6 +471,10 @@ export default function DiscoverPage() {
         projects_count?: number | null;
         posts_count?: number | null;
         likes_count?: number | null;
+        total_experience?: string | null;
+        price_per_day?: number | null;
+        price_per_hour?: number | null;
+        price_negotiable?: boolean | null;
         settings?: any[];
       }
 
@@ -518,6 +526,10 @@ export default function DiscoverPage() {
             is_saved: savedUserIds.includes(p.id),
             connection_status: conn?.status || null,
             connection_initiator: conn?.user_id || null,
+            total_experience: p.total_experience || null,
+            price_per_day: p.price_per_day || null,
+            price_per_hour: p.price_per_hour || null,
+            price_negotiable: p.price_negotiable || null,
             allow_connections_from: Array.isArray(p.settings) 
               ? (p.settings.length > 0 ? p.settings[0].privacy_settings?.allowConnectionRequests : null)
               : (p.settings ? (p.settings as any).privacy_settings?.allowConnectionRequests : null),
@@ -1465,6 +1477,27 @@ export default function DiscoverPage() {
                       {/* Bio */}
                       {userItem.bio && (
                         <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">{userItem.bio}</p>
+                      )}
+                      
+                      {/* Pricing and Experience */}
+                      {(userItem.total_experience || userItem.price_per_day || userItem.price_per_hour) && (
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+                          {userItem.total_experience && (
+                            <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
+                              <Briefcase className="w-3 h-3 text-gray-500" />
+                              {userItem.total_experience}
+                            </span>
+                          )}
+                          {(userItem.price_per_day || userItem.price_per_hour) && (
+                            <span className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-500 px-2 py-1 rounded-md border border-yellow-200 dark:border-yellow-800/50">
+                              <Award className="w-3 h-3" />
+                              {userItem.price_per_hour ? `₹${userItem.price_per_hour}/hr` : ''}
+                              {userItem.price_per_hour && userItem.price_per_day ? ' • ' : ''}
+                              {userItem.price_per_day ? `₹${userItem.price_per_day}/day` : ''}
+                              {userItem.price_negotiable ? ' (Neg.)' : ''}
+                            </span>
+                          )}
+                        </div>
                       )}
                       
                       {/* Skills - Only show 2 skills */}

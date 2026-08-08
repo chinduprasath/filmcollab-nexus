@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [profileLikesCount, setProfileLikesCount] = React.useState("0");
   const [projectsCount, setProjectsCount] = React.useState("0");
   const [jobsAppliedCount, setJobsAppliedCount] = React.useState("0");
+  const [dashboardEvents, setDashboardEvents] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     if (!loading && isAdmin && isAdmin()) {
@@ -62,18 +63,7 @@ export default function Dashboard() {
     }
 
     if (currentUserId) {
-      // Projects
-      Promise.all([
-        supabase.from("projects").select("id").eq("created_by", currentUserId),
-        supabase.from("project_members").select("project_id").eq("user_id", currentUserId)
-      ]).then(([createdRes, joinedRes]) => {
-        const pSet = new Set<string>();
-        if (createdRes.data) createdRes.data.forEach((p: any) => pSet.add(p.id));
-        if (joinedRes.data) joinedRes.data.forEach((p: any) => p.project_id && pSet.add(p.project_id));
-        setProjectsCount(pSet.size.toString());
-      }).catch(() => {});
-
-      // Jobs Applied
+      // Projects and Jobs Applied
       let localAppliedCount = 0;
       try {
         const stored = localStorage.getItem(`applied_jobs_${currentUserId}`);
@@ -85,18 +75,32 @@ export default function Dashboard() {
         console.error(e);
       }
 
+      Promise.all([
+        supabase.from("projects").select("id").eq("created_by", currentUserId),
+        supabase.from("project_members").select("project_id").eq("user_id", currentUserId),
+        supabase.from("job_applications").select("id", { count: 'exact', head: true }).eq("user_id", currentUserId)
+      ]).then(([createdRes, joinedRes, jobsRes]) => {
+        const pSet = new Set<string>();
+        (createdRes.data || []).forEach((r: any) => pSet.add(r.id));
+        (joinedRes.data || []).forEach((r: any) => pSet.add(r.project_id));
+        setProjectsCount(pSet.size.toString());
+        
+        const dbJobsCount = jobsRes.count || 0;
+        setJobsAppliedCount(Math.max(dbJobsCount, localAppliedCount).toString());
+      }).catch((err) => {
+        setJobsAppliedCount(localAppliedCount.toString());
+      });
+
+      // Events
       supabase
-        .from("job_applications")
-        .select("id", { count: 'exact', head: true })
-        .eq("user_id", currentUserId)
-        .then(({ count, error }) => {
-          if (!error && count !== null && count > 0) {
-            setJobsAppliedCount(Math.max(count, localAppliedCount).toString());
-          } else {
-            setJobsAppliedCount(localAppliedCount.toString());
+        .from("industry_events")
+        .select("*")
+        .order("date", { ascending: true })
+        .limit(4)
+        .then(({ data }) => {
+          if (data) {
+            setDashboardEvents(data);
           }
-        }).catch(() => {
-          setJobsAppliedCount(localAppliedCount.toString());
         });
     }
   }, [profile, user]);
@@ -163,56 +167,21 @@ export default function Dashboard() {
     }
   ];
 
-  const events = [
-    {
-      type: "ongoing",
-      title: "Film Festival Workshop",
-      description: "Cinematography Masterclass",
-      time: "Ongoing",
-      location: "Los Angeles Convention Center",
-      status: "Live Now"
-    },
-    {
-      type: "upcoming",
-      title: "Industry Networking Event",
-      description: "Meet fellow filmmakers and producers",
-      time: "Tomorrow, 6:00 PM",
-      location: "Hollywood Studios",
-      status: "Upcoming"
-    },
-    {
-      type: "upcoming",
-      title: "Script Writing Workshop",
-      description: "Learn advanced storytelling techniques",
-      time: "Jan 20, 2:00 PM",
-      location: "Online Event",
-      status: "Upcoming"
-    },
-    {
-      type: "ongoing",
-      title: "Post-Production Meetup",
-      description: "Share your latest projects",
-      time: "Ongoing",
-      location: "Virtual Meeting",
-      status: "Live Now"
-    }
-  ];
-
   return (
     <AppLayout pageTitle="Dashboard">
       <div className="space-y-8">
         {/* Welcome Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
             Welcome back, {profile?.first_name || profile?.full_name || 'User'}!
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
+          <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mt-2">
             Here's what's happening in your film industry network today.
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           {stats.map((stat, index) => (
             <Card 
               key={index} 
@@ -283,39 +252,49 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {events.map((event, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-yellow-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
-                    onClick={() => navigate("/industry-hub")}
-                  >
-                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                      event.type === 'ongoing' 
-                        ? 'bg-yellow-500 dark:bg-yellow-400' 
-                        : 'bg-yellow-400 dark:bg-yellow-500'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {event.title}
+                {dashboardEvents.length > 0 ? dashboardEvents.map((event, index) => {
+                  const eventDate = new Date(event.date);
+                  const isOngoing = eventDate.toDateString() === new Date().toDateString();
+                  const type = isOngoing ? "ongoing" : "upcoming";
+                  const status = isOngoing ? "Live Now" : "Upcoming";
+                  const time = event.date;
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-yellow-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                      onClick={() => navigate("/industry-hub")}
+                    >
+                      <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                        type === 'ongoing' 
+                          ? 'bg-yellow-500 dark:bg-yellow-400' 
+                          : 'bg-yellow-400 dark:bg-yellow-500'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {event.title}
+                          </div>
+                          <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
+                            type === 'ongoing' 
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-300' 
+                              : 'bg-yellow-50 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300'
+                          }`}>
+                            {status}
+                          </span>
                         </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          event.type === 'ongoing' 
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-300' 
-                            : 'bg-yellow-50 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300'
-                        }`}>
-                          {event.status}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                        {event.description}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {event.location} • {event.time}
+                        <div className="text-sm text-gray-600 dark:text-gray-300 mb-1 line-clamp-1">
+                          {event.description}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {event.location} • {time}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                }) : (
+                  <div className="text-sm text-gray-500 text-center py-4">No events found.</div>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -364,6 +364,7 @@ export default function ProjectsPage() {
     fetchProjects();
     fetchLikedProjects();
     fetchSavedProjects();
+    fetchAppliedProjects();
   }, []);
 
   const fetchProjects = async () => {
@@ -385,13 +386,30 @@ export default function ProjectsPage() {
       // Fetch profiles to map created_by to usernames
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("user_id, username, full_name");
+        .select("id, username, full_name");
+
+      // Fetch user's joined projects
+      const memberOfProjects = new Set<string>();
+      if (user?.id) {
+        const { data: memberData } = await supabase
+          .from("project_members")
+          .select("project_id, role")
+          .eq("user_id", user.id);
+          
+        if (memberData) {
+          memberData.forEach(m => {
+            if (m.role && m.role !== "Applicant") {
+              memberOfProjects.add(m.project_id);
+            }
+          });
+        }
+      }
 
       const profileMap: Record<string, { username: string; full_name: string }> = {};
       if (profilesData) {
         profilesData.forEach(p => {
-          if (p.user_id) {
-            profileMap[p.user_id] = {
+          if (p.id) {
+            profileMap[p.id] = {
               username: p.username || "",
               full_name: p.full_name || ""
             };
@@ -426,7 +444,7 @@ export default function ProjectsPage() {
           allow_applicants?: boolean | null;
         }) => {
           const isLiked = likedProjects.includes(project.id);
-          const isMember = project.created_by === user?.id || false;
+          const isMember = memberOfProjects.has(project.id);
           
           return {
             id: project.id,
@@ -502,6 +520,25 @@ export default function ProjectsPage() {
     } catch (error) {
       console.error('Error fetching saved projects:', error);
       setSavedProjects([]);
+    }
+  };
+
+  const fetchAppliedProjects = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("project_members")
+        .select("project_id")
+        .eq("user_id", user.id)
+        .eq("role", "Applicant");
+      
+      if (error) throw error;
+      if (data) {
+        setAppliedProjects(data.map((item: { project_id: string }) => item.project_id));
+      }
+    } catch (error) {
+      console.error('Error fetching applied projects:', error);
+      setAppliedProjects([]);
     }
   };
 
@@ -645,18 +682,30 @@ export default function ProjectsPage() {
     }
 
     try {
+      const { error } = await supabase
+        .from("project_members")
+        .insert({
+          project_id: projectId,
+          user_id: user.id,
+          role: "Applicant"
+        });
+
+      if (error) throw error;
+
       // Add to applied projects
       setAppliedProjects(prev => [...prev, projectId]);
       
       const project = projects.find(p => p.id === projectId);
-      if (project && project.creator_id && project.creator_id !== user.id) {
+      if (project && project.created_by && project.created_by !== user.id) {
         supabase.from("notifications").insert({
-          user_id: project.creator_id,
+          user_id: project.created_by,
           title: "New Project Application",
           description: `Someone applied to join your project: ${project.title}`,
           type: "project",
           action_url: `/projects?projectId=${project.id}`
-        }).then();
+        }).then(({ error: notifError }) => {
+          if (notifError) console.error("Notification error:", notifError);
+        });
       }
       
       toast({
@@ -761,7 +810,7 @@ export default function ProjectsPage() {
 
     // Filter by tab
     if (activeTab === "joined") {
-      filtered = filtered.filter(project => project.is_member);
+      filtered = filtered.filter(project => project.is_member && project.created_by !== user?.id);
     } else if (activeTab === "created") {
       filtered = filtered.filter(project => project.created_by === user?.id);
     } else if (activeTab === "saved") {
@@ -929,7 +978,7 @@ export default function ProjectsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4 bg-yellow-50/50 dark:bg-background border border-yellow-200/50 dark:border-yellow-900/30">
             <TabsTrigger value="all" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">All Projects ({projects.length})</TabsTrigger>
-            <TabsTrigger value="joined" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">Joined ({projects.filter(p => p.is_member).length})</TabsTrigger>
+            <TabsTrigger value="joined" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">Joined ({projects.filter(p => p.is_member && p.created_by !== user?.id).length})</TabsTrigger>
             <TabsTrigger value="created" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">Created ({projects.filter(p => p.created_by === user?.id).length})</TabsTrigger>
             <TabsTrigger value="saved" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">Saved ({savedProjects.length})</TabsTrigger>
           </TabsList>

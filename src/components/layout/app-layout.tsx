@@ -32,8 +32,8 @@ export function AppLayout({ children, pageTitle }: AppLayoutProps) {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/50 dark:bg-black/70" onClick={() => setMobileMenuOpen(false)} />
-          <div className="relative">
-            <Sidebar />
+          <div className="relative h-full w-64 max-w-[80vw]">
+            <Sidebar className="w-full" />
           </div>
         </div>
       )}

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Film, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,6 +23,7 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const { signIn, user, profile, loading: authLoading, signInAsGuest } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { isAdmin } = useAuth();
 
@@ -32,16 +33,17 @@ export default function SignIn() {
     
     // If user is authenticated and not loading, navigate based on role
     if (user && !authLoading) {
+      const from = location.state?.from?.pathname;
       console.log('SignIn component - user authenticated, checking admin status');
       if (isAdmin()) {
         console.log('User is admin, navigating to admin dashboard');
-        navigate("/admin-dashboard");
+        navigate(from || "/admin-dashboard");
       } else {
         console.log('User is regular user, navigating to dashboard');
-        navigate("/dashboard");
+        navigate(from || "/dashboard");
       }
     }
-  }, [user, authLoading, navigate, isAdmin]);
+  }, [user, authLoading, navigate, isAdmin, location.state?.from?.pathname]);
 
   const form = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),

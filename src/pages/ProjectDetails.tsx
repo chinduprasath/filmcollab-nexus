@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +6,17 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,12 +27,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   ArrowLeft, 
   MapPin, 
   Clock, 
-  DollarSign, 
+  IndianRupee, 
   Users, 
   Calendar,
   Building,
@@ -96,17 +108,22 @@ interface ProjectMember {
   role: string;
   avatar: string;
   joined_date: string;
+  user_id?: string;
 }
 
 interface Task {
   id: string;
   title: string;
   description: string;
-  assigned_to: string;
-  assigned_by: string;
+  assigned_to: string | null;
+  assigned_by: string | null;
+  assigned_to_profile?: {
+    full_name: string | null;
+    username: string | null;
+  };
   status: 'pending' | 'in-progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
-  due_date: string;
+  due_date: string | null;
   created_at: string;
 }
 
@@ -165,7 +182,125 @@ export default function ProjectDetails() {
   });
   const [sourceTab, setSourceTab] = useState<string>("");
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [mentionOpen, setMentionOpen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [cursorPos, setCursorPos] = useState(0);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom of chat
+  useEffect(() => {
+    if (activeTab === "chat") {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [chatMessages, activeTab]);
+
+  // Realtime subscription and polling fallback for chat messages
+  useEffect(() => {
+    if (!projectId) return;
+    
+    const subscription = supabase.channel("project_messages_channel")
+      .on("postgres", { event: "INSERT", schema: "public", table: "project_messages", filter: `project_id=eq.${projectId}` }, (payload) => {
+        const newData = payload.new;
+        
+        setChatMessages(prev => {
+          if (prev.some(m => m.id === newData.id || (m.user_id === newData.sender_id && m.message === newData.content && new Date(newData.created_at).getTime() - new Date(m.timestamp).getTime() < 5000))) {
+             return prev;
+          }
+          
+          const formattedMessage = {
+            id: newData.id,
+            user_id: newData.sender_id,
+            user_name: "Unknown", 
+            user_avatar: "U",
+            message: newData.content,
+            timestamp: newData.created_at
+          };
+          return [...prev, formattedMessage];
+        });
+      })
+      .subscribe();
+      
+    // Polling fallback to guarantee updates even if Realtime drops events due to RLS
+    const intervalId = setInterval(async () => {
+      const { data } = await supabase
+        .from("project_messages")
+        .select("id, content, created_at, sender_id, profiles:sender_id(full_name, username)")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: true });
+        
+      if (data) {
+        const formattedMessages = data.map(m => ({
+          id: m.id,
+          user_id: m.sender_id,
+          user_name: m.profiles?.full_name || m.profiles?.username || "Unknown",
+          user_avatar: (m.profiles?.full_name || m.profiles?.username || "U").substring(0, 2).toUpperCase(),
+          message: m.content,
+          timestamp: m.created_at
+        }));
+        
+        setChatMessages(prev => {
+          if (prev.length === formattedMessages.length && prev[prev.length-1]?.id === formattedMessages[formattedMessages.length-1]?.id) {
+            return prev;
+          }
+          return formattedMessages;
+        });
+      }
+    }, 5000);
+      
+    return () => {
+      supabase.removeChannel(subscription);
+      clearInterval(intervalId);
+    };
+  }, [projectId]);
+
+  // Realtime subscription and polling fallback for project tasks
+  useEffect(() => {
+    if (!projectId) return;
+
+    const subscription = supabase.channel("project_tasks_channel")
+      .on("postgres", { event: "*", schema: "public", table: "project_tasks", filter: `project_id=eq.${projectId}` }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          const newTask = payload.new as Task;
+          setTasks(prev => {
+            if (prev.some(t => t.id === newTask.id)) return prev;
+            return [newTask, ...prev];
+          });
+        } else if (payload.eventType === 'UPDATE') {
+          const updatedTask = payload.new as Task;
+          setTasks(prev => prev.map(t => t.id === updatedTask.id ? { ...t, ...updatedTask } : t));
+        } else if (payload.eventType === 'DELETE') {
+          const deletedTask = payload.old as Task;
+          setTasks(prev => prev.filter(t => t.id !== deletedTask.id));
+        }
+      })
+      .subscribe();
+      
+    // Polling fallback to guarantee updates even if Realtime drops events due to RLS
+    const intervalId = setInterval(async () => {
+      const { data } = await supabase
+        .from("project_tasks")
+        .select("*, assigned_to_profile:profiles!assigned_to(full_name, username)")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false });
+        
+      if (data) {
+        setTasks(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+          return data as unknown as Task[];
+        });
+      }
+    }, 5000);
+      
+    return () => {
+      supabase.removeChannel(subscription);
+      clearInterval(intervalId);
+    };
+  }, [projectId]);
+  
   const [newMessage, setNewMessage] = useState("");
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [showCreateTask, setShowCreateTask] = useState(false);
@@ -178,36 +313,9 @@ export default function ProjectDetails() {
   });
 
   const [dbMembers, setDbMembers] = useState<ProjectMember[]>([]);
-  const [localProjectMembers, setLocalProjectMembers] = useState<ProjectMember[]>([
-    {
-      id: "member-1",
-      name: "Sarah Johnson",
-      role: "Director",
-      avatar: "SJ",
-      joined_date: "2024-01-10"
-    },
-    {
-      id: "member-2",
-      name: "Michael Chen",
-      role: "Producer",
-      avatar: "MC",
-      joined_date: "2024-01-12"
-    },
-    {
-      id: "member-3",
-      name: "Emily Rodriguez",
-      role: "Cinematographer",
-      avatar: "ER",
-      joined_date: "2024-01-14"
-    },
-    {
-      id: "member-4",
-      name: "David Kim",
-      role: "Editor",
-      avatar: "DK",
-      joined_date: "2024-01-16"
-    }
-  ]);
+  const [localProjectMembers, setLocalProjectMembers] = useState<ProjectMember[]>([]);
+
+  const projectMembers: ProjectMember[] = [...dbMembers, ...localProjectMembers];
 
   // Hardcoded projects data
   const hardcodedProjects: Project[] = [
@@ -608,8 +716,6 @@ export default function ProjectDetails() {
     }
   ];
 
-  const projectMembers: ProjectMember[] = [...dbMembers, ...localProjectMembers];
-
   const handleJoinProject = async () => {
     if (!currentUser) {
       toast({
@@ -624,28 +730,37 @@ export default function ProjectDetails() {
         .insert({
           project_id: projectId,
           user_id: currentUser.id,
-          role: "Member"
+          role: "Applicant"
         });
 
       if (error) throw error;
 
-      setIsMember(true);
-      if (project) {
-        setProject({ ...project, is_member: true });
+      if (project && project.created_by && project.created_by !== currentUser.id) {
+        supabase.from("notifications").insert({
+          user_id: project.created_by,
+          title: "New Project Application",
+          description: `Someone applied to join your project: ${project.title}`,
+          type: "project",
+          action_url: `/projects?projectId=${project.id}`
+        }).then(({ error: notifError }) => {
+          if (notifError) console.error("Notification error:", notifError);
+        });
       }
+
       toast({
-        title: "Joined project",
-        description: "You have successfully joined this project."
+        title: "Application sent",
+        description: "You have successfully applied to join this project."
       });
     } catch (err) {
       console.error("Error joining project:", err);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to join project."
+        description: "Failed to apply to project."
       });
     }
   };
+
 
   const handleLeaveProject = async () => {
     if (!currentUser) return;
@@ -776,7 +891,7 @@ export default function ProjectDetails() {
           category: editForm.category,
           status: editForm.status,
           project_status: editForm.project_status,
-          team_size: Number(editForm.team_size),
+          team_size: projectMembers.length,
           budget_min: editForm.budget_min ? Number(editForm.budget_min) : null,
           budget_max: editForm.budget_max ? Number(editForm.budget_max) : null,
           budget_currency: editForm.budget_currency,
@@ -795,7 +910,7 @@ export default function ProjectDetails() {
         category: editForm.category,
         status: editForm.status,
         project_status: editForm.project_status,
-        team_size: Number(editForm.team_size),
+        team_size: projectMembers.length,
         budget_min: editForm.budget_min ? Number(editForm.budget_min) : null,
         budget_max: editForm.budget_max ? Number(editForm.budget_max) : null,
         budget_currency: editForm.budget_currency,
@@ -921,8 +1036,8 @@ export default function ProjectDetails() {
     }
   };
 
-  const handleCreateTask = () => {
-    if (!newTask.title || !newTask.description) {
+  const handleCreateTask = async () => {
+    if (!newTask.title || !newTask.description || !project || !currentUser) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -931,81 +1046,283 @@ export default function ProjectDetails() {
       return;
     }
 
-    const task: Task = {
-      id: `task-${Date.now()}`,
-      title: newTask.title,
-      description: newTask.description,
-      assigned_to: newTask.assigned_to,
-      assigned_by: "Current User",
-      status: "pending",
-      priority: newTask.priority,
-      due_date: newTask.due_date,
-      created_at: new Date().toISOString()
-    };
+    try {
+      const { data, error } = await supabase.from("project_tasks").insert({
+        project_id: project.id,
+        title: newTask.title,
+        description: newTask.description,
+        assigned_to: newTask.assigned_to || null,
+        assigned_by: currentUser.id,
+        status: "pending",
+        priority: newTask.priority,
+        due_date: newTask.due_date || null
+      }).select("*, assigned_to_profile:profiles!assigned_to(full_name, username)").single();
 
-    setTasks(prev => [...prev, task]);
-    setNewTask({
-      title: "",
-      description: "",
-      assigned_to: "",
-      priority: "medium",
-      due_date: ""
-    });
-    setShowCreateTask(false);
-    
-    toast({
-      title: "Task created",
-      description: "New task has been created successfully."
-    });
+      if (error) throw error;
+
+      setTasks(prev => [data as unknown as Task, ...prev]);
+      setNewTask({
+        title: "",
+        description: "",
+        assigned_to: "",
+        priority: "medium",
+        due_date: ""
+      });
+      setShowCreateTask(false);
+      
+      toast({
+        title: "Task created",
+        description: "New task has been created successfully."
+      });
+    } catch (err) {
+      console.error("Error creating task:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create task."
+      });
+    }
   };
 
-  const handleUpdateTaskStatus = (taskId: string, status: Task['status']) => {
+  const handleUpdateTaskStatus = async (taskId: string, status: Task['status']) => {
+    // Optimistic UI update
     setTasks(prev => prev.map(task => 
       task.id === taskId ? { ...task, status } : task
     ));
     
-    toast({
-      title: "Task updated",
-      description: `Task status updated to ${status}.`
-    });
+    try {
+      const { error } = await supabase.from("project_tasks").update({ status }).eq("id", taskId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Task updated",
+        description: `Task status updated to ${status}.`
+      });
+    } catch (err) {
+      console.error("Error updating task status:", err);
+      // Revert on error could be implemented here
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update task status."
+      });
+    }
   };
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !currentUser || !project) return;
+    
+    const content = newMessage;
+    setNewMessage("");
 
-    const message: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      user_id: "current-user",
-      user_name: "Alex Rodriguez",
-      user_avatar: "AR",
-      message: newMessage,
+    // Optimistic UI update
+    const userName = profile?.full_name || currentUser.email?.split('@')[0] || "Unknown User";
+    const userAvatar = userName.split(" ").map((n: string) => n[0]).join("").toUpperCase().substring(0, 2);
+    const tempMsg = {
+      id: `temp-${Date.now()}`,
+      user_id: currentUser.id,
+      user_name: userName,
+      user_avatar: userAvatar,
+      message: content,
       timestamp: new Date().toISOString()
     };
+    setChatMessages(prev => [...prev, tempMsg]);
 
-    setChatMessages(prev => [...prev, message]);
-    setNewMessage("");
+    try {
+      const { data, error } = await supabase.from("project_messages").insert({
+        project_id: project.id,
+        sender_id: currentUser.id,
+        content: content
+      }).select().single();
+
+      if (error) throw error;
+
+      // Extract mentions using regex
+      const mentionRegex = /@(\w+)/g;
+      const mentions = [...content.matchAll(mentionRegex)].map(m => m[1]);
+      
+      const mentionedUsers = [...dbMembers];
+      if (project.created_by && project.created_by !== currentUser.id) {
+        mentionedUsers.push({ user_id: project.created_by, role: 'Creator', full_name: project.creator_name || "", username: project.creator_username || "", id: '', name: '', avatar: '', joined_date: '' } as any);
+      }
+
+      const notificationsToInsert = [];
+      
+      for (const u of mentionedUsers) {
+        const name = u.name?.toLowerCase() || "";
+        const fullName = u.full_name?.toLowerCase() || "";
+        const username = u.username?.toLowerCase() || "";
+        const role = u.role?.toLowerCase() || "";
+        
+        let isMentioned = false;
+        if (mentions.some(m => name.includes(m.toLowerCase()) || fullName.includes(m.toLowerCase()) || username.includes(m.toLowerCase()) || role.includes(m.toLowerCase()))) {
+          isMentioned = true;
+        }
+        
+        // Match exact multi-word strings after @ symbol
+        if (name && content.toLowerCase().includes(`@${name}`)) isMentioned = true;
+        if (fullName && content.toLowerCase().includes(`@${fullName}`)) isMentioned = true;
+        if (username && content.toLowerCase().includes(`@${username}`)) isMentioned = true;
+        if (role && content.toLowerCase().includes(`@${role}`)) isMentioned = true;
+        
+        if (isMentioned && u.user_id !== currentUser.id) {
+          if (!notificationsToInsert.some(n => n.user_id === u.user_id)) {
+            notificationsToInsert.push({
+              user_id: u.user_id,
+              title: "Mentioned in Chat",
+              description: `${userName} mentioned you in ${project.title}`,
+              type: "project",
+              action_url: `/projects/${project.id}?tab=chat`
+            });
+          }
+        }
+      }
+      
+      if (notificationsToInsert.length > 0) {
+        await supabase.from("notifications").insert(notificationsToInsert);
+      }
+    } catch (err) {
+      console.error("Error sending message:", err);
+      // Remove optimistic message on fail
+      setChatMessages(prev => prev.filter(m => m.id !== tempMsg.id));
+    }
   };
 
-  const handleAcceptApplicant = (applicantId: string) => {
-    setApplicants(prev => prev.map(applicant => 
-      applicant.id === applicantId ? { ...applicant, status: "accepted" } : applicant
-    ));
+  const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setNewMessage(val);
     
-    toast({
-      title: "Applicant accepted",
-      description: "The applicant has been accepted to the project."
+    // @mention detection
+    const cursor = e.target.selectionStart || 0;
+    setCursorPos(cursor);
+    const textBeforeCursor = val.slice(0, cursor);
+    const match = textBeforeCursor.match(/@(\w*)$/);
+    
+    if (match) {
+      setMentionQuery(match[1]);
+      setMentionOpen(true);
+    } else {
+      setMentionOpen(false);
+    }
+  };
+
+  const insertMention = (username: string) => {
+    const textBefore = newMessage.slice(0, cursorPos).replace(/@\w*$/, `@${username} `);
+    const textAfter = newMessage.slice(cursorPos);
+    setNewMessage(textBefore + textAfter);
+    setMentionOpen(false);
+    chatInputRef.current?.focus();
+  };
+
+  const renderMessageContent = (text: string) => {
+    const parts = text.split(/(@\w+)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('@')) {
+        return <strong key={i} className="text-yellow-600 dark:text-yellow-400 font-bold">{part}</strong>;
+      }
+      return part;
     });
   };
 
-  const handleRejectApplicant = (applicantId: string) => {
-    setApplicants(prev => prev.map(applicant => 
-      applicant.id === applicantId ? { ...applicant, status: "rejected" } : applicant
-    ));
-    
-    toast({
-      title: "Applicant rejected",
-      description: "The applicant has been rejected."
-    });
+  const handleAcceptApplicant = async (applicantId: string) => {
+    try {
+      // Fetch user_id first to send notification
+      const { data: memberData, error: fetchErr } = await supabase
+        .from("project_members")
+        .select("user_id")
+        .eq("id", applicantId)
+        .single();
+        
+      if (fetchErr) throw fetchErr;
+
+      const { error } = await supabase
+        .from("project_members")
+        .update({ role: "Member" })
+        .eq("id", applicantId);
+        
+      if (error) throw error;
+      
+      const acceptedApplicant = applicants.find(a => a.id === applicantId);
+      
+      setApplicants(prev => prev.filter(applicant => applicant.id !== applicantId));
+      
+      if (acceptedApplicant) {
+        setDbMembers(prev => [...prev, {
+          id: acceptedApplicant.id,
+          user_id: memberData.user_id,
+          name: acceptedApplicant.name,
+          role: "Member",
+          avatar: acceptedApplicant.avatar,
+          joined_date: new Date().toISOString()
+        }]);
+
+        // Send notification to the user
+        await supabase.from("notifications").insert({
+          user_id: memberData.user_id,
+          title: "Application Accepted",
+          description: `Your application to join ${project?.title || 'the project'} has been accepted!`,
+          type: "application_update",
+          status: "unread",
+          action_url: `/projects/${projectId}`
+        });
+      }
+      
+      toast({
+        title: "Applicant accepted",
+        description: "The applicant has been accepted to the project."
+      });
+    } catch (err) {
+      console.error("Error accepting applicant:", err);
+      toast({
+        title: "Error",
+        description: "Could not accept applicant. Please run the RLS SQL to allow creators to manage members.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRejectApplicant = async (applicantId: string) => {
+    try {
+      // Fetch user_id first to send notification
+      const { data: memberData } = await supabase
+        .from("project_members")
+        .select("user_id")
+        .eq("id", applicantId)
+        .single();
+
+      const { error } = await supabase
+        .from("project_members")
+        .delete()
+        .eq("id", applicantId);
+        
+      if (error) throw error;
+      
+      setApplicants(prev => prev.filter(applicant => applicant.id !== applicantId));
+      
+      if (memberData?.user_id) {
+        // Send notification to the user
+        await supabase.from("notifications").insert({
+          user_id: memberData.user_id,
+          title: "Application Status Update",
+          description: `Your application to join ${project?.title || 'the project'} was not accepted at this time.`,
+          type: "application_update",
+          status: "unread"
+        });
+      }
+      
+      toast({
+        title: "Applicant rejected",
+        description: "The applicant has been rejected."
+      });
+    } catch (err) {
+      console.error("Error rejecting applicant:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to reject applicant. Please run the RLS SQL."
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -1039,6 +1356,9 @@ export default function ProjectDetails() {
       default: return <Film className="h-4 w-4" />;
     }
   };
+
+
+      
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -1109,11 +1429,26 @@ export default function ProjectDetails() {
 
             const isProjectCreator = user ? data.created_by === user.id : false;
 
+            // Self-heal: If the creator isn't in project_members, they might be blocked by RLS from seeing applicants.
+            if (isProjectCreator && !isUserMember && user) {
+              const { error: healError } = await supabase.from("project_members").insert({
+                project_id: projectId,
+                user_id: user.id,
+                role: "Creator"
+              });
+              if (!healError) {
+                isUserMember = true;
+              } else {
+                console.error("Self-heal error:", healError);
+              }
+            }
+
             let fetchedMembers: ProjectMember[] = [];
+            let fetchedApplicants: Applicant[] = [];
             try {
               const { data: membersData, error: membersError } = await supabase
                 .from("project_members")
-                .select("id, user_id, role, created_at")
+                .select("id, user_id, role, joined_at")
                 .eq("project_id", projectId);
 
               if (membersData && !membersError) {
@@ -1121,17 +1456,17 @@ export default function ProjectDetails() {
                 if (userIds.length > 0) {
                   const { data: profilesData } = await supabase
                     .from("profiles")
-                    .select("user_id, full_name, username, category")
-                    .in("user_id", userIds);
+                    .select("id, full_name, username, category")
+                    .in("id", userIds);
 
-                  const profileMap: Record<string, { user_id: string; full_name?: string | null; username?: string | null; category?: string | null }> = {};
+                  const profileMap: Record<string, { id: string; full_name?: string | null; username?: string | null; category?: string | null }> = {};
                   if (profilesData) {
-                    (profilesData as Array<{ user_id: string; full_name?: string | null; username?: string | null; category?: string | null }>).forEach(p => {
-                      profileMap[p.user_id] = p;
+                    (profilesData as Array<{ id: string; full_name?: string | null; username?: string | null; category?: string | null }>).forEach(p => {
+                      profileMap[p.id] = p;
                     });
                   }
 
-                  fetchedMembers = (membersData as Array<{ id: string; user_id: string; role: string | null; created_at: string | null }>).map((m) => {
+                  const allMembers = (membersData as Array<{ id: string; user_id: string; role: string | null; joined_at: string | null }>).map((m) => {
                     const p = profileMap[m.user_id];
                     const name = p?.full_name || p?.username || "Unknown User";
                     return {
@@ -1140,15 +1475,29 @@ export default function ProjectDetails() {
                       name: name,
                       role: m.role || p?.category || "Member",
                       avatar: name.substring(0, 2).toUpperCase(),
-                      joined_date: m.created_at || new Date().toISOString()
+                      joined_date: m.joined_at || new Date().toISOString()
                     };
                   });
+                  
+                  fetchedMembers = allMembers.filter(m => m.role !== "Applicant");
+                  fetchedApplicants = allMembers.filter(m => m.role === "Applicant").map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    email: "Hidden",
+                    role: m.role,
+                    experience: "Not specified",
+                    skills: [],
+                    applied_date: m.joined_date,
+                    status: 'pending' as const,
+                    avatar: m.avatar
+                  }));
                 }
               }
             } catch (err) {
               console.error("Error fetching project members:", err);
             }
             setDbMembers(fetchedMembers);
+            setApplicants(fetchedApplicants);
 
             const dbProject: Project = {
               id: data.id,
@@ -1204,8 +1553,44 @@ export default function ProjectDetails() {
             setIsSaved(dbProject.is_saved);
             setIsLiked(dbProject.is_liked);
             setIsMember(dbProject.is_member);
-            setTasks([]);
-            setChatMessages([]);
+            
+            // Fetch project tasks
+            const { data: tasksData, error: tasksError } = await supabase
+              .from("project_tasks")
+              .select("*, assigned_to_profile:profiles!assigned_to(full_name, username)")
+              .eq("project_id", projectId)
+              .order("created_at", { ascending: false });
+              
+            if (tasksError) {
+              console.error("Error fetching tasks:", tasksError);
+              setTasks([]);
+            } else if (tasksData) {
+              setTasks(tasksData as unknown as Task[]);
+            } else {
+              setTasks([]);
+            }
+            
+            // Fetch actual chat messages for the project
+            const { data: messagesData } = await supabase
+              .from("project_messages")
+              .select("id, content, created_at, sender_id, profiles:sender_id(full_name, username)")
+              .eq("project_id", projectId)
+              .order("created_at", { ascending: true });
+              
+            if (messagesData) {
+              const formattedMessages = messagesData.map(data => ({
+                id: data.id,
+                user_id: data.sender_id,
+                user_name: data.profiles?.full_name || data.profiles?.username || "Unknown",
+                user_avatar: (data.profiles?.full_name || data.profiles?.username || "U").substring(0, 2).toUpperCase(),
+                message: data.content,
+                timestamp: data.created_at
+              }));
+              setChatMessages(formattedMessages);
+            } else {
+              setChatMessages([]);
+            }
+            
             setApplicants([]);
             setLoading(false);
           } else {
@@ -1885,7 +2270,7 @@ export default function ProjectDetails() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <DollarSign className="h-4 w-4 text-gray-500" />
+                      <IndianRupee className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">Budget Range</p>
                         <p className="text-sm text-gray-600">
@@ -2163,7 +2548,7 @@ export default function ProjectDetails() {
                         </SelectTrigger>
                         <SelectContent>
                           {projectMembers.map((member) => (
-                            <SelectItem key={member.id} value={member.name}>
+                            <SelectItem key={member.id} value={member.user_id || member.id}>
                               {member.name} - {member.role}
                             </SelectItem>
                           ))}
@@ -2205,62 +2590,220 @@ export default function ProjectDetails() {
               </Dialog>
             </div>
 
-            <div className="space-y-4">
-              {tasks.map((task) => (
-                <Card key={task.id} className="border-yellow-200">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-semibold text-gray-900">{task.title}</h4>
-                          <Badge variant={
-                            task.priority === 'high' ? 'destructive' :
-                            task.priority === 'medium' ? 'default' : 'secondary'
-                          } className={
-                            task.priority === 'high' ? 'bg-red-100 text-red-800' :
-                            task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
-                          }>
-                            {task.priority}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>Assigned to: {task.assigned_to}</span>
-                          <span>Due: {formatDate(task.due_date)}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Select value={task.status} onValueChange={(value: "pending" | "in_progress" | "completed") => handleUpdateTaskStatus(task.id, value)}>
-                          <SelectTrigger className="w-32 border-yellow-200 focus:border-yellow-500">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">
-                              <div className="flex items-center gap-2">
-                                <Circle className="h-3 w-3" />
-                                Pending
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="in-progress">
-                              <div className="flex items-center gap-2">
-                                <AlertCircle className="h-3 w-3" />
-                                In Progress
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="completed">
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="h-3 w-3" />
-                                Completed
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+            <Accordion type="multiple" defaultValue={["in-progress", "pending"]} className="w-full space-y-4">
+                {/* In Progress Section */}
+                <AccordionItem value="in-progress" className="border-none">
+                  <AccordionTrigger className="hover:no-underline bg-yellow-50 px-4 py-3 rounded-lg border border-yellow-200">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-5 w-5 text-yellow-600" />
+                      <h4 className="font-semibold text-yellow-900">In Progress ({tasks.filter(t => t.status === 'in-progress').length})</h4>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-4">
+                    <div className="space-y-4">
+                      {tasks.filter(t => t.status === 'in-progress').map((task) => (
+                        <Card key={task.id} className="border-yellow-200">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-semibold text-gray-900">{task.title}</h4>
+                                  <Badge variant={
+                                    task.priority === 'high' ? 'destructive' :
+                                    task.priority === 'medium' ? 'default' : 'secondary'
+                                  } className={
+                                    task.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                    task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                                  }>
+                                    {task.priority}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                                <div className="flex items-center gap-4 text-xs text-gray-500">
+                                  <span>Assigned to: {task.assigned_to_profile?.full_name || task.assigned_to_profile?.username || "Unknown"}</span>
+                                  <span>Due: {formatDate(task.due_date || "")}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Select value={task.status} onValueChange={(value: "pending" | "in-progress" | "completed") => handleUpdateTaskStatus(task.id, value)}>
+                                  <SelectTrigger className="w-36 border-yellow-200 focus:border-yellow-500 whitespace-nowrap [&>span]:flex [&>span]:items-center [&>span]:gap-2">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="pending">
+                                      <div className="flex items-center gap-2">
+                                        <Circle className="h-3 w-3" />
+                                        Pending
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="in-progress">
+                                      <div className="flex items-center gap-2">
+                                        <AlertCircle className="h-3 w-3" />
+                                        In Progress
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="completed">
+                                      <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-3 w-3" />
+                                        Completed
+                                      </div>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      {tasks.filter(t => t.status === 'in-progress').length === 0 && (
+                        <p className="text-sm text-gray-500 text-center py-4 italic">No tasks currently in progress.</p>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Pending Section */}
+                <AccordionItem value="pending" className="border-none">
+                  <AccordionTrigger className="hover:no-underline bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <Circle className="h-5 w-5 text-gray-600" />
+                      <h4 className="font-semibold text-gray-900">Pending ({tasks.filter(t => t.status === 'pending').length})</h4>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-4">
+                    <div className="space-y-4">
+                      {tasks.filter(t => t.status === 'pending').map((task) => (
+                        <Card key={task.id} className="border-gray-200">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-semibold text-gray-900">{task.title}</h4>
+                                  <Badge variant={
+                                    task.priority === 'high' ? 'destructive' :
+                                    task.priority === 'medium' ? 'default' : 'secondary'
+                                  } className={
+                                    task.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                    task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                                  }>
+                                    {task.priority}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                                <div className="flex items-center gap-4 text-xs text-gray-500">
+                                  <span>Assigned to: {task.assigned_to_profile?.full_name || task.assigned_to_profile?.username || "Unknown"}</span>
+                                  <span>Due: {formatDate(task.due_date || "")}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Select value={task.status} onValueChange={(value: "pending" | "in-progress" | "completed") => handleUpdateTaskStatus(task.id, value)}>
+                                  <SelectTrigger className="w-36 border-gray-200 focus:border-gray-500 whitespace-nowrap [&>span]:flex [&>span]:items-center [&>span]:gap-2">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="pending">
+                                      <div className="flex items-center gap-2">
+                                        <Circle className="h-3 w-3" />
+                                        Pending
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="in-progress">
+                                      <div className="flex items-center gap-2">
+                                        <AlertCircle className="h-3 w-3" />
+                                        In Progress
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="completed">
+                                      <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-3 w-3" />
+                                        Completed
+                                      </div>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      {tasks.filter(t => t.status === 'pending').length === 0 && (
+                        <p className="text-sm text-gray-500 text-center py-4 italic">No pending tasks.</p>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Completed Section */}
+                <AccordionItem value="completed" className="border-none">
+                  <AccordionTrigger className="hover:no-underline bg-green-50 px-4 py-3 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <h4 className="font-semibold text-green-900">Completed ({tasks.filter(t => t.status === 'completed').length})</h4>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-4">
+                    <div className="space-y-4">
+                      {tasks.filter(t => t.status === 'completed').map((task) => (
+                        <Card key={task.id} className="border-green-200 opacity-75">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-semibold text-gray-900 line-through">{task.title}</h4>
+                                  <Badge variant={
+                                    task.priority === 'high' ? 'destructive' :
+                                    task.priority === 'medium' ? 'default' : 'secondary'
+                                  } className={
+                                    task.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                    task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                                  }>
+                                    {task.priority}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                                <div className="flex items-center gap-4 text-xs text-gray-500">
+                                  <span>Assigned to: {task.assigned_to_profile?.full_name || task.assigned_to_profile?.username || "Unknown"}</span>
+                                  <span>Due: {formatDate(task.due_date || "")}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Select value={task.status} onValueChange={(value: "pending" | "in-progress" | "completed") => handleUpdateTaskStatus(task.id, value)}>
+                                  <SelectTrigger className="w-36 border-green-200 focus:border-green-500 whitespace-nowrap [&>span]:flex [&>span]:items-center [&>span]:gap-2">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="pending">
+                                      <div className="flex items-center gap-2">
+                                        <Circle className="h-3 w-3" />
+                                        Pending
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="in-progress">
+                                      <div className="flex items-center gap-2">
+                                        <AlertCircle className="h-3 w-3" />
+                                        In Progress
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="completed">
+                                      <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-3 w-3" />
+                                        Completed
+                                      </div>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      {tasks.filter(t => t.status === 'completed').length === 0 && (
+                        <p className="text-sm text-gray-500 text-center py-4 italic">No completed tasks yet.</p>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
           </TabsContent>
 
           {/* Chat Tab */}
@@ -2277,20 +2820,44 @@ export default function ProjectDetails() {
                   </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0 flex flex-col h-[500px]">
+              <CardContent className="p-0 flex flex-col h-[calc(100vh-280px)] min-h-[400px] relative">
                 {/* Messages List Area */}
-                <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50/50 dark:bg-background/50 min-h-0">
+                <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50/50 dark:bg-background/50 min-h-0 flex flex-col">
                   {chatMessages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 space-y-2">
                       <MessageCircle className="h-10 w-10 text-gray-300 dark:text-gray-700" />
                       <p className="text-sm">No messages yet. Start the conversation!</p>
                     </div>
                   ) : (
-                    chatMessages.map((message) => {
+                    chatMessages.map((message, index) => {
                       const isMe = message.user_id === "current-user" || message.user_id === currentUser?.id;
-                      const initials = message.user_avatar || message.user_name?.split(" ").map(n => n[0]).join("").toUpperCase() || "U";
+                      const initials = message.user_avatar || message.user_name?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
+                      
+                      const msgDateStr = new Date(message.timestamp).toDateString();
+                      const prevMsgDateStr = index > 0 ? new Date(chatMessages[index - 1].timestamp).toDateString() : "";
+                      const showDateHeader = msgDateStr !== prevMsgDateStr;
+                      
+                      const formatDateHeader = (dateString: string) => {
+                        const date = new Date(dateString);
+                        const today = new Date();
+                        const yesterday = new Date(today);
+                        yesterday.setDate(yesterday.getDate() - 1);
+
+                        if (date.toDateString() === today.toDateString()) return "Today";
+                        if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+                        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                      };
+
                       return (
-                        <div key={message.id} className={cn("flex gap-3 max-w-[85%] w-full", isMe ? "ml-auto flex-row-reverse" : "mr-auto")}>
+                        <div key={message.id} className="w-full flex flex-col">
+                          {showDateHeader && (
+                            <div className="flex justify-center my-4">
+                              <span className="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-400 text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
+                                {formatDateHeader(message.timestamp)}
+                              </span>
+                            </div>
+                          )}
+                          <div className={cn("flex gap-3 max-w-[85%] w-full", isMe ? "ml-auto flex-row-reverse" : "mr-auto")}>
                           {/* Avatar */}
                           <Avatar className="h-8 w-8 shrink-0 border border-yellow-200/50 dark:border-yellow-900/30">
                             <AvatarFallback className={cn(
@@ -2313,21 +2880,60 @@ export default function ProjectDetails() {
                                 ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-tr-none" 
                                 : "bg-white dark:bg-background text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700/50 rounded-tl-none"
                             )}>
-                              <p className="whitespace-pre-wrap break-words leading-relaxed">{message.message}</p>
+                                <p className="whitespace-pre-wrap break-words leading-relaxed">
+                                  {message.message.split(/(@\S+)/g).map((part: string, i: number) => {
+                                    if (part.startsWith('@')) {
+                                      return <span key={i} className={cn("font-bold px-1 rounded-sm", isMe ? "bg-white/20 text-white" : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400")}>{part}</span>;
+                                    }
+                                    return part;
+                                  })}
+                                </p>
                             </div>
+                          </div>
                           </div>
                         </div>
                       );
                     })
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
+
+                {/* @Mention Popover */}
+                {mentionOpen && (
+                  <div className="absolute bottom-20 left-4 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-48 overflow-y-auto z-10 p-1">
+                    {dbMembers.concat(project?.created_by ? [{ user_id: project.created_by, name: project.creator_name || project.creator_username } as any] : []).filter(u => 
+                      u.name?.toLowerCase().includes(mentionQuery.toLowerCase()) || 
+                      u.full_name?.toLowerCase().includes(mentionQuery.toLowerCase()) || 
+                      u.username?.toLowerCase().includes(mentionQuery.toLowerCase())
+                    ).map((u, i) => (
+                      <div 
+                        key={i}
+                        className="flex items-center gap-2 p-2 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded cursor-pointer"
+                        onClick={() => insertMention(u.name?.split(' ')[0] || u.full_name?.split(' ')[0] || u.username || "User")}
+                      >
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-[10px] bg-yellow-100 text-yellow-700 border border-yellow-200">{u.name?.[0] || u.full_name?.[0] || 'U'}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{u.name || u.full_name || u.username}</span>
+                      </div>
+                    ))}
+                    {dbMembers.concat(project?.created_by ? [{ user_id: project.created_by, name: project.creator_name || project.creator_username } as any] : []).filter(u => 
+                      u.name?.toLowerCase().includes(mentionQuery.toLowerCase()) || 
+                      u.full_name?.toLowerCase().includes(mentionQuery.toLowerCase()) || 
+                      u.username?.toLowerCase().includes(mentionQuery.toLowerCase())
+                    ).length === 0 && (
+                        <div className="p-2 text-sm text-gray-500 text-center">No members found</div>
+                    )}
+                  </div>
+                )}
 
                 {/* Chat Input Section */}
                 <div className="p-4 border-t border-yellow-100 dark:border-yellow-900/20 bg-white dark:bg-background flex gap-2 shrink-0">
                   <Input
+                    ref={chatInputRef}
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
+                    onChange={handleMessageChange}
+                    placeholder="Type a message... (Use @ to mention)"
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                     className="flex-1 border-yellow-200 dark:border-yellow-900/30 focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white"
                   />
@@ -2369,15 +2975,35 @@ export default function ProjectDetails() {
                           Message
                         </Button>
                         {project?.is_creator && member.user_id !== currentUser?.id && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleDeleteMember(member.id, !!member.user_id, member.user_id)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                            title="Remove Member"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                                title="Remove Member"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to remove {member.name} from the project? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDeleteMember(member.id, !!member.user_id, member.user_id)}
+                                  className="bg-red-500 text-white hover:bg-red-600 focus:ring-red-500"
+                                >
+                                  Remove
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         )}
                       </div>
                     </div>
@@ -2399,7 +3025,7 @@ export default function ProjectDetails() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {applicants.map((applicant) => (
+                    {applicants.length > 0 ? applicants.map((applicant) => (
                       <div key={applicant.id} className="flex items-center gap-4 p-4 border rounded-lg border-yellow-200">
                         <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center">
                           <span className="text-white font-semibold">
@@ -2444,7 +3070,11 @@ export default function ProjectDetails() {
                           )}
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-center py-8 text-gray-500 border rounded-lg border-dashed border-gray-300">
+                        No applicants have applied to this project yet.
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -2532,14 +3162,7 @@ export default function ProjectDetails() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-gray-700">Team Size Target</label>
-                  <Input 
-                    type="number"
-                    value={editForm.team_size}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, team_size: Number(e.target.value) }))}
-                  />
-                </div>
+
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-gray-700">Budget Min</label>
                   <Input 

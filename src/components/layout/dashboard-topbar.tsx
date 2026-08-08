@@ -251,18 +251,29 @@ export function DashboardTopbar({
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-background/60 border-b border-yellow-200 dark:border-yellow-900/40">
-      <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex items-center gap-4">
+      <div className="flex h-16 items-center justify-between px-4 md:px-6 relative">
+        <div className="flex items-center gap-2 md:gap-4 z-10">
           {/* Mobile menu toggle */}
           <Button
             variant="ghost"
             size="sm"
-            className="md:hidden text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
+            className="md:hidden text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-yellow-50 dark:hover:bg-yellow-950/30 p-2"
             onClick={onMenuToggle}
           >
-            {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
 
+          {/* Logo (Mobile Only) - Centered */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex md:hidden items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center flex-shrink-0">
+              <div className="h-4 w-4 bg-white rounded-sm opacity-90"></div>
+            </div>
+          </div>
+          
+          {/* Page Title (Desktop Only) */}
+          <h1 className="hidden md:block text-xl font-semibold text-gray-900 dark:text-white">
+            {pageTitle}
+          </h1>
         </div>
 
         <div className="flex items-center gap-4">
@@ -339,10 +350,10 @@ export function DashboardTopbar({
           {/* User Profile Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-3 h-auto p-2 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" className="flex items-center gap-2 md:gap-3 h-auto p-1 md:p-2 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
+                <Avatar className="h-7 w-7 md:h-8 md:w-8">
                   <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || "User"} />
-                  <AvatarFallback className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+                  <AvatarFallback className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white text-xs md:text-sm">
                     {(profile?.full_name || profile?.username || "U")[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -354,7 +365,7 @@ export function DashboardTopbar({
                     {profile?.full_name || "User"}
                   </span>
                 </div>
-                <ChevronDown className="h-4 w-4 text-gray-500" />
+                <ChevronDown className="hidden md:block h-4 w-4 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-white dark:bg-background border border-yellow-100 dark:border-yellow-900/40" align="end" forceMount>

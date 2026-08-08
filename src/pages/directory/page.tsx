@@ -36,10 +36,11 @@ import {
   Sun,
   X,
   Volume2,
-  Filter,
+  Filter
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 type DirType = "images" | "videos" | "documents" | "audios";
 
@@ -57,6 +58,7 @@ interface BaseItem {
 interface ImageItem extends BaseItem {
   type: "images";
   thumbnailUrl: string;
+  additionalUrls?: string[];
 }
 
 interface VideoItem extends BaseItem {
@@ -403,6 +405,7 @@ export default function DirectoryPage() {
   
   // Modals / Read mode states
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
+  const [previewImageIndex, setPreviewImageIndex] = useState(0);
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
   const [docPageNum, setDocPageNum] = useState<number>(0);
@@ -576,6 +579,7 @@ export default function DirectoryPage() {
 
   const closeModal = () => {
     setSelectedImage(null);
+    setPreviewImageIndex(0);
     setSelectedVideo(null);
     setSelectedDoc(null);
     if (searchParams.has("item")) {
@@ -628,6 +632,7 @@ export default function DirectoryPage() {
           description: undefined,
           coverUrl: (stats as any)?.coverUrl,
           thumbnailUrl: (stats as any)?.coverUrl || item.file_url,
+          additionalUrls: item.additional_urls,
           videoUrl: item.file_type === 'video' ? item.file_url : undefined,
           audioUrl: item.file_type === 'audio' ? item.file_url : undefined,
           fileUrl: item.file_url,
@@ -833,14 +838,22 @@ export default function DirectoryPage() {
                       </button>
                     </div>
 
-                    {/* Image format (Requirement 1: Just image + bottom overlay) */}
+                    {/* Images */}
                     {it.type === "images" && (
-                      <img 
-                        src={(it as ImageItem).thumbnailUrl} 
-                        alt={it.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        loading="lazy"
-                      />
+                      <div className="relative w-full h-full">
+                        <img 
+                          src={(it as ImageItem).thumbnailUrl} 
+                          alt={it.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          loading="lazy"
+                        />
+                        {(it as ImageItem).additionalUrls && (it as ImageItem).additionalUrls!.length > 0 && (
+                          <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 z-10 pointer-events-none">
+                            <ImageIcon className="w-3 h-3" />
+                            {(it as ImageItem).additionalUrls!.length + 1}
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* Video format (Requirement 1: Just video thumbnail with interactive play overlay) */}
@@ -1027,7 +1040,7 @@ export default function DirectoryPage() {
       <AnimatePresence>
         {selectedImage && (
           <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm cursor-pointer"
+            className="fixed inset-0 z-50 flex items-center justify-center md:p-4 bg-black/95 backdrop-blur-sm cursor-pointer"
             onClick={closeModal}
           >
             <motion.div 
@@ -1035,7 +1048,7 @@ export default function DirectoryPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="relative w-full max-w-4xl bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 shadow-2xl cursor-default"
+              className="relative w-full h-full md:h-auto max-w-4xl bg-gray-900 flex flex-col md:rounded-2xl overflow-hidden border-0 md:border md:border-gray-800 shadow-2xl cursor-default"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -1055,21 +1068,71 @@ export default function DirectoryPage() {
               </div>
 
               {/* Image Content */}
-              <div className="w-full bg-black relative flex items-center justify-center p-4">
+              <div className="w-full flex-1 bg-black relative flex flex-col items-center justify-center p-0 md:p-4 min-h-0">
                 <img 
-                  src={selectedImage.thumbnailUrl} 
+                  src={
+                    selectedImage.additionalUrls && selectedImage.additionalUrls.length > 0 
+                      ? [selectedImage.thumbnailUrl, ...selectedImage.additionalUrls][previewImageIndex] 
+                      : selectedImage.thumbnailUrl
+                  } 
                   alt={selectedImage.title} 
-                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                  className="w-full h-full object-contain"
                 />
+                
+                {selectedImage.additionalUrls && selectedImage.additionalUrls.length > 0 && (
+                  <>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:bg-black/50 rounded-full"
+                      onClick={(e) => { e.stopPropagation(); setPreviewImageIndex(p => Math.max(0, p - 1)); }}
+                      disabled={previewImageIndex === 0}
+                    >
+                      <ChevronLeft className="w-8 h-8" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:bg-black/50 rounded-full"
+                      onClick={(e) => { e.stopPropagation(); setPreviewImageIndex(p => Math.min((selectedImage.additionalUrls?.length || 0), p + 1)); }}
+                      disabled={previewImageIndex === (selectedImage.additionalUrls?.length || 0)}
+                    >
+                      <ChevronRight className="w-8 h-8" />
+                    </Button>
+                    
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 p-2 rounded-lg flex items-center gap-2 max-w-[80vw] overflow-x-auto" onClick={e => e.stopPropagation()}>
+                      {[selectedImage.thumbnailUrl, ...selectedImage.additionalUrls].map((url, idx) => (
+                        <div key={idx} className="relative group shrink-0">
+                          <img 
+                            src={url} 
+                            alt={`Thumbnail ${idx}`} 
+                            className={cn("w-10 h-10 md:w-16 md:h-16 object-cover rounded cursor-pointer border-2 transition-all", previewImageIndex === idx ? "border-yellow-500 scale-110" : "border-transparent opacity-60 hover:opacity-100")}
+                            onClick={() => setPreviewImageIndex(idx)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Footer stats */}
               <div className="p-4 bg-gray-950 border-t border-gray-800 flex items-center justify-between text-xs text-gray-400">
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+                  <button 
+                    className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                    onClick={(e) => {
+                      handleLikeToggle(selectedImage.id, e as unknown as React.MouseEvent);
+                      setSelectedImage(prev => prev ? { 
+                        ...prev, 
+                        likes: prev.likedByUser ? Math.max(0, prev.likes - 1) : prev.likes + 1,
+                        likedByUser: !prev.likedByUser 
+                      } : null);
+                    }}
+                  >
+                    <Heart className={cn("w-4 h-4", selectedImage.likedByUser ? "text-red-500 fill-red-500" : "text-gray-400")} />
                     <span>{selectedImage.likes} likes</span>
-                  </div>
+                  </button>
                   <span>Uploaded: {selectedImage.uploadDate}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -1130,10 +1193,20 @@ export default function DirectoryPage() {
               {/* Footer stats */}
               <div className="p-4 bg-gray-950 border-t border-gray-800 flex items-center justify-between text-xs text-gray-400">
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+                  <button 
+                    className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                    onClick={(e) => {
+                      handleLikeToggle(selectedVideo.id, e as unknown as React.MouseEvent);
+                      setSelectedVideo(prev => prev ? { 
+                        ...prev, 
+                        likes: prev.likedByUser ? Math.max(0, prev.likes - 1) : prev.likes + 1,
+                        likedByUser: !prev.likedByUser 
+                      } : null);
+                    }}
+                  >
+                    <Heart className={cn("w-4 h-4", selectedVideo.likedByUser ? "text-red-500 fill-red-500" : "text-gray-400")} />
                     <span>{selectedVideo.likes} likes</span>
-                  </div>
+                  </button>
                   <span>Uploaded: {selectedVideo.uploadDate}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
