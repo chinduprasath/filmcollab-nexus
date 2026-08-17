@@ -181,7 +181,7 @@ export default function ShootingLocations() {
 
   return (
     <AppLayout>
-      <div className="flex-1 space-y-6 p-8 pt-6">
+      <div className="flex-1 space-y-6 px-0 py-2 md:p-8 md:pt-6">
         
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

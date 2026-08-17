@@ -137,9 +137,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: profileData, error: profileError } = profileResult;
       const { data: roleData, error: roleError } = roleResult;
 
+      let finalProfileData = profileData;
+
+      if (finalProfileData) {
+        // Fix for signup profession
+        const pendingProfession = localStorage.getItem('pending_profession');
+        if (pendingProfession && (finalProfileData.role === 'USER' || finalProfileData.role === 'user' || !finalProfileData.role)) {
+           console.log("Updating profile with pending profession:", pendingProfession);
+           const { error: updateErr } = await supabase.from('profiles').update({ role: pendingProfession }).eq('user_id', userId);
+           if (!updateErr) {
+             finalProfileData = { ...finalProfileData, role: pendingProfession };
+           }
+           localStorage.removeItem('pending_profession');
+        }
+      }
+
       // Fetch admin permissions if applicable
       let adminPermsData = null;
-      if (profileData && (profileData.role === 'admin' || (roleData && roleData.some(r => r.role === 'admin')))) {
+      if (finalProfileData && (finalProfileData.role === 'admin' || (roleData && roleData.some(r => r.role === 'admin')))) {
         const permsResult = await withTimeout(
           supabase
             .from('admin_team_members')
@@ -162,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('Role fetch warning or timeout:', roleError);
       }
 
-      let activeProfile = profileData;
+      let activeProfile = finalProfileData;
 
       if (!activeProfile) {
         console.log('No profile found for user in DB. Creating a profile on the fly...');
@@ -525,6 +540,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("registering_admin");
       }
 
+      // To prevent Postgres ENUM cast errors in handle_new_user_role trigger when role is a profession like "Director"
+      const authRole = role === 'admin' ? 'admin' : undefined;
+      
+      if (role && role !== 'admin') {
+        localStorage.setItem('pending_profession', role);
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -534,7 +556,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             full_name: fullName,
             first_name: firstName || '',
             last_name: lastName || '',
-            role: role || '',
+            role: authRole,
           }
         }
       });

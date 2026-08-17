@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CategoryDropdown } from "@/components/ui/category-dropdown";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
@@ -928,15 +929,15 @@ export default function ProjectsPage() {
     <AppLayout pageTitle="Projects">
       <div className="space-y-6 text-gray-900 dark:text-gray-100">
         {/* Header */}
-        <div className="flex justify-between items-start">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+          <div className="w-full sm:w-auto">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects</h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-gray-600 dark:text-gray-300 mt-1 w-full">
               Discover and collaborate on film and entertainment projects
             </p>
           </div>
           <Button 
-            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
+            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white w-full sm:w-auto"
             onClick={() => setIsCreateDialogOpen(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -945,21 +946,24 @@ export default function ProjectsPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-            <Input
-              placeholder="Search projects, titles, or keywords..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-yellow-200 focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white dark:border-yellow-900/40"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="border-yellow-200 text-gray-800 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:text-gray-300 dark:hover:bg-yellow-950/20 dark:hover:text-white" onClick={() => setShowFilters(!showFilters)}>
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex gap-2 w-full flex-1">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+              <Input
+                placeholder="Search projects, titles, or keywords..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 border-yellow-200 focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white dark:border-yellow-900/40 w-full"
+              />
+            </div>
+            <Button variant="outline" className="shrink-0 border-yellow-200 text-gray-800 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:text-gray-300 dark:hover:bg-yellow-950/20 dark:hover:text-white" onClick={() => setShowFilters(!showFilters)}>
+              <Filter className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Filters</span>
             </Button>
+          </div>
+          
+          <div className="hidden md:block">
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-40 bg-white dark:bg-background border-gray-200 dark:border-yellow-900/40 text-gray-900 dark:text-white">
                 <SelectValue placeholder="Sort by" />
@@ -976,12 +980,14 @@ export default function ProjectsPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 bg-yellow-50/50 dark:bg-background border border-yellow-200/50 dark:border-yellow-900/30">
-            <TabsTrigger value="all" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">All Projects ({projects.length})</TabsTrigger>
-            <TabsTrigger value="joined" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">Joined ({projects.filter(p => p.is_member && p.created_by !== user?.id).length})</TabsTrigger>
-            <TabsTrigger value="created" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">Created ({projects.filter(p => p.created_by === user?.id).length})</TabsTrigger>
-            <TabsTrigger value="saved" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white">Saved ({savedProjects.length})</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto pb-2 scrollbar-none">
+            <TabsList className="inline-flex min-w-max w-full md:grid md:w-full md:grid-cols-4 bg-yellow-50/50 dark:bg-background border border-yellow-200/50 dark:border-yellow-900/30">
+              <TabsTrigger value="all" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white text-xs sm:text-sm">All Projects ({projects.length})</TabsTrigger>
+              <TabsTrigger value="joined" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white text-xs sm:text-sm">Joined ({projects.filter(p => p.is_member && p.created_by !== user?.id).length})</TabsTrigger>
+              <TabsTrigger value="created" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white text-xs sm:text-sm">Created ({projects.filter(p => p.created_by === user?.id).length})</TabsTrigger>
+              <TabsTrigger value="saved" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white text-xs sm:text-sm">Saved ({savedProjects.length})</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value={activeTab} className="space-y-4">
             <div className="flex justify-between items-center">
@@ -1542,19 +1548,35 @@ export default function ProjectsPage() {
         {showFilters && (
           <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
             <div className="w-80 bg-background h-full shadow-lg overflow-y-auto">
-              <div className="p-6">
+              <div className="px-0 py-2 md:p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold">Filters</h3>
+                  <h3 className="text-lg font-semibold">Filters & Sort</h3>
                   <Button 
                     variant="ghost" 
-                    size="sm" 
+                    size="icon" 
                     onClick={() => setShowFilters(false)}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-5 w-5" />
                   </Button>
                 </div>
 
-                <div className="space-y-6">
+                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                  {/* Mobile Sort */}
+                  <div className="md:hidden space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort By</label>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="w-full bg-white dark:bg-background border-gray-200 dark:border-yellow-900/40 text-gray-900 dark:text-white">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Newest First</SelectItem>
+                        <SelectItem value="oldest">Oldest First</SelectItem>
+                        <SelectItem value="popular">Most Popular</SelectItem>
+                        <SelectItem value="budget">Highest Budget</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Project Type</label>
                     <Select value={filters.projectType} onValueChange={(value) => setFilters(prev => ({ ...prev, projectType: value }))}>
@@ -1574,17 +1596,11 @@ export default function ProjectsPage() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Category</label>
-                    <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Categories" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <CategoryDropdown
+                      value={filters.category === "all" ? "" : filters.category}
+                      onChange={(value) => setFilters(prev => ({ ...prev, category: value || "all" }))}
+                      placeholder="All Categories"
+                    />
                   </div>
 
                   <div className="space-y-2">

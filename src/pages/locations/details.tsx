@@ -290,7 +290,7 @@ export default function LocationDetails() {
 
               {/* Contact Card */}
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="px-0 py-2 md:p-6">
                   <h3 className="font-bold text-lg mb-4 border-b pb-2">Contact Information</h3>
                   <div className="space-y-3 text-sm text-gray-700">
                     <div>

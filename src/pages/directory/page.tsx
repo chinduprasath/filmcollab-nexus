@@ -9,12 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "motion/react";
 import { AddFileDialog } from "@/components/directory/AddFileDialog";
+import { CategoryDropdown } from "@/components/ui/category-dropdown";
 import {
   Search,
+  Plus,
   Image as ImageIcon,
   Video as VideoIcon,
   FileText,
@@ -401,7 +404,6 @@ export default function DirectoryPage() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterMinLikes, setFilterMinLikes] = useState<string>("");
   const [filterMaxLikes, setFilterMaxLikes] = useState<string>("");
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   
   // Modals / Read mode states
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
@@ -425,30 +427,6 @@ export default function DirectoryPage() {
       if (user?.id) setCurrentUserId(user.id);
     });
   }, []);
-
-  useEffect(() => {
-    const typeMap: Record<string, string> = {
-      'images': 'image',
-      'videos': 'video',
-      'audios': 'audio',
-      'documents': 'document'
-    };
-    const fileType = typeMap[activeTab];
-    if (fileType) {
-      supabase.from("directory_categories")
-        .select("name")
-        .eq("file_type", fileType)
-        .then(({ data, error }) => {
-          if (!error && data) {
-            const parsed = data
-              .map((d: any) => d.name.split(',').map((s: string) => s.trim()))
-              .flat()
-              .filter(Boolean);
-            setAvailableCategories(Array.from(new Set(parsed)) as string[]);
-          }
-        });
-    }
-  }, [activeTab]);
 
   // Toggle Like Handler (Requirement 4: Remove views, instead add likes)
   const handleLikeToggle = async (id: string, e: React.MouseEvent) => {
@@ -735,10 +713,11 @@ export default function DirectoryPage() {
             </div>
           </div>
         </div>
-        {/* Tabs - Only displayed if not viewing liked items */}
+        {/* Navigation - Tabs for Desktop, Dropdown for Mobile - Only displayed if not viewing liked items */}
         {!viewingLiked && (
           <div className="bg-white dark:bg-background rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40 overflow-hidden">
-            <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-800 px-4 scrollbar-none overflow-x-auto">
+            {/* Desktop View */}
+            <div className="hidden md:flex justify-between items-center border-b border-gray-200 dark:border-gray-800 px-4">
               <div className="flex">
                 {[
                   { id: "images", label: "Images", icon: ImageIcon },
@@ -772,6 +751,38 @@ export default function DirectoryPage() {
                   className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold h-9 text-xs px-4 shadow-sm transition-colors"
                 >
                   Add Files
+                </Button>
+              </div>
+            </div>
+
+            {/* Mobile View */}
+            <div className="flex md:hidden flex-col gap-3 p-3 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex justify-between items-center w-full gap-2">
+                <Select value={activeTab} onValueChange={(val) => handleTabChange(val as DirType)}>
+                  <SelectTrigger className="w-full text-sm font-medium border-yellow-200 focus:ring-yellow-500 h-10">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" side="bottom" avoidCollisions={false}>
+                    <SelectItem value="images"><div className="flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Images</div></SelectItem>
+                    <SelectItem value="videos"><div className="flex items-center gap-2"><VideoIcon className="w-4 h-4" /> Videos</div></SelectItem>
+                    <SelectItem value="documents"><div className="flex items-center gap-2"><FileText className="w-4 h-4" /> Documents</div></SelectItem>
+                    <SelectItem value="audios"><div className="flex items-center gap-2"><Music className="w-4 h-4" /> Audios</div></SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2 w-full">
+                <Button
+                  variant="outline"
+                  onClick={() => setSidebarOpen(true)}
+                  className="flex-1 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 font-bold h-10 text-xs shadow-sm"
+                >
+                  <Filter className="w-3.5 h-3.5 mr-1.5" /> Filter
+                </Button>
+                <Button
+                  onClick={() => setShowAddFileDialog(true)}
+                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-bold h-10 text-xs shadow-sm transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Files
                 </Button>
               </div>
             </div>
@@ -1382,16 +1393,11 @@ export default function DirectoryPage() {
           <div className="mt-8 space-y-6">
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Category</Label>
-              <select
-                value={filterCategory}
-                onChange={(e) => { setFilterCategory(e.target.value); resetPaging(); }}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500"
-              >
-                <option value="all">All Categories</option>
-                {availableCategories.map((cat, idx) => (
-                  <option key={idx} value={cat}>{cat}</option>
-                ))}
-              </select>
+              <CategoryDropdown
+                value={filterCategory === "all" ? "" : filterCategory}
+                onChange={(val) => { setFilterCategory(val || "all"); resetPaging(); }}
+                placeholder="All Categories"
+              />
             </div>
 
             <div className="space-y-3">

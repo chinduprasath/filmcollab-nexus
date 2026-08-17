@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CategoryDropdown } from "@/components/ui/category-dropdown";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -1005,6 +1006,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [editProfileTab, setEditProfileTab] = useState("profile");
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [editForm, setEditForm] = useState<ProfileData>(emptyProfileData);
@@ -1480,16 +1482,11 @@ export default function ProfilePage() {
           console.error("Error loading profile stats:", e);
         }
 
-        // Jobs joined (from localStorage)
+        // Jobs applied (from database)
         try {
-          const storedApplied = localStorage.getItem(`applied_jobs_${resolvedUserId}`);
-          if (storedApplied) {
-            const arr = JSON.parse(storedApplied);
-            if (Array.isArray(arr)) {
-              updateJobsCount(arr.length);
-            } else {
-              updateJobsCount(0);
-            }
+          const jobsRes = await supabase.from('job_applications').select('id', { count: 'exact', head: true }).eq('user_id', resolvedUserId);
+          if (!jobsRes.error) {
+            updateJobsCount(jobsRes.count ?? 0);
           } else {
             updateJobsCount(0);
           }
@@ -1859,9 +1856,9 @@ export default function ProfilePage() {
         <Card className="relative overflow-hidden border-yellow-200 dark:border-zinc-800 bg-white dark:bg-background">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row md:items-center gap-4">
-              <div className="flex flex-col items-center md:flex-row md:items-center gap-4 flex-1 text-center md:text-left">
-                <div className="relative group mx-auto md:mx-0">
-                  <Avatar className="w-24 h-24 border-4 border-white dark:border-zinc-800 shadow-lg flex-shrink-0">
+              <div className="flex flex-row items-center md:items-center gap-4 flex-1 text-left w-full">
+                <div className="relative group mx-0 flex-shrink-0">
+                  <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-white dark:border-zinc-800 shadow-lg flex-shrink-0">
                     <AvatarImage src={profile.avatar} alt={profile.name} />
                     <AvatarFallback className="text-xl font-semibold bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
                       {profile.name.split(' ').map(n => n[0]).join('')}
@@ -1889,8 +1886,8 @@ export default function ProfilePage() {
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-50 flex flex-wrap items-center justify-center md:justify-start gap-2">
+                  <div className="flex items-center justify-start gap-2 mb-1">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-zinc-50 flex flex-nowrap items-center justify-start gap-1.5 sm:gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden w-full max-w-full sm:max-w-none whitespace-nowrap">
                       {profile.name}
                       {profile.verified && (
                         <UserCheck className="w-5 h-5 text-blue-500 flex-shrink-0" />
@@ -1915,12 +1912,12 @@ export default function ProfilePage() {
                       })}
                     </h1>
                   </div>
-                  <div className="flex items-center justify-center md:justify-start gap-2 text-sm mb-2 flex-wrap">
-                    <span className="text-gray-600 dark:text-zinc-400">@{profile.username}</span>
-                    <span className="text-gray-300 dark:text-zinc-600">•</span>
-                    <span className="text-gray-700 dark:text-zinc-300 font-medium">{profile.role}</span>
+                  <div className="flex items-center justify-start gap-2 text-sm mb-2 flex-wrap">
+                    {profile.username && <span className="text-gray-600 dark:text-zinc-400">@{profile.username}</span>}
+                    {profile.username && profile.role && <span className="text-gray-300 dark:text-zinc-600">•</span>}
+                    {profile.role && <span className="text-gray-700 dark:text-zinc-300 font-medium">{profile.role}</span>}
                   </div>
-                  <div className="flex items-center justify-center md:justify-start gap-4 text-xs text-gray-500 dark:text-zinc-400">
+                  <div className="flex flex-row items-center justify-start gap-4 text-xs text-gray-500 dark:text-zinc-400 w-full mt-1">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-3 h-3 flex-shrink-0" />
                       {profile.location}
@@ -1939,89 +1936,113 @@ export default function ProfilePage() {
                   {/* Instagram Icon & Followers */}
                   <div className="flex flex-col items-center gap-1">
                     {profile.instagram ? (
-                      <a
-                        href={profile.instagram}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 rounded-full transition-colors text-pink-600 bg-pink-50 hover:bg-pink-100 dark:bg-pink-950/30 dark:text-pink-400"
-                        title="Instagram profile"
-                      >
-                        <Instagram className="w-5 h-5" />
-                      </a>
+                      <>
+                        
+                        <a
+                          href={profile.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-full transition-colors text-pink-600 bg-pink-50 hover:bg-pink-100 dark:bg-pink-950/30 dark:text-pink-400"
+                          title="Instagram profile"
+                        >
+                          <Instagram className="w-5 h-5" />
+                        </a>
+                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                          {followersCounts.instagram || "..."}
+                        </span>
+                      </>
                     ) : (
-                      <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No Instagram profile">
-                        <Instagram className="w-5 h-5" />
-                      </div>
+                      <>
+                        <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No Instagram profile">
+                          <Instagram className="w-5 h-5" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">NA</span>
+                      </>
                     )}
-                    <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-                      {profile.instagram ? (followersCounts.instagram || "...") : "NA"}
-                    </span>
                   </div>
 
                   {/* YouTube Icon & Followers */}
                   <div className="flex flex-col items-center gap-1">
                     {profile.youtube ? (
-                      <a
-                        href={profile.youtube}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 rounded-full transition-colors text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400"
-                        title="YouTube profile"
-                      >
-                        <Youtube className="w-5 h-5" />
-                      </a>
+                      <>
+                        
+                        <a
+                          href={profile.youtube}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-full transition-colors text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400"
+                          title="YouTube profile"
+                        >
+                          <Youtube className="w-5 h-5" />
+                        </a>
+                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                          {followersCounts.youtube || "..."}
+                        </span>
+                      </>
                     ) : (
-                      <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No YouTube profile">
-                        <Youtube className="w-5 h-5" />
-                      </div>
+                      <>
+                        <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No YouTube profile">
+                          <Youtube className="w-5 h-5" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">NA</span>
+                      </>
                     )}
-                    <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-                      {profile.youtube ? (followersCounts.youtube || "...") : "NA"}
-                    </span>
                   </div>
 
                   {/* Facebook Icon & Followers */}
                   <div className="flex flex-col items-center gap-1">
                     {profile.facebook ? (
-                      <a
-                        href={profile.facebook}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 rounded-full transition-colors text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/30 dark:text-blue-400"
-                        title="Facebook profile"
-                      >
-                        <Facebook className="w-5 h-5" />
-                      </a>
+                      <>
+                        
+                        <a
+                          href={profile.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-full transition-colors text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/30 dark:text-blue-400"
+                          title="Facebook profile"
+                        >
+                          <Facebook className="w-5 h-5" />
+                        </a>
+                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                          {followersCounts.facebook || "..."}
+                        </span>
+                      </>
                     ) : (
-                      <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No Facebook profile">
-                        <Facebook className="w-5 h-5" />
-                      </div>
+                      <>
+                        <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No Facebook profile">
+                          <Facebook className="w-5 h-5" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">NA</span>
+                      </>
                     )}
-                    <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-                      {profile.facebook ? (followersCounts.facebook || "...") : "NA"}
-                    </span>
                   </div>
 
                   {/* Twitter Icon & Followers */}
                   <div className="flex flex-col items-center gap-1">
                     {profile.twitter ? (
-                      <a
-                        href={profile.twitter}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 rounded-full transition-colors text-sky-500 bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/30 dark:text-sky-400"
-                        title="Twitter profile"
-                      >
-                        <Twitter className="w-5 h-5" />
-                      </a>
+                      <>
+                        
+                        <a
+                          href={profile.twitter}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-full transition-colors text-sky-500 bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/30 dark:text-sky-400"
+                          title="Twitter profile"
+                        >
+                          <Twitter className="w-5 h-5" />
+                        </a>
+                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                          {followersCounts.twitter || "..."}
+                        </span>
+                      </>
                     ) : (
-                      <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No Twitter profile">
-                        <Twitter className="w-5 h-5" />
-                      </div>
+                      <>
+                        <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No Twitter profile">
+                          <Twitter className="w-5 h-5" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">NA</span>
+                      </>
                     )}
-                    <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-                      {profile.twitter ? (followersCounts.twitter || "...") : "NA"}
-                    </span>
                   </div>
 
                 </div>
@@ -2030,7 +2051,7 @@ export default function ProfilePage() {
             
             {/* Statistics Row */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-zinc-800">
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 sm:gap-x-6 gap-y-3 w-full sm:w-auto">
                 <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-zinc-400" title="Connections">
                   <Users className="w-4 h-4 text-gray-500 dark:text-zinc-500" />
                   <span className="font-semibold text-gray-900 dark:text-zinc-100">{connectionsCount.toLocaleString()}</span>
@@ -2050,11 +2071,11 @@ export default function ProfilePage() {
               </div>
 
               {isOwnProfile ? (
-                <div className="flex gap-2 self-end sm:self-auto">
+                <div className="flex gap-2 self-center sm:self-auto w-full sm:w-auto mt-2 sm:mt-0">
                   <Button 
                     size="sm" 
                     variant="secondary" 
-                    className="bg-white hover:bg-gray-50 border-gray-300 dark:bg-background dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 shadow-sm flex items-center gap-1"
+                    className="flex-1 sm:flex-none bg-white hover:bg-gray-50 border-gray-300 dark:bg-background dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 shadow-sm flex items-center justify-center gap-1"
                     onClick={handleEditProfile}
                   >
                     <Edit className="w-4 h-4" />
@@ -2063,7 +2084,7 @@ export default function ProfilePage() {
                   <Button 
                     size="sm" 
                     variant="secondary" 
-                    className="bg-white hover:bg-gray-50 border-gray-300 dark:bg-background dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 shadow-sm flex items-center gap-1"
+                    className="flex-1 sm:flex-none bg-white hover:bg-gray-50 border-gray-300 dark:bg-background dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 shadow-sm flex items-center justify-center gap-1"
                     onClick={() => setShowShareModal(true)}
                   >
                     <Share2 className="w-4 h-4" />
@@ -2071,11 +2092,11 @@ export default function ProfilePage() {
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 self-end sm:self-auto">
+                <div className="flex items-center gap-2 self-center sm:self-auto w-full sm:w-auto mt-2 sm:mt-0">
                   <Button 
                     size="sm" 
                     variant="ghost" 
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    className="flex-1 sm:flex-none hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 justify-center"
                     onClick={() => navigate(`/messages?u=${encodeURIComponent(profile.username)}`)}
                     disabled={!canMessage}
                   >
@@ -2085,7 +2106,7 @@ export default function ProfilePage() {
                   <Button 
                     size="sm" 
                     onClick={handleConnect}
-                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white disabled:opacity-50"
+                    className="flex-1 sm:flex-none bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white disabled:opacity-50 justify-center"
                     disabled={!canConnect}
                   >
                     <UserPlus className="w-4 h-4 mr-1.5" />
@@ -2101,7 +2122,26 @@ export default function ProfilePage() {
         <div className="w-full space-y-4">
           <div className="w-full space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="flex w-full overflow-x-auto bg-yellow-50 dark:bg-zinc-800 border border-yellow-200 dark:border-zinc-700 p-1 rounded-lg justify-start md:grid md:grid-cols-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              
+              {/* Mobile Dropdown */}
+              <div className="md:hidden w-full mb-4">
+                <Select value={activeTab} onValueChange={setActiveTab}>
+                  <SelectTrigger className="w-full h-10 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-600 font-medium text-gray-900 dark:text-white shadow-sm">
+                    <SelectValue placeholder="Select tab" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" side="bottom" align="start">
+                    <SelectItem value="overview">Overview</SelectItem>
+                    <SelectItem value="experience">Experience</SelectItem>
+                    <SelectItem value="projects">Projects</SelectItem>
+                    <SelectItem value="achievements">Achievements</SelectItem>
+                    <SelectItem value="education">Education</SelectItem>
+                    <SelectItem value="directory">Directory</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Desktop Tabs */}
+              <TabsList className="hidden md:grid w-full overflow-x-auto bg-yellow-50 dark:bg-zinc-800 border border-yellow-200 dark:border-zinc-700 p-1 rounded-lg justify-start grid-cols-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <TabsTrigger 
                   value="overview" 
                   className="text-xs text-gray-700 dark:text-zinc-300 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:dark:text-white"
@@ -2543,15 +2583,15 @@ export default function ProfilePage() {
 
               <TabsContent value="directory" className="space-y-4">
                 <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Directory</CardTitle>
-                    <div className="flex gap-2 items-center">
-                      <Button size="sm" onClick={() => setShowAddFileDialog(true)} className="h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
+                  <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 gap-4 sm:gap-2">
+                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50 w-full sm:w-auto">Directory</CardTitle>
+                    <div className="flex gap-2 items-center w-full sm:w-auto">
+                      <Button size="sm" onClick={() => setShowAddFileDialog(true)} className="flex-1 sm:flex-none h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                         <Plus className="w-4 h-4 mr-1" />
                         Add Files
                       </Button>
-                      <Select value={directoryFilter} onValueChange={(v: any) => { setDirectoryFilter(v); setDirectoryPage(1); }}>
-                        <SelectTrigger className="w-[130px] h-8 text-xs bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700">
+                      <div className="flex-1 sm:flex-none w-full"><Select value={directoryFilter} onValueChange={(v: any) => { setDirectoryFilter(v); setDirectoryPage(1); }}>
+                        <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700">
                           <SelectValue placeholder="Filter by type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2562,6 +2602,7 @@ export default function ProfilePage() {
                           <SelectItem value="audio">Audio</SelectItem>
                         </SelectContent>
                       </Select>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -2573,10 +2614,10 @@ export default function ProfilePage() {
                       </div>
                     ) : (
                       <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                           {(() => {
                         const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter).sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
-                        const paginated = filtered.slice((directoryPage - 1) * 16, directoryPage * 16);
+                        const paginated = filtered.slice((directoryPage - 1) * 10, directoryPage * 10);
                         if (filtered.length === 0) return <p className="text-sm text-gray-500 dark:text-zinc-400 col-span-full">No files found.</p>;
                         return paginated.map(file => (
                           <div key={file.id} className="relative group overflow-hidden rounded-md cursor-pointer border border-gray-200 dark:border-zinc-800" onClick={() => setPreviewFile(file)}>
@@ -2620,7 +2661,7 @@ export default function ProfilePage() {
                     </div>
                     {(() => {
                       const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter);
-                      const totalPages = Math.ceil(filtered.length / 16);
+                      const totalPages = Math.ceil(filtered.length / 10);
                       if (totalPages <= 1) return null;
                       return (
                         <div className="flex justify-center items-center gap-2 mt-4">
@@ -2713,8 +2754,22 @@ export default function ProfilePage() {
             <DialogTitle className="text-2xl font-bold">Edit Profile</DialogTitle>
           </DialogHeader>
           
-          <Tabs defaultValue="profile" className="w-full flex-1 flex flex-col min-h-0">
-            <TabsList className="flex w-full overflow-x-auto bg-gray-100 flex-shrink-0 justify-start md:grid md:grid-cols-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <Tabs value={editProfileTab} onValueChange={setEditProfileTab} className="w-full flex-1 flex flex-col min-h-0">
+                          <div className="md:hidden w-full mb-4 mt-2 px-1 flex-shrink-0">
+                <Select value={editProfileTab} onValueChange={setEditProfileTab}>
+                  <SelectTrigger className="w-full h-10 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-600 font-medium text-gray-900 dark:text-white shadow-sm">
+                    <SelectValue placeholder="Select section" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" side="bottom" align="start">
+                    <SelectItem value="profile">Profile</SelectItem>
+                    <SelectItem value="experience">Experience</SelectItem>
+                    <SelectItem value="achievements">Achievements</SelectItem>
+                    <SelectItem value="education">Education</SelectItem>
+                    <SelectItem value="directory">Directory</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <TabsList className="hidden md:grid w-full overflow-x-auto bg-gray-100 flex-shrink-0 justify-start grid-cols-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <TabsTrigger 
                 value="profile" 
                 className="text-sm data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
@@ -2819,38 +2874,11 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <Label htmlFor="role">Role</Label>
-                    <Select value={editForm.role} onValueChange={(value) => handleFormChange('role', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Director">Director</SelectItem>
-                        <SelectItem value="Producer">Producer</SelectItem>
-                        <SelectItem value="Cinematographer">Cinematographer</SelectItem>
-                        <SelectItem value="Editor">Editor</SelectItem>
-                        <SelectItem value="Writer">Writer</SelectItem>
-                        <SelectItem value="Composer">Composer</SelectItem>
-                        <SelectItem value="Designer">Designer</SelectItem>
-                        <SelectItem value="Sound Designer">Sound Designer</SelectItem>
-                        <SelectItem value="Actor">Actor</SelectItem>
-                        <SelectItem value="Actress">Actress</SelectItem>
-                        <SelectItem value="Screenwriter">Screenwriter</SelectItem>
-                        <SelectItem value="Production Manager">Production Manager</SelectItem>
-                        <SelectItem value="Assistant Director">Assistant Director</SelectItem>
-                        <SelectItem value="Camera Operator">Camera Operator</SelectItem>
-                        <SelectItem value="Sound Engineer">Sound Engineer</SelectItem>
-                        <SelectItem value="Makeup Artist">Makeup Artist</SelectItem>
-                        <SelectItem value="Costume Designer">Costume Designer</SelectItem>
-                        <SelectItem value="Set Designer">Set Designer</SelectItem>
-                        <SelectItem value="VFX Artist">VFX Artist</SelectItem>
-                        <SelectItem value="Motion Graphics Designer">Motion Graphics Designer</SelectItem>
-                        <SelectItem value="Colorist">Colorist</SelectItem>
-                        <SelectItem value="Film Distributor">Film Distributor</SelectItem>
-                        <SelectItem value="Digital Marketer">Digital Marketer</SelectItem>
-                        <SelectItem value="Social Media Manager">Social Media Manager</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <CategoryDropdown
+                      value={editForm.role}
+                      onChange={(value) => handleFormChange('role', value)}
+                      placeholder="Select your role"
+                    />
                   </div>
                 </div>
                 
@@ -3453,8 +3481,8 @@ export default function ProfilePage() {
             <TabsContent value="directory" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">Directory</h3>
-                <div className="flex gap-2 items-center">
-                  <Select value={directoryFilter} onValueChange={(v: any) => { setDirectoryFilter(v); setDirectoryPage(1); }}>
+                <div className="flex gap-2 items-center w-full sm:w-auto">
+                  <div className="flex-1 sm:flex-none w-full"><Select value={directoryFilter} onValueChange={(v: any) => { setDirectoryFilter(v); setDirectoryPage(1); }}>
                     <SelectTrigger className="w-[130px] h-8 text-xs">
                       <SelectValue placeholder="Filter by type" />
                     </SelectTrigger>
@@ -3465,7 +3493,8 @@ export default function ProfilePage() {
                       <SelectItem value="video">Videos</SelectItem>
                       <SelectItem value="audio">Audio</SelectItem>
                     </SelectContent>
-                  </Select>
+                      </Select>
+                  </div>
                   <Button size="sm" onClick={() => setShowAddFileDialog(true)} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Files
@@ -3473,10 +3502,10 @@ export default function ProfilePage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {(() => {
                   const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter).sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
-                  const paginated = filtered.slice((directoryPage - 1) * 16, directoryPage * 16);
+                  const paginated = filtered.slice((directoryPage - 1) * 10, directoryPage * 10);
                   if (filtered.length === 0) return <p className="text-sm text-gray-500 col-span-full">No files found.</p>;
                   return paginated.map(file => (
                     <div key={file.id} className="relative group overflow-hidden rounded-md cursor-pointer border border-gray-200 dark:border-zinc-800" onClick={() => setPreviewFile(file)}>
@@ -3516,7 +3545,7 @@ export default function ProfilePage() {
               </div>
               {(() => {
                  const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter);
-                 const totalPages = Math.ceil(filtered.length / 16);
+                 const totalPages = Math.ceil(filtered.length / 10);
                  if (totalPages <= 1) return null;
                  return (
                    <div className="flex justify-center items-center gap-2 mt-4">

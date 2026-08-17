@@ -198,7 +198,7 @@ const Billing = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex flex-row overflow-x-auto gap-6 pb-4 lg:grid lg:grid-cols-3 lg:overflow-visible snap-x">
               {isLoadingPlans ? (
                 <div className="col-span-3 text-center py-10">
                   <div className="w-8 h-8 animate-spin rounded-full border-4 border-yellow-500 border-t-transparent mx-auto mb-2"></div>
@@ -207,7 +207,7 @@ const Billing = () => {
               ) : availablePlans.map((plan) => {
                 const IconComponent = plan.is_custom_price ? Zap : (plan.popular ? Crown : Star);
                 return (
-                  <Card key={plan.id} className={`relative ${plan.popular ? 'border-yellow-500 shadow-lg' : 'border-gray-200'}`}>
+                  <Card key={plan.id} className={`relative min-w-[280px] lg:min-w-0 flex-shrink-0 snap-center ${plan.popular ? 'border-yellow-500 shadow-lg' : 'border-gray-200'}`}>
                     {plan.popular && (
                       <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                         <Badge className="bg-yellow-600 text-white px-3 py-1">

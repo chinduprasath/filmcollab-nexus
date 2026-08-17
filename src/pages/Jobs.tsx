@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { CategoryDropdown } from "@/components/ui/category-dropdown";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -536,14 +537,19 @@ export default function Jobs() {
           console.error(e);
         }
       }
-      const storedApplied = localStorage.getItem(`applied_jobs_${user.id}`);
-      if (storedApplied) {
-        try {
-          setAppliedJobs(JSON.parse(storedApplied));
-        } catch (e) {
-          console.error(e);
-        }
-      }
+      
+      // Fetch applied jobs from DB
+      supabase
+        .from('job_applications')
+        .select('job_id')
+        .eq('user_id', user.id)
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setAppliedJobs(data.map(d => d.job_id));
+          } else if (error) {
+            console.error('Error fetching applied jobs:', error);
+          }
+        });
     } else {
       setSavedJobs([]);
       setAppliedJobs([]);
@@ -555,12 +561,6 @@ export default function Jobs() {
       localStorage.setItem(`saved_jobs_${user.id}`, JSON.stringify(savedJobs));
     }
   }, [savedJobs, user]);
-
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(`applied_jobs_${user.id}`, JSON.stringify(appliedJobs));
-    }
-  }, [appliedJobs, user]);
 
   const onSubmit = async (data: JobFormData) => {
     if (!user) {
@@ -853,15 +853,24 @@ export default function Jobs() {
       return;
     }
 
-    setAppliedJobs(prev => {
-      if (prev.includes(job.id)) {
-        toast({
-          title: "Already Applied",
-          description: `You have already applied for ${job.job_title} at ${job.company_name}.`
-        });
-        return prev;
-      }
-      const updated = [...prev, job.id];
+    if (appliedJobs.includes(job.id)) {
+      toast({
+        title: "Already Applied",
+        description: `You have already applied for ${job.job_title} at ${job.company_name}.`
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('job_applications').insert({
+        job_id: job.id,
+        user_id: user.id
+      });
+
+      if (error) throw error;
+
+      setAppliedJobs(prev => [...prev, job.id]);
+      
       toast({
         title: "Application Submitted",
         description: `Successfully applied for ${job.job_title} at ${job.company_name}!`
@@ -877,9 +886,14 @@ export default function Jobs() {
           action_url: `/jobs?jobId=${job.id}`
         }).then();
       }
-      
-      return updated;
-    });
+    } catch (error) {
+      console.error('Error applying for job:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to submit application. Please try again."
+      });
+    }
   };
 
   const handleEditJob = (job: Job) => {
@@ -1477,98 +1491,11 @@ export default function Jobs() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-gray-700">Category</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
-                                <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="max-h-60">
-                              {/* Film & Media Projects */}
-                              <SelectItem value="Short Films">Short Films</SelectItem>
-                              <SelectItem value="Feature Films">Feature Films</SelectItem>
-                              <SelectItem value="Web Series">Web Series</SelectItem>
-                              <SelectItem value="Documentaries">Documentaries</SelectItem>
-                              <SelectItem value="Music Videos">Music Videos</SelectItem>
-                              <SelectItem value="Advertisements / Commercials">Advertisements / Commercials</SelectItem>
-                              <SelectItem value="Corporate Videos">Corporate Videos</SelectItem>
-                              <SelectItem value="Theatre / Stage Plays">Theatre / Stage Plays</SelectItem>
-                              
-                              {/* Direction & Production */}
-                              <SelectItem value="Director">Director</SelectItem>
-                              <SelectItem value="Assistant Director">Assistant Director</SelectItem>
-                              <SelectItem value="Producer">Producer</SelectItem>
-                              <SelectItem value="Executive Producer">Executive Producer</SelectItem>
-                              <SelectItem value="Line Producer">Line Producer</SelectItem>
-                              <SelectItem value="Production Manager">Production Manager</SelectItem>
-                              <SelectItem value="Production Assistant">Production Assistant</SelectItem>
-                              
-                              {/* Cinematography & Camera */}
-                              <SelectItem value="Cinematographer / DOP">Cinematographer / DOP</SelectItem>
-                              <SelectItem value="Assistant Cameraman">Assistant Cameraman</SelectItem>
-                              <SelectItem value="Camera Operator">Camera Operator</SelectItem>
-                              <SelectItem value="Steadicam Operator">Steadicam Operator</SelectItem>
-                              <SelectItem value="Drone Operator">Drone Operator</SelectItem>
-                              <SelectItem value="Gaffer">Gaffer</SelectItem>
-                              <SelectItem value="Lighting Technician">Lighting Technician</SelectItem>
-                              
-                              {/* Actors & Performers */}
-                              <SelectItem value="Lead Actor / Actress">Lead Actor / Actress</SelectItem>
-                              <SelectItem value="Supporting Actor / Actress">Supporting Actor / Actress</SelectItem>
-                              <SelectItem value="Child Artist">Child Artist</SelectItem>
-                              <SelectItem value="Theatre Artist">Theatre Artist</SelectItem>
-                              <SelectItem value="Voice Over Artist">Voice Over Artist</SelectItem>
-                              <SelectItem value="Dancer">Dancer</SelectItem>
-                              <SelectItem value="Stunt Artist">Stunt Artist</SelectItem>
-                              
-                              {/* Writing & Creative */}
-                              <SelectItem value="Script Writer">Script Writer</SelectItem>
-                              <SelectItem value="Screenplay Writer">Screenplay Writer</SelectItem>
-                              <SelectItem value="Dialogue Writer">Dialogue Writer</SelectItem>
-                              <SelectItem value="Lyricist">Lyricist</SelectItem>
-                              <SelectItem value="Storyboard Artist">Storyboard Artist</SelectItem>
-                              
-                              {/* Music & Sound */}
-                              <SelectItem value="Music Director">Music Director</SelectItem>
-                              <SelectItem value="Background Score Composer">Background Score Composer</SelectItem>
-                              <SelectItem value="Singer / Vocalist">Singer / Vocalist</SelectItem>
-                              <SelectItem value="Instrumentalist">Instrumentalist</SelectItem>
-                              <SelectItem value="Sound Engineer">Sound Engineer</SelectItem>
-                              <SelectItem value="Foley Artist">Foley Artist</SelectItem>
-                              <SelectItem value="Dubbing / Voice Artist">Dubbing / Voice Artist</SelectItem>
-                              
-                              {/* Art & Design */}
-                              <SelectItem value="Art Director">Art Director</SelectItem>
-                              <SelectItem value="Set Designer">Set Designer</SelectItem>
-                              <SelectItem value="Costume Designer">Costume Designer</SelectItem>
-                              <SelectItem value="Fashion Stylist">Fashion Stylist</SelectItem>
-                              <SelectItem value="Makeup Artist">Makeup Artist</SelectItem>
-                              <SelectItem value="Hair Stylist">Hair Stylist</SelectItem>
-                              <SelectItem value="Graphic Designer">Graphic Designer</SelectItem>
-                              <SelectItem value="Poster Designer">Poster Designer</SelectItem>
-                              
-                              {/* Editing & Post Production */}
-                              <SelectItem value="Video Editor">Video Editor</SelectItem>
-                              <SelectItem value="VFX Artist">VFX Artist</SelectItem>
-                              <SelectItem value="Motion Graphics Designer">Motion Graphics Designer</SelectItem>
-                              <SelectItem value="Colorist">Colorist</SelectItem>
-                              <SelectItem value="DI Supervisor">DI Supervisor</SelectItem>
-                              <SelectItem value="Sound Editor">Sound Editor</SelectItem>
-                              
-                              {/* Marketing & Distribution */}
-                              <SelectItem value="Digital Marketer">Digital Marketer</SelectItem>
-                              <SelectItem value="Public Relations (PR)">Public Relations (PR)</SelectItem>
-                              <SelectItem value="Social Media Manager">Social Media Manager</SelectItem>
-                              <SelectItem value="Film Distributor">Film Distributor</SelectItem>
-                              
-                              {/* Film Community & Support */}
-                              <SelectItem value="Film Festivals">Film Festivals</SelectItem>
-                              <SelectItem value="Workshops & Training">Workshops & Training</SelectItem>
-                              <SelectItem value="Casting Calls">Casting Calls</SelectItem>
-                              <SelectItem value="Location Scouts">Location Scouts</SelectItem>
-                              <SelectItem value="Film Equipment Rentals">Film Equipment Rentals</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <CategoryDropdown
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Select category"
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -1727,19 +1654,11 @@ export default function Jobs() {
                 {/* Category Filter */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Category</label>
-                  <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="w-full border-yellow-200 focus:border-yellow-500">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CategoryDropdown
+                    value={filterCategory === "all" ? "" : filterCategory}
+                    onChange={(val) => setFilterCategory(val || "all")}
+                    placeholder="All Categories"
+                  />
                 </div>
 
                 {/* Location Filter */}

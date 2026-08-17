@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CategoryDropdown } from "@/components/ui/category-dropdown";
 import { useCastingCalls } from "@/hooks/use-casting-calls";
-import { CATEGORIES } from "./data";
 import { toast } from "sonner";
 import { ArrowLeft, Save, Image as ImageIcon, UploadCloud, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,15 +19,6 @@ export default function NewCastingCall() {
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [scriptFile, setScriptFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [dbCategories, setDbCategories] = useState<string[]>(CATEGORIES);
-
-  useEffect(() => {
-    supabase.from('categories').select('name').then(({ data, error }) => {
-      if (data && !error) {
-        setDbCategories(data.map(d => d.name));
-      }
-    });
-  }, []);
 
   const [form, setForm] = useState({
     title: "",
@@ -37,7 +28,7 @@ export default function NewCastingCall() {
     contactPerson: "",
     email: "",
     phone: "",
-    category: CATEGORIES[0],
+    category: "",
     roleName: "",
     roleDescription: "",
     gender: "Any",
@@ -205,12 +196,11 @@ export default function NewCastingCall() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="category">Category *</Label>
-                    <Select value={form.category} onValueChange={v => setForm({...form, category: v})}>
-                      <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
-                      <SelectContent>
-                        {dbCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                    <CategoryDropdown
+                      value={form.category}
+                      onChange={(val) => setForm({...form, category: val || ""})}
+                      placeholder="Select Category"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="projectName">Project Name *</Label>

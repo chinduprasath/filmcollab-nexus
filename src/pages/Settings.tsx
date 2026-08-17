@@ -14,6 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import {
   User,
@@ -221,6 +224,7 @@ const Settings = () => {
   });
 
   // Privacy Settings State
+  const [visibleToCategories, setVisibleToCategories] = useState<string[]>(['all']);
   const [privacySettings, setPrivacySettings] = useState({
     profileVisibility: 'public',
     showEmail: false,
@@ -233,8 +237,16 @@ const Settings = () => {
     allowSearchEngines: false
   });
 
+  const [availableCategories, setAvailableCategories] = useState<{name: string, department: string}[]>([]);
+
   useEffect(() => {
     const fetchSettings = async () => {
+      // Fetch categories
+      const { data: catData } = await supabase.from('categories').select('name, department');
+      if (catData) {
+        setAvailableCategories(catData.sort((a, b) => a.department.localeCompare(b.department) || a.name.localeCompare(b.name)));
+      }
+
       if (profile?.id) {
         const { data, error } = await supabase
           .from('settings')
@@ -244,6 +256,7 @@ const Settings = () => {
           
         if (data) {
           if (data.privacy_settings) setPrivacySettings(prev => ({ ...prev, ...data.privacy_settings }));
+          if (data.visible_to_categories) setVisibleToCategories(data.visible_to_categories);
           if (data.notification_settings) setNotificationSettings(prev => ({ ...prev, ...data.notification_settings }));
           if (data.appearance_settings) setAppearanceSettings(prev => ({ ...prev, ...data.appearance_settings }));
           if (data.security_settings) setSecuritySettings(prev => ({ ...prev, ...data.security_settings }));
@@ -298,7 +311,10 @@ const Settings = () => {
     try {
       if (profile?.id) {
         let updateData: any = {};
-        if (section === 'Privacy') updateData.privacy_settings = privacySettings;
+        if (section === 'Privacy') {
+          updateData.privacy_settings = privacySettings;
+          updateData.visible_to_categories = visibleToCategories;
+        }
         if (section === 'Notifications') updateData.notification_settings = notificationSettings;
         if (section === 'Appearance') updateData.appearance_settings = appearanceSettings;
         if (section === 'Security') updateData.security_settings = securitySettings;
@@ -370,7 +386,20 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex w-full overflow-x-auto bg-yellow-50 border-yellow-200 justify-start md:grid md:grid-cols-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div className="md:hidden w-full mb-4 mt-2 flex-shrink-0">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full h-10 bg-yellow-50 dark:bg-zinc-900 border border-yellow-200 dark:border-zinc-700 font-medium text-gray-900 dark:text-white shadow-sm">
+                <SelectValue placeholder="Select section" />
+              </SelectTrigger>
+              <SelectContent position="popper" side="bottom" align="start">
+                <SelectItem value="privacy">Privacy</SelectItem>
+                <SelectItem value="notifications">Notifications</SelectItem>
+                <SelectItem value="appearance">Appearance</SelectItem>
+                <SelectItem value="security">Security</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <TabsList className="hidden md:grid w-full overflow-x-auto bg-yellow-50 border-yellow-200 justify-start grid-cols-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <TabsTrigger 
               value="privacy" 
               className="flex items-center gap-2 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
@@ -433,6 +462,79 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {privacySettings.profileVisibility === 'public' && (
+                    <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4 mt-4">
+                      <div className="space-y-1">
+                        <Label>Who can view my profile</Label>
+                        <p className="text-sm text-gray-500">Restrict visibility to specific user categories</p>
+                      </div>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-[250px] justify-between h-auto min-h-10 text-left font-normal py-2 flex-wrap gap-1">
+                            {visibleToCategories?.includes('all') || !visibleToCategories?.length ? (
+                              <span>All (Everyone)</span>
+                            ) : (
+                              <div className="flex flex-wrap gap-1">
+                                {visibleToCategories.slice(0, 2).map(cat => (
+                                  <Badge key={cat} variant="secondary" className="text-xs truncate max-w-[80px]">{cat}</Badge>
+                                ))}
+                                {visibleToCategories.length > 2 && (
+                                  <Badge variant="secondary" className="text-xs">+{visibleToCategories.length - 2}</Badge>
+                                )}
+                              </div>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[250px] p-0" align="end">
+                          <div className="p-3 border-b text-sm font-semibold">Select Categories</div>
+                          <ScrollArea className="h-64">
+                            <div className="p-2 space-y-1">
+                              <label className="flex items-center gap-2 rounded hover:bg-muted p-2 cursor-pointer text-sm">
+                                <Checkbox 
+                                  checked={visibleToCategories?.includes('all') || !visibleToCategories?.length}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setVisibleToCategories(['all']);
+                                    }
+                                  }}
+                                />
+                                <span>All (Everyone)</span>
+                              </label>
+                                {Object.entries(availableCategories.reduce((acc, cat) => {
+                                  if (!acc[cat.department]) acc[cat.department] = [];
+                                  acc[cat.department].push(cat.name);
+                                  return acc;
+                                }, {} as Record<string, string[]>)).map(([dept, cats]) => (
+                                  <div key={dept} className="mb-2">
+                                    <div className="px-2 py-1 text-xs font-bold text-gray-500 uppercase tracking-wider">{dept}</div>
+                                    {cats.map(cat => (
+                                      <label key={cat} className="flex items-center gap-2 rounded hover:bg-muted p-2 cursor-pointer text-sm ml-2">
+                                        <Checkbox 
+                                          checked={!visibleToCategories?.includes('all') && visibleToCategories?.includes(cat)}
+                                          onCheckedChange={(checked) => {
+                                            let current = visibleToCategories || [];
+                                            if (current.includes('all')) current = [];
+                                            
+                                            if (checked) {
+                                              setVisibleToCategories([...current, cat]);
+                                            } else {
+                                              const next = current.filter(c => c !== cat);
+                                              setVisibleToCategories(next.length ? next : ['all']);
+                                            }
+                                          }}
+                                        />
+                                        <span>{cat}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                ))}
+                            </div>
+                          </ScrollArea>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
 
                   <Separator />
 

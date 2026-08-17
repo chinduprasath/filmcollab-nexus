@@ -244,7 +244,8 @@ export default function MessagesPage() {
           profiles!connections_connected_user_id_fkey (id, full_name, username, avatar_url, category),
           sender_profile:profiles!connections_user_id_fkey (id, full_name, username, avatar_url, category)
         `)
-        .eq("status", "accepted");
+        .eq("status", "accepted")
+        .or(`user_id.eq.${currentUserId},connected_user_id.eq.${currentUserId}`);
 
       const connectionsData = rawConnectionsData as unknown as DBConnection[];
       const connectedList: ConnectedUser[] = [];
@@ -817,7 +818,7 @@ export default function MessagesPage() {
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-64px)] grid grid-cols-1 md:grid-cols-[340px_1fr] gap-4 bg-gray-50 p-4 md:p-6 -m-6 overflow-hidden font-sans">
+      <div className="h-[calc(100vh-64px)] grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 bg-gray-50 p-4 lg:p-6 -m-6 overflow-hidden font-sans">
         
         {/* Hidden File Input for base64 Attachment Uploads */}
         <input
@@ -835,7 +836,7 @@ export default function MessagesPage() {
 
         {/* Left column: Directory Sidebar */}
         <Card id="messages-sidebar" className={`flex flex-col overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200 ${
-          isMobileChatOpen ? "hidden md:flex" : "flex"
+          isMobileChatOpen ? "hidden lg:flex" : "flex"
         }`}>
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center justify-between mb-2">
@@ -926,7 +927,7 @@ export default function MessagesPage() {
 
         {/* Right column: Chat Window */}
         <Card id="messages-chat-window" className={`flex flex-col overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200 ${
-          isMobileChatOpen ? "flex" : "hidden md:flex"
+          isMobileChatOpen ? "flex" : "hidden lg:flex"
         }`}>
           {activeConv ? (
             <>
@@ -935,7 +936,7 @@ export default function MessagesPage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setIsMobileChatOpen(false)}
-                    className="p-1 text-gray-500 hover:bg-gray-100 rounded-lg md:hidden"
+                    className="p-1 text-gray-500 hover:bg-gray-100 rounded-lg lg:hidden"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>

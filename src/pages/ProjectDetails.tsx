@@ -2166,7 +2166,7 @@ export default function ProjectDetails() {
             <TabsTrigger value="overview" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all">Overview</TabsTrigger>
             <TabsTrigger value="tasks" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all">Tasks</TabsTrigger>
             <TabsTrigger value="chat" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all">Chat</TabsTrigger>
-            <TabsTrigger value="team" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all">Team Members</TabsTrigger>
+            <TabsTrigger value="team" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all"><span className="hidden sm:inline">Team Members</span><span className="sm:inline hidden text-transparent w-0 -mr-1">&nbsp;</span><span className="sm:hidden">Members</span></TabsTrigger>
             {sourceTab === 'created' && (
               <TabsTrigger value="applicants" className="text-gray-600 dark:text-gray-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 py-2.5 rounded-lg font-medium transition-all">Applicants</TabsTrigger>
             )}
@@ -2937,9 +2937,9 @@ export default function ProjectDetails() {
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                     className="flex-1 border-yellow-200 dark:border-yellow-900/30 focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white"
                   />
-                  <Button onClick={handleSendMessage} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shrink-0 shadow-sm transition-transform active:scale-95">
-                    <Send className="h-4 w-4 mr-1.5" />
-                    <span>Send</span>
+                  <Button onClick={handleSendMessage} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shrink-0 shadow-sm transition-transform active:scale-95 px-3 sm:px-4">
+                    <Send className="h-4 w-4 sm:mr-1.5" />
+                    <span className="hidden sm:inline">Send</span>
                   </Button>
                 </div>
               </CardContent>
@@ -2970,9 +2970,9 @@ export default function ProjectDetails() {
                         <p className="text-xs text-gray-500">Joined: {formatDate(member.joined_date)}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                          <MessageCircle className="h-4 w-4 mr-2" />
-                          Message
+                        <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 px-2 sm:px-3">
+                          <MessageCircle className="h-4 w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Message</span>
                         </Button>
                         {project?.is_creator && member.user_id !== currentUser?.id && (
                           <AlertDialog>

@@ -11,9 +11,10 @@ export function LandingTopbar({ className }: LandingTopbarProps) {
 
   const navigationItems = [
     { name: "Home", href: "/" },
-    { name: "Features", href: "/#features" },
-    { name: "How It Works", href: "/#how-it-works" },
-    { name: "Community", href: "/#community" }
+    { name: "Features", href: "/features" },
+    { name: "Pricing", href: "/pricing" },
+    { name: "About", href: "/about" },
+    { name: "Contact Us", href: "/contact" }
   ];
 
   return (

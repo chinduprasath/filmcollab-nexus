@@ -64,17 +64,6 @@ export default function Dashboard() {
 
     if (currentUserId) {
       // Projects and Jobs Applied
-      let localAppliedCount = 0;
-      try {
-        const stored = localStorage.getItem(`applied_jobs_${currentUserId}`);
-        if (stored) {
-          const arr = JSON.parse(stored);
-          if (Array.isArray(arr)) localAppliedCount = arr.length;
-        }
-      } catch (e) {
-        console.error(e);
-      }
-
       Promise.all([
         supabase.from("projects").select("id").eq("created_by", currentUserId),
         supabase.from("project_members").select("project_id").eq("user_id", currentUserId),
@@ -86,9 +75,9 @@ export default function Dashboard() {
         setProjectsCount(pSet.size.toString());
         
         const dbJobsCount = jobsRes.count || 0;
-        setJobsAppliedCount(Math.max(dbJobsCount, localAppliedCount).toString());
+        setJobsAppliedCount(dbJobsCount.toString());
       }).catch((err) => {
-        setJobsAppliedCount(localAppliedCount.toString());
+        console.error("Error fetching dashboard counts:", err);
       });
 
       // Events

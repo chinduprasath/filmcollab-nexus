@@ -216,7 +216,7 @@ const Support = () => {
           <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
             <button
               onClick={() => setActiveTab('create')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'create'
                   ? 'bg-white text-yellow-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
@@ -226,7 +226,7 @@ const Support = () => {
             </button>
             <button
               onClick={() => setActiveTab('tickets')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'tickets'
                   ? 'bg-white text-yellow-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
@@ -238,17 +238,17 @@ const Support = () => {
 
           {/* Search and Filter */}
           {activeTab === 'tickets' && (
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="relative">
+            <div className="flex flex-row gap-2 w-full">
+              <div className="relative w-full sm:w-64 flex-shrink-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search tickets..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-10 w-full sm:w-64"
+                  className="pl-9 h-10 w-full"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex-shrink-0 flex gap-2">
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-[140px] h-10">
                     <SelectValue />

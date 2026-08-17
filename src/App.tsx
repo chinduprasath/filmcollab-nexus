@@ -6,6 +6,10 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import Index from "./pages/Index";
+import Features from "./pages/Features";
+import Pricing from "./pages/Pricing";
+import About from "./pages/About";
+import ContactUs from "./pages/ContactUs";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import AdminSignIn from "./pages/auth/AdminSignIn";
@@ -19,6 +23,7 @@ import CastingCallDetails from "./pages/casting-calls/details";
 import NewCastingCall from "./pages/casting-calls/new";
 import ProjectDetails from "./pages/ProjectDetails";
 import IndustryHub from "./pages/industry-hub/page";
+import NewIndustryHubPost from "./pages/industry-hub/new";
 import Projects from "./pages/projects/page";
 import Posts from "./pages/posts/page";
 import Directory from "./pages/directory/page";
@@ -137,6 +142,10 @@ function AppRoutes() {
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Index />} />
+      <Route path="/features" element={<Features />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<ContactUs />} />
       <Route
         path="/auth/signin"
         element={
@@ -237,14 +246,22 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-      <Route
-        path="/industry-hub"
-        element={
-          <ProtectedRoute>
-            <IndustryHub />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/industry-hub"
+          element={
+            <ProtectedRoute>
+              <IndustryHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/industry-hub/new"
+          element={
+            <ProtectedRoute>
+              <NewIndustryHubPost />
+            </ProtectedRoute>
+          }
+        />
       <Route
         path="/projects"
         element={

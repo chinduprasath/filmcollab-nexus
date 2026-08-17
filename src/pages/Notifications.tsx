@@ -255,7 +255,7 @@ const Notifications = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="hidden sm:inline-flex text-xs">
               <Bell className="w-3 h-3 mr-1" />
               {notifications.length} Total
             </Badge>
@@ -329,9 +329,20 @@ const Notifications = () => {
             return (
               <Card 
                 key={notification.id} 
-                className={`hover:shadow-md transition-shadow ${
+                className={`hover:shadow-md transition-shadow sm:cursor-default cursor-pointer ${
                   notification.status === 'unread' ? 'border-l-4 border-l-yellow-500 bg-yellow-50/30' : ''
                 }`}
+                onClick={() => {
+                  if (window.innerWidth < 640) {
+                    if (notification.action_url) {
+                      navigate(notification.action_url);
+                    } else {
+                      if (notification.type === 'job') navigate('/jobs');
+                      else if (notification.type === 'connection') navigate('/connections');
+                      else if (notification.type === 'project') navigate('/projects');
+                    }
+                  }
+                }}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
@@ -442,87 +453,7 @@ const Notifications = () => {
           </Card>
         )}
 
-        {/* Notification Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              Notification Settings
-            </CardTitle>
-            <CardDescription>
-              Manage your notification preferences
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="font-medium">Notification Types</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">Job notifications</span>
-                    </div>
-                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">Connection requests</span>
-                    </div>
-                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">Project updates</span>
-                    </div>
-                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">Event reminders</span>
-                    </div>
-                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <h4 className="font-medium">Delivery Methods</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Bell className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">Push notifications</span>
-                    </div>
-                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">Email notifications</span>
-                    </div>
-                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">SMS notifications</span>
-                    </div>
-                    <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">Configure</Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <Separator className="my-6" />
-            <div className="text-center">
-              <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                Go to Settings
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        
       </div>
     </AppLayout>
   );

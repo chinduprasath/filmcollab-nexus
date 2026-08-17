@@ -9,10 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { CategoryDropdown } from "@/components/ui/category-dropdown";
 
 const signUpSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -28,74 +25,10 @@ const signUpSchema = z.object({
 
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
-const roles = [
-  { value: "Director", label: "🎥 Director", category: "Direction & Production" },
-  { value: "Assistant Director", label: "🎥 Assistant Director", category: "Direction & Production" },
-  { value: "Producer", label: "🎥 Producer", category: "Direction & Production" },
-  { value: "Executive Producer", label: "🎥 Executive Producer", category: "Direction & Production" },
-  { value: "Line Producer", label: "🎥 Line Producer", category: "Direction & Production" },
-  { value: "Production Manager", label: "🎥 Production Manager", category: "Direction & Production" },
-  { value: "Production Assistant", label: "🎥 Production Assistant", category: "Direction & Production" },
-  
-  { value: "Cinematographer / DOP", label: "📸 Cinematographer / DOP", category: "Cinematography & Camera" },
-  { value: "Assistant Cameraman", label: "📸 Assistant Cameraman", category: "Cinematography & Camera" },
-  { value: "Camera Operator", label: "📸 Camera Operator", category: "Cinematography & Camera" },
-  { value: "Steadicam Operator", label: "📸 Steadicam Operator", category: "Cinematography & Camera" },
-  { value: "Drone Operator", label: "📸 Drone Operator", category: "Cinematography & Camera" },
-  { value: "Gaffer", label: "📸 Gaffer", category: "Cinematography & Camera" },
-  { value: "Lighting Technician", label: "📸 Lighting Technician", category: "Cinematography & Camera" },
-  
-  { value: "Lead Actor / Actress", label: "🎭 Lead Actor / Actress", category: "Actors & Performers" },
-  { value: "Supporting Actor / Actress", label: "🎭 Supporting Actor / Actress", category: "Actors & Performers" },
-  { value: "Child Artist", label: "🎭 Child Artist", category: "Actors & Performers" },
-  { value: "Theatre Artist", label: "🎭 Theatre Artist", category: "Actors & Performers" },
-  { value: "Voice Over Artist", label: "🎭 Voice Over Artist", category: "Actors & Performers" },
-  { value: "Dancer", label: "🎭 Dancer", category: "Actors & Performers" },
-  { value: "Stunt Artist", label: "🎭 Stunt Artist", category: "Actors & Performers" },
-  
-  { value: "Script Writer", label: "✍️ Script Writer", category: "Writing & Creative" },
-  { value: "Screenplay Writer", label: "✍️ Screenplay Writer", category: "Writing & Creative" },
-  { value: "Dialogue Writer", label: "✍️ Dialogue Writer", category: "Writing & Creative" },
-  { value: "Lyricist", label: "✍️ Lyricist", category: "Writing & Creative" },
-  { value: "Storyboard Artist", label: "✍️ Storyboard Artist", category: "Writing & Creative" },
-  
-  { value: "Music Director", label: "🎼 Music Director", category: "Music & Sound" },
-  { value: "Background Score Composer", label: "🎼 Background Score Composer", category: "Music & Sound" },
-  { value: "Singer / Vocalist", label: "🎼 Singer / Vocalist", category: "Music & Sound" },
-  { value: "Instrumentalist", label: "🎼 Instrumentalist", category: "Music & Sound" },
-  { value: "Sound Engineer", label: "🎼 Sound Engineer", category: "Music & Sound" },
-  { value: "Foley Artist", label: "🎼 Foley Artist", category: "Music & Sound" },
-  { value: "Dubbing / Voice Artist", label: "🎼 Dubbing / Voice Artist", category: "Music & Sound" },
-  
-  { value: "Art Director", label: "🎨 Art Director", category: "Art & Design" },
-  { value: "Set Designer", label: "🎨 Set Designer", category: "Art & Design" },
-  { value: "Costume Designer", label: "🎨 Costume Designer", category: "Art & Design" },
-  { value: "Fashion Stylist", label: "🎨 Fashion Stylist", category: "Art & Design" },
-  { value: "Makeup Artist", label: "🎨 Makeup Artist", category: "Art & Design" },
-  { value: "Hair Stylist", label: "🎨 Hair Stylist", category: "Art & Design" },
-  { value: "Graphic Designer", label: "🎨 Graphic Designer", category: "Art & Design" },
-  { value: "Poster Designer", label: "🎨 Poster Designer", category: "Art & Design" },
-  
-  { value: "Video Editor", label: "🖥️ Video Editor", category: "Editing & Post Production" },
-  { value: "VFX Artist", label: "🖥️ VFX Artist", category: "Editing & Post Production" },
-  { value: "Motion Graphics Designer", label: "🖥️ Motion Graphics Designer", category: "Editing & Post Production" },
-  { value: "Colorist", label: "🖥️ Colorist", category: "Editing & Post Production" },
-  { value: "DI Supervisor", label: "🖥️ DI Supervisor", category: "Editing & Post Production" },
-  { value: "Sound Editor", label: "🖥️ Sound Editor", category: "Editing & Post Production" },
-  
-  { value: "Digital Marketer", label: "📣 Digital Marketer", category: "Marketing & Distribution" },
-  { value: "Public Relations (PR)", label: "📣 Public Relations (PR)", category: "Marketing & Distribution" },
-  { value: "Social Media Manager", label: "📣 Social Media Manager", category: "Marketing & Distribution" },
-  { value: "Film Distributor", label: "📣 Film Distributor", category: "Marketing & Distribution" },
-  
-  { value: "Others", label: "Others", category: "Others" }
-];
-
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -208,62 +141,13 @@ export default function SignUp() {
                   control={form.control}
                   name="role"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel className="text-gray-700">Role</FormLabel>
-                      <Popover open={open} onOpenChange={setOpen}>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={open}
-                              className="w-full justify-between border-yellow-200 hover:border-yellow-500"
-                            >
-                              {field.value
-                                ? roles.find((role) => role.value === field.value)?.label
-                                : "Select your role in the film industry"}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0" align="start">
-                          <Command>
-                            <CommandInput placeholder="Search roles..." />
-                            <CommandList>
-                              <CommandEmpty>No role found.</CommandEmpty>
-                              {Object.entries(
-                                roles.reduce((acc, role) => {
-                                  if (!acc[role.category]) {
-                                    acc[role.category] = [];
-                                  }
-                                  acc[role.category].push(role);
-                                  return acc;
-                                }, {} as Record<string, typeof roles>)
-                              ).map(([category, categoryRoles]) => (
-                                <CommandGroup key={category} heading={category}>
-                                  {categoryRoles.map((role) => (
-                                    <CommandItem
-                                      key={role.value}
-                                      value={role.value}
-                                      onSelect={(currentValue) => {
-                                        field.onChange(currentValue === field.value ? "" : currentValue);
-                                        setOpen(false);
-                                      }}
-                                    >
-                                      <Check
-                                        className={`mr-2 h-4 w-4 ${
-                                          field.value === role.value ? "opacity-100" : "opacity-0"
-                                        }`}
-                                      />
-                                      {role.label}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              ))}
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                      <CategoryDropdown
+                        value={field.value}
+                        onChange={field.onChange}
+                        className="border-yellow-200 hover:border-yellow-500"
+                      />
                       <FormMessage />
                     </FormItem>
                   )}

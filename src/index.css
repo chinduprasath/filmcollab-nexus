@@ -328,3 +328,5 @@ All colors MUST be HSL.
   from { transform: rotate(360deg); }
   to { transform: rotate(0deg); }
 }
+
+.ql-editor { min-height: 300px; }

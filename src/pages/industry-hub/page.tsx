@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,8 +20,8 @@ import {
   X,
   FileText,
   ChevronLeft,
-  ArrowLeft,
-  ArrowRight
+  MoveLeft,
+  MoveRight
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -67,6 +68,7 @@ interface Course {
 }
 
 export default function IndustryHubPage() {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
@@ -385,7 +387,7 @@ export default function IndustryHubPage() {
     const createType = params.get("create");
     if (createType === "events" || createType === "courses") {
       setSelectedPostType(createType);
-      setShowCreatePopup(true);
+      // setShowCreatePopup(true);
       // Clean up URL query parameters
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -503,58 +505,8 @@ export default function IndustryHubPage() {
     });
   };
 
-  const handleEditClick = (item: {
-    id: string | number;
-    title: string;
-    description: string;
-    category?: string;
-    date?: string;
-    price?: string;
-    location?: string;
-    isOnline?: boolean;
-    duration?: string;
-    level?: string;
-    instructor?: string;
-    googleMapsLink?: string | null;
-    meetingLink?: string | null;
-    registrationLink?: string | null;
-  }, type: string) => {
-    setEditingItem({ id: item.id, type });
-    setSelectedPostType(type);
-    
-    if (type === "news") {
-      setFormFields(prev => ({
-        ...prev,
-        newsTitle: item.title,
-        newsCategory: item.category,
-        newsDescription: item.description
-      }));
-    } else if (type === "events") {
-      setFormFields(prev => ({
-        ...prev,
-        eventTitle: item.title,
-        eventDate: item.date,
-        eventPrice: item.price,
-        eventLocation: item.location,
-        eventType: item.isOnline ? "Online" : "In-Person",
-        eventDescription: item.description,
-        eventGoogleMapsLink: item.googleMapsLink || "",
-        eventMeetingLink: item.meetingLink || "",
-        eventRegistrationLink: item.registrationLink || ""
-      }));
-    } else if (type === "courses") {
-      setFormFields(prev => ({
-        ...prev,
-        courseTitle: item.title,
-        courseDuration: item.duration,
-        coursePrice: item.price,
-        courseLevel: item.level,
-        courseCategory: item.category,
-        courseInstructor: item.instructor,
-        courseDescription: item.description
-      }));
-    }
-    setShowCreatePopup(true);
+  const handleEditClick = (item: any, type: string) => {
+    navigate(`/industry-hub/new?type=${type}&edit=${item.id}`);
   };
 
   const handleDelete = async (id: string | number, type: string) => {
@@ -794,8 +746,8 @@ export default function IndustryHubPage() {
                   Stay updated with industry news, events, and educational opportunities
                 </p>
               </div>
-              <div className="flex items-center gap-4 w-full lg:w-auto">
-                <div className="relative w-full max-w-sm">
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+                <div className="relative w-full sm:max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                   <Input
                     placeholder={`Search ${activeTab === "news" ? "news" : activeTab === "events" ? "events" : "courses"}...`}
@@ -804,9 +756,9 @@ export default function IndustryHubPage() {
                     className="pl-9 h-9 border-yellow-200 dark:border-yellow-900/40 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 text-sm bg-white dark:bg-background text-gray-900 dark:text-white"
                   />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <Select value={selectedPostType} onValueChange={setSelectedPostType}>
-                    <SelectTrigger className="w-32 h-9 border-yellow-200 dark:border-yellow-900/40 rounded-lg text-sm focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white">
+                    <SelectTrigger className="w-full sm:w-32 h-9 border-yellow-200 dark:border-yellow-900/40 rounded-lg text-sm focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -818,10 +770,7 @@ export default function IndustryHubPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      resetForm();
-                      setShowCreatePopup(true);
-                    }}
+                    onClick={() => navigate(`/industry-hub/new?type=${selectedPostType}`)}
                     className="h-9 px-3 border-yellow-200 dark:border-yellow-900/40 text-gray-700 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 rounded-lg text-sm bg-white dark:bg-background"
                   >
                     <Plus className="w-4 h-4 mr-1" />
@@ -837,7 +786,7 @@ export default function IndustryHubPage() {
         {isViewingNewsDetail && selectedNews ? (
           <div className="bg-white dark:bg-background rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800 space-y-6">
             {/* News Detail Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-4">
+            <div className="flex items-center justify-between gap-4 border-b pb-4">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -847,8 +796,8 @@ export default function IndustryHubPage() {
                 }} 
                 className="w-fit flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
               >
-                <ChevronLeft className="w-4 h-4" />
-                Back to Industry Hub
+                <ChevronLeft className="w-4 h-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Back to Industry Hub</span>
               </Button>
               <div className="flex items-center gap-2">
                 <Button 
@@ -858,8 +807,8 @@ export default function IndustryHubPage() {
                   disabled={!hasPrevNews}
                   className="flex items-center gap-1 border-gray-200 hover:border-yellow-500 hover:bg-yellow-50/50 dark:border-gray-800 text-gray-700 dark:text-gray-300"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  Previous News
+                  <MoveLeft className="w-4 h-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Previous News</span>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -868,8 +817,8 @@ export default function IndustryHubPage() {
                   disabled={!hasNextNews}
                   className="flex items-center gap-1 border-gray-200 hover:border-yellow-500 hover:bg-yellow-50/50 dark:border-gray-800 text-gray-700 dark:text-gray-300"
                 >
-                  Next News
-                  <ArrowRight className="w-4 h-4" />
+                  <span className="hidden sm:inline">Next News</span>
+                  <MoveRight className="w-4 h-4 sm:ml-1" />
                 </Button>
               </div>
             </div>
@@ -963,8 +912,8 @@ export default function IndustryHubPage() {
                 }} 
                 className="w-fit flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
               >
-                <ChevronLeft className="w-4 h-4" />
-                Back to Industry Hub
+                <ChevronLeft className="w-4 h-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Back to Industry Hub</span>
               </Button>
               {user && selectedEvent.user_id === user.id && (
                 <div className="flex items-center gap-2">
@@ -1020,7 +969,7 @@ export default function IndustryHubPage() {
                       className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold rounded-lg text-sm flex items-center justify-center gap-2 h-9 px-4 shadow-sm transition-all"
                     >
                       <Calendar className="w-4 h-4" />
-                      Register Now ↗
+                      Register Now
                     </a>
                   ) : (
                     <Button 
@@ -1154,8 +1103,8 @@ export default function IndustryHubPage() {
                 }} 
                 className="w-fit flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
               >
-                <ChevronLeft className="w-4 h-4" />
-                Back to Industry Hub
+                <ChevronLeft className="w-4 h-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Back to Industry Hub</span>
               </Button>
               {user && selectedCourse.user_id === user.id && (
                 <div className="flex items-center gap-2">
@@ -1270,9 +1219,9 @@ export default function IndustryHubPage() {
           <>
             {/* Tabs */}
             <div className="bg-white dark:bg-background rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-          <div className="flex border-b border-gray-200 dark:border-gray-800 px-4">
+          <div className="flex w-full overflow-x-auto scrollbar-none border-b border-gray-200 dark:border-gray-800 px-4">
             {[
-              { id: "news", label: "Industry News & Insights", count: filteredNews.length },
+              { id: "news", label: "Industry News", count: filteredNews.length },
               { id: "events", label: "Events", count: filteredEvents.length },
               { id: "courses", label: "Courses", count: filteredCourses.length },
               { id: "created", label: "Created By Me", count: totalMyItems }
@@ -1280,7 +1229,7 @@ export default function IndustryHubPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-3 border-b-2 font-medium transition-colors relative flex items-center text-sm ${
+                className={`px-4 py-3 border-b-2 font-medium transition-colors relative flex items-center text-sm whitespace-nowrap shrink-0 ${
                   activeTab === tab.id
                     ? "border-yellow-500 text-yellow-600 dark:text-yellow-500"
                     : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -1349,7 +1298,7 @@ export default function IndustryHubPage() {
                     {searchQuery ? "Try adjusting your search terms" : "Be the first to share industry insights and news"}
                   </p>
                   {!searchQuery && (
-                    <Button onClick={() => { resetForm(); setSelectedPostType("news"); setShowCreatePopup(true); }}>
+                    <Button onClick={() => navigate('/industry-hub/new?type=news')}>
                       <Plus className="w-4 h-4 mr-2" />
                       Create First News
                     </Button>
@@ -1444,7 +1393,7 @@ export default function IndustryHubPage() {
                     {searchQuery ? "Try adjusting your search terms" : "Be the first to create an industry event"}
                   </p>
                   {!searchQuery && (
-                    <Button onClick={() => { resetForm(); setSelectedPostType("events"); setShowCreatePopup(true); }}>
+                    <Button onClick={() => navigate('/industry-hub/new?type=events')}>
                       <Plus className="w-4 h-4 mr-2" />
                       Create First Event
                     </Button>
@@ -1524,7 +1473,7 @@ export default function IndustryHubPage() {
                     {searchQuery ? "Try adjusting your search terms" : "Be the first to create an industry course"}
                   </p>
                   {!searchQuery && (
-                    <Button onClick={() => { resetForm(); setSelectedPostType("courses"); setShowCreatePopup(true); }}>
+                    <Button onClick={() => navigate('/industry-hub/new?type=courses')}>
                       <Plus className="w-4 h-4 mr-2" />
                       Create First Course
                     </Button>

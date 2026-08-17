@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CategoryDropdown } from "@/components/ui/category-dropdown";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -1344,10 +1346,11 @@ export default function StudiosDirectory() {
               </div>
 
               {/* Profile Details Area */}
-              <div className="p-6 md:p-10">
+              <div className="px-0 py-2 md:p-10">
                 <Tabs value={activeViewTab} onValueChange={setActiveViewTab} className="space-y-8">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-gray-100">
-                    <TabsList className="bg-gray-100 p-1 rounded-xl inline-flex flex-wrap h-auto gap-1">
+                    {/* Desktop View */}
+                    <TabsList className="bg-gray-100 p-1 rounded-xl hidden md:inline-flex flex-wrap h-auto gap-1">
                       <TabsTrigger value="about" className="rounded-lg text-xs font-semibold py-2 px-4 whitespace-nowrap">About & Crew</TabsTrigger>
                       <TabsTrigger value="projects" className="rounded-lg text-xs font-semibold py-2 px-4 whitespace-nowrap">Projects</TabsTrigger>
                       <TabsTrigger value="media" className="rounded-lg text-xs font-semibold py-2 px-4 whitespace-nowrap">Media</TabsTrigger>
@@ -1356,6 +1359,24 @@ export default function StudiosDirectory() {
                       <TabsTrigger value="courses" className="rounded-lg text-xs font-semibold py-2 px-4 whitespace-nowrap">Courses</TabsTrigger>
                       <TabsTrigger value="reviews" className="rounded-lg text-xs font-semibold py-2 px-4 whitespace-nowrap">Reviews</TabsTrigger>
                     </TabsList>
+
+                    {/* Mobile View */}
+                    <div className="md:hidden w-full">
+                      <Select value={activeViewTab} onValueChange={setActiveViewTab}>
+                        <SelectTrigger className="w-full bg-gray-50 border-gray-200">
+                          <SelectValue placeholder="Select tab" />
+                        </SelectTrigger>
+                        <SelectContent position="popper" side="bottom" avoidCollisions={false}>
+                          <SelectItem value="about">About & Crew</SelectItem>
+                          <SelectItem value="projects">Projects</SelectItem>
+                          <SelectItem value="media">Media</SelectItem>
+                          <SelectItem value="jobs">Jobs</SelectItem>
+                          <SelectItem value="events">Events</SelectItem>
+                          <SelectItem value="courses">Courses</SelectItem>
+                          <SelectItem value="reviews">Reviews</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     {isOwner && (
                       <div className="ml-auto flex gap-2 shrink-0">
                         {activeViewTab === "projects" && (
@@ -1808,7 +1829,6 @@ export default function StudiosDirectory() {
                     </div>
                   </TabsContent>
 
-                  {/* OPPORTUNITIES TAB */}
                   {/* REVIEWS TAB */}
                   <TabsContent value="reviews" className="space-y-8 outline-none">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1822,7 +1842,7 @@ export default function StudiosDirectory() {
                               <SelectTrigger className="w-full bg-white border-yellow-200">
                                 <SelectValue placeholder="Select star rating" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                                 <SelectItem value="5">⭐⭐⭐⭐⭐ Excellent (5/5)</SelectItem>
                                 <SelectItem value="4">⭐⭐⭐⭐ Good (4/5)</SelectItem>
                                 <SelectItem value="3">⭐⭐⭐ Satisfactory (3/5)</SelectItem>
@@ -2016,7 +2036,7 @@ export default function StudiosDirectory() {
                                 <SelectTrigger className="h-8 border-purple-100 text-xs">
                                   <SelectValue placeholder="Paid or Unpaid" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                                   <SelectItem value="Paid">Paid Stipend</SelectItem>
                                   <SelectItem value="Unpaid">Unpaid Opportunity</SelectItem>
                                 </SelectContent>
@@ -2224,15 +2244,11 @@ export default function StudiosDirectory() {
                         {/* Category */}
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-gray-600">Business Category</label>
-                          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="All Categories" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Categories</SelectItem>
-                              {CATEGORIES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                          <CategoryDropdown
+                            value={selectedCategory === "all" ? "" : selectedCategory}
+                            onChange={(val) => setSelectedCategory(val || "all")}
+                            placeholder="All Categories"
+                          />
                         </div>
 
                         {/* City */}
@@ -2242,7 +2258,7 @@ export default function StudiosDirectory() {
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="All Cities" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                               <SelectItem value="all">All Cities</SelectItem>
                               {CITIES.map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}
                             </SelectContent>
@@ -2256,7 +2272,7 @@ export default function StudiosDirectory() {
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="All States" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                               <SelectItem value="all">All States</SelectItem>
                               {STATES.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
                             </SelectContent>
@@ -2270,7 +2286,7 @@ export default function StudiosDirectory() {
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="All Languages" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                               <SelectItem value="all">All Languages</SelectItem>
                               {LANGUAGES.map(lang => <SelectItem key={lang} value={lang}>{lang}</SelectItem>)}
                             </SelectContent>
@@ -2284,7 +2300,7 @@ export default function StudiosDirectory() {
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="All Ratings" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                               <SelectItem value="all">Any Rating</SelectItem>
                               <SelectItem value="4.5">⭐⭐⭐⭐+ 4.5 Stars & above</SelectItem>
                               <SelectItem value="4.0">⭐⭐⭐⭐ 4.0 Stars & above</SelectItem>
@@ -2300,7 +2316,7 @@ export default function StudiosDirectory() {
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Any Size" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                               <SelectItem value="all">Any Size</SelectItem>
                               <SelectItem value="small">Boutique / Small (Under 20 crew)</SelectItem>
                               <SelectItem value="medium">Mid-Size Studio (20 - 100 crew)</SelectItem>
@@ -2316,7 +2332,7 @@ export default function StudiosDirectory() {
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Any Years" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                               <SelectItem value="all">Any</SelectItem>
                               <SelectItem value="0-5">0 - 5 Years</SelectItem>
                               <SelectItem value="5-10">5 - 10 Years</SelectItem>

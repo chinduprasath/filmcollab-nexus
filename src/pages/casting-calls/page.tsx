@@ -7,8 +7,8 @@ import { useCastingCalls } from "@/hooks/use-casting-calls";
 import { CastingCallCard } from "./components/CastingCallCard";
 import { Filter, Search, Plus, MapPin, Briefcase, IndianRupee } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
-import { CATEGORIES } from "./data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CategoryDropdown } from "@/components/ui/category-dropdown";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
@@ -74,7 +74,7 @@ export default function CastingCallsPage() {
   return (
     <AppLayout pageTitle="Casting Calls">
       <div className="bg-gray-50/50 min-h-full">
-        <div className="max-w-7xl mx-auto p-4 md:p-8">
+        <div className="max-w-7xl mx-auto px-0 py-2 md:p-8">
           
           {/* Header Section */}
           <div className="flex flex-col mb-8 gap-4">
@@ -112,13 +112,11 @@ export default function CastingCallsPage() {
                     <div className="space-y-6">
                       <div className="space-y-3">
                         <Label>Category</Label>
-                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                          <SelectTrigger><SelectValue placeholder="All Categories" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Categories</SelectItem>
-                            {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                        <CategoryDropdown
+                          value={selectedCategory === "all" ? "" : selectedCategory}
+                          onChange={(val) => setSelectedCategory(val || "all")}
+                          placeholder="All Categories"
+                        />
                       </div>
 
                       <div className="space-y-3">
