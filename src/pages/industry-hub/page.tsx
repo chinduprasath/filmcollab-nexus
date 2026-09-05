@@ -735,30 +735,30 @@ export default function IndustryHubPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 bg-yellow-50/30 dark:bg-background min-h-screen p-4 -m-4 text-gray-900 dark:text-gray-100">
+      <div className="space-y-4 bg-background min-h-screen p-4 -m-4 text-foreground">
         {/* Header */}
         {!isViewingAnyDetail && (
-          <div className="bg-white dark:bg-background p-4 rounded-lg shadow-sm border border-yellow-200 dark:border-yellow-900/40">
+          <div className="bg-card text-card-foreground p-4 rounded-lg shadow-sm border border-yellow-200 dark:border-yellow-900/40">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Industry Hub</h1>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
+                <h1 className="text-2xl font-bold text-foreground mb-1">Industry Hub</h1>
+                <p className="text-muted-foreground text-sm">
                   Stay updated with industry news, events, and educational opportunities
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
                 <div className="relative w-full sm:max-w-sm">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
                     placeholder={`Search ${activeTab === "news" ? "news" : activeTab === "events" ? "events" : "courses"}...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-9 border-yellow-200 dark:border-yellow-900/40 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 text-sm bg-white dark:bg-background text-gray-900 dark:text-white"
+                    className="pl-9 h-9 border-yellow-200 dark:border-yellow-900/40 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 text-sm bg-card text-card-foreground text-foreground"
                   />
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <Select value={selectedPostType} onValueChange={setSelectedPostType}>
-                    <SelectTrigger className="w-full sm:w-32 h-9 border-yellow-200 dark:border-yellow-900/40 rounded-lg text-sm focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white">
+                    <SelectTrigger className="w-full sm:w-32 h-9 border-yellow-200 dark:border-yellow-900/40 rounded-lg text-sm focus:border-yellow-500 bg-card text-card-foreground text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -771,7 +771,7 @@ export default function IndustryHubPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/industry-hub/new?type=${selectedPostType}`)}
-                    className="h-9 px-3 border-yellow-200 dark:border-yellow-900/40 text-gray-700 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 rounded-lg text-sm bg-white dark:bg-background"
+                    className="h-9 px-3 border-yellow-200 dark:border-yellow-900/40 text-foreground hover:border-yellow-500 hover:text-yellow-700 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 hover:bg-yellow-50 dark:hover:bg-yellow-950/40 rounded-lg text-sm bg-card transition-colors"
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Post
@@ -784,7 +784,7 @@ export default function IndustryHubPage() {
 
         {/* If viewing a detail, show the detail page. Otherwise, show Tabs + Tab Content */}
         {isViewingNewsDetail && selectedNews ? (
-          <div className="bg-white dark:bg-background rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800 space-y-6">
+          <div className="bg-card text-card-foreground rounded-lg shadow-sm p-6 border border-border space-y-6">
             {/* News Detail Header */}
             <div className="flex items-center justify-between gap-4 border-b pb-4">
               <Button 
@@ -794,7 +794,7 @@ export default function IndustryHubPage() {
                   setShowNewsDetail(false);
                   setSelectedNews(null);
                 }} 
-                className="w-fit flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
+                className="w-fit flex items-center gap-1.5 text-muted-foreground hover:text-yellow-700 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4 sm:mr-1.5" />
                 <span className="hidden sm:inline">Back to Industry Hub</span>
@@ -805,7 +805,7 @@ export default function IndustryHubPage() {
                   size="sm" 
                   onClick={handlePrevNews} 
                   disabled={!hasPrevNews}
-                  className="flex items-center gap-1 border-gray-200 hover:border-yellow-500 hover:bg-yellow-50/50 dark:border-gray-800 text-gray-700 dark:text-gray-300"
+                  className="flex items-center gap-1 border-border dark:border-border/80 hover:border-yellow-500 hover:text-yellow-700 dark:hover:text-yellow-400 hover:bg-yellow-50/50 dark:hover:bg-yellow-950/40 text-foreground transition-colors disabled:opacity-50"
                 >
                   <MoveLeft className="w-4 h-4 sm:mr-1" />
                   <span className="hidden sm:inline">Previous News</span>
@@ -815,7 +815,7 @@ export default function IndustryHubPage() {
                   size="sm" 
                   onClick={handleNextNews} 
                   disabled={!hasNextNews}
-                  className="flex items-center gap-1 border-gray-200 hover:border-yellow-500 hover:bg-yellow-50/50 dark:border-gray-800 text-gray-700 dark:text-gray-300"
+                  className="flex items-center gap-1 border-border dark:border-border/80 hover:border-yellow-500 hover:text-yellow-700 dark:hover:text-yellow-400 hover:bg-yellow-50/50 dark:hover:bg-yellow-950/40 text-foreground transition-colors disabled:opacity-50"
                 >
                   <span className="hidden sm:inline">Next News</span>
                   <MoveRight className="w-4 h-4 sm:ml-1" />
@@ -833,7 +833,7 @@ export default function IndustryHubPage() {
               </div>
               
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight flex-1">
+                <h1 className="text-3xl font-extrabold text-foreground leading-tight tracking-tight flex-1">
                   {selectedNews.title}
                 </h1>
                 <div className="flex items-center gap-2 shrink-0">
@@ -850,7 +850,7 @@ export default function IndustryHubPage() {
                   <Button 
                     variant="outline" 
                     onClick={() => toast({ title: "Saved to bookmarks!", description: "You can find saved insights in your profile." })}
-                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 text-gray-700 dark:text-gray-300 shadow-sm"
+                    className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground shadow-sm transition-colors"
                   >
                     <Bookmark className="w-4 h-4 mr-2" />
                     Save to Bookmarks
@@ -858,15 +858,15 @@ export default function IndustryHubPage() {
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-gray-50 dark:bg-background p-3 rounded-lg border border-gray-100 dark:border-gray-900">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/40 p-3 rounded-lg border border-border">
                 <UserPlus className="w-4 h-4 text-yellow-500" />
-                <span>Written by <span className="font-semibold text-gray-900 dark:text-white">{selectedNews.createdBy}</span></span>
+                <span>Written by <span className="font-semibold text-foreground">{selectedNews.createdBy}</span></span>
                 <span className="mx-2">•</span>
                 <Calendar className="w-4 h-4 text-yellow-500" />
                 <span>Published on {selectedNews.createdDate}</span>
               </div>
 
-              <div className="prose max-w-none dark:prose-invert text-gray-800 dark:text-gray-200 text-base leading-relaxed whitespace-pre-line pt-2">
+              <div className="prose max-w-none dark:prose-invert text-foreground/90 text-base leading-relaxed whitespace-pre-line pt-2">
                 {selectedNews.description}
               </div>
             </div>
@@ -880,7 +880,7 @@ export default function IndustryHubPage() {
                     handleEditClick(selectedNews, "news");
                     setShowNewsDetail(false);
                   }}
-                  className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 text-gray-700 dark:text-gray-300"
+                  className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 text-foreground"
                 >
                   <Edit className="w-4 h-4 mr-1" />
                   Edit
@@ -900,7 +900,7 @@ export default function IndustryHubPage() {
             )}
           </div>
         ) : isViewingEventDetail && selectedEvent ? (
-          <div className="bg-white dark:bg-background rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800 space-y-6">
+          <div className="bg-card text-card-foreground rounded-lg shadow-sm p-6 border border-border space-y-6">
             {/* Event Detail Header */}
             <div className="flex items-center justify-between border-b pb-4">
               <Button 
@@ -910,7 +910,7 @@ export default function IndustryHubPage() {
                   setShowEventDetail(false);
                   setSelectedEvent(null);
                 }} 
-                className="w-fit flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
+                className="w-fit flex items-center gap-1.5 text-muted-foreground hover:text-yellow-700 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4 sm:mr-1.5" />
                 <span className="hidden sm:inline">Back to Industry Hub</span>
@@ -924,7 +924,7 @@ export default function IndustryHubPage() {
                       handleEditClick(selectedEvent, "events");
                       setShowEventDetail(false);
                     }}
-                    className="h-9 px-3 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 text-gray-700 dark:text-gray-300 text-sm"
+                    className="h-9 px-3 border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 text-foreground text-sm"
                   >
                     <Edit className="w-4 h-4 mr-1" />
                     Edit
@@ -951,13 +951,13 @@ export default function IndustryHubPage() {
                 <Badge variant={selectedEvent.isOnline ? "default" : "secondary"}>
                   {selectedEvent.isOnline ? "Online" : "In-Person"}
                 </Badge>
-                <Badge variant="outline" className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
+                <Badge variant="outline" className="border-border text-foreground">
                   {selectedEvent.price}
                 </Badge>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight flex-1">
+                <h1 className="text-3xl font-extrabold text-foreground leading-tight tracking-tight flex-1">
                   {selectedEvent.title}
                 </h1>
                 <div className="flex items-center gap-2 shrink-0">
@@ -987,7 +987,7 @@ export default function IndustryHubPage() {
                       navigator.clipboard.writeText(window.location.href);
                       toast({ title: "Link copied!", description: "Event link copied to clipboard." });
                     }}
-                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 h-9 px-4 text-gray-700 dark:text-gray-300 shadow-sm"
+                    className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 h-9 px-4 text-foreground shadow-sm"
                   >
                     <Share2 className="w-4 h-4 mr-2" />
                     Share Event
@@ -995,7 +995,7 @@ export default function IndustryHubPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 dark:bg-background p-4 rounded-xl border border-gray-100 dark:border-gray-900">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-muted/40 p-4 rounded-xl border border-border">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 bg-yellow-100 dark:bg-yellow-950/50 rounded-lg text-yellow-600 dark:text-yellow-400">
                     <Calendar className="w-4 h-4" />
@@ -1040,7 +1040,7 @@ export default function IndustryHubPage() {
                   <h4 className="text-xs font-bold text-yellow-800 dark:text-yellow-400 uppercase tracking-wider">Event Resource Links</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
                     {!selectedEvent.isOnline && selectedEvent.googleMapsLink && (
-                      <div className="flex flex-col gap-1 p-3 bg-white dark:bg-background border rounded-lg">
+                      <div className="flex flex-col gap-1 p-3 bg-card text-card-foreground border rounded-lg">
                         <span className="text-xs text-muted-foreground font-medium">Google Maps Directions:</span>
                         <a 
                           href={selectedEvent.googleMapsLink} 
@@ -1054,7 +1054,7 @@ export default function IndustryHubPage() {
                       </div>
                     )}
                     {selectedEvent.isOnline && selectedEvent.meetingLink && (
-                      <div className="flex flex-col gap-1 p-3 bg-white dark:bg-background border rounded-lg">
+                      <div className="flex flex-col gap-1 p-3 bg-card text-card-foreground border rounded-lg">
                         <span className="text-xs text-muted-foreground font-medium">Virtual Meeting Room:</span>
                         <a 
                           href={selectedEvent.meetingLink} 
@@ -1068,7 +1068,7 @@ export default function IndustryHubPage() {
                       </div>
                     )}
                     {selectedEvent.registrationLink && (
-                      <div className="flex flex-col gap-1 p-3 bg-white dark:bg-background border rounded-lg">
+                      <div className="flex flex-col gap-1 p-3 bg-card text-card-foreground border rounded-lg">
                         <span className="text-xs text-muted-foreground font-medium">External Registration Form:</span>
                         <a 
                           href={selectedEvent.registrationLink} 
@@ -1085,13 +1085,13 @@ export default function IndustryHubPage() {
                 </div>
               )}
 
-              <div className="prose max-w-none dark:prose-invert text-gray-800 dark:text-gray-200 text-base leading-relaxed whitespace-pre-line pt-2">
+              <div className="prose max-w-none dark:prose-invert text-foreground/90 text-base leading-relaxed whitespace-pre-line pt-2">
                 {selectedEvent.description}
               </div>
             </div>
           </div>
         ) : isViewingCourseDetail && selectedCourse ? (
-          <div className="bg-white dark:bg-background rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800 space-y-6">
+          <div className="bg-card text-card-foreground rounded-lg shadow-sm p-6 border border-border space-y-6">
             {/* Course Detail Header */}
             <div className="flex items-center justify-between border-b pb-4">
               <Button 
@@ -1101,7 +1101,7 @@ export default function IndustryHubPage() {
                   setShowCourseDetail(false);
                   setSelectedCourse(null);
                 }} 
-                className="w-fit flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
+                className="w-fit flex items-center gap-1.5 text-muted-foreground hover:text-yellow-700 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4 sm:mr-1.5" />
                 <span className="hidden sm:inline">Back to Industry Hub</span>
@@ -1115,7 +1115,7 @@ export default function IndustryHubPage() {
                       handleEditClick(selectedCourse, "courses");
                       setShowCourseDetail(false);
                     }}
-                    className="h-9 px-3 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 text-gray-700 dark:text-gray-300 text-sm"
+                    className="h-9 px-3 border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 text-foreground text-sm"
                   >
                     <Edit className="w-4 h-4 mr-1" />
                     Edit
@@ -1139,13 +1139,13 @@ export default function IndustryHubPage() {
             {/* Course Details */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">{selectedCourse.level}</Badge>
-                <Badge variant="secondary" className="bg-gray-100 dark:bg-gray-855 text-gray-700 dark:text-gray-300">{selectedCourse.category}</Badge>
+                <Badge variant="outline" className="border-border text-foreground">{selectedCourse.level}</Badge>
+                <Badge variant="secondary" className="bg-muted text-foreground">{selectedCourse.category}</Badge>
                 <Badge variant="outline" className="text-primary font-bold">{selectedCourse.price}</Badge>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight flex-1">
+                <h1 className="text-3xl font-extrabold text-foreground leading-tight tracking-tight flex-1">
                   {selectedCourse.title}
                 </h1>
                 <div className="flex items-center gap-2 shrink-0">
@@ -1163,7 +1163,7 @@ export default function IndustryHubPage() {
                       navigator.clipboard.writeText(window.location.href);
                       toast({ title: "Link copied!", description: "Course link copied to clipboard." });
                     }}
-                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 h-9 px-4 text-gray-700 dark:text-gray-300 shadow-sm"
+                    className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 h-9 px-4 text-foreground shadow-sm"
                   >
                     <Share2 className="w-4 h-4 mr-2" />
                     Share Course
@@ -1171,7 +1171,7 @@ export default function IndustryHubPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 dark:bg-background p-4 rounded-xl border border-gray-100 dark:border-gray-900">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-muted/40 p-4 rounded-xl border border-border">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 bg-yellow-100 dark:bg-yellow-950/50 rounded-lg text-yellow-600 dark:text-yellow-400">
                     <Clock className="w-4 h-4" />
@@ -1210,7 +1210,7 @@ export default function IndustryHubPage() {
                 </div>
               </div>
 
-              <div className="prose max-w-none dark:prose-invert text-gray-800 dark:text-gray-200 text-base leading-relaxed whitespace-pre-line pt-2">
+              <div className="prose max-w-none dark:prose-invert text-foreground/90 text-base leading-relaxed whitespace-pre-line pt-2">
                 {selectedCourse.description}
               </div>
             </div>
@@ -1218,8 +1218,8 @@ export default function IndustryHubPage() {
         ) : (
           <>
             {/* Tabs */}
-            <div className="bg-white dark:bg-background rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-          <div className="flex w-full overflow-x-auto scrollbar-none border-b border-gray-200 dark:border-gray-800 px-4">
+            <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border">
+          <div className="flex w-full overflow-x-auto scrollbar-none border-b border-border px-4">
             {[
               { id: "news", label: "Industry News", count: filteredNews.length },
               { id: "events", label: "Events", count: filteredEvents.length },
@@ -1232,11 +1232,11 @@ export default function IndustryHubPage() {
                 className={`px-4 py-3 border-b-2 font-medium transition-colors relative flex items-center text-sm whitespace-nowrap shrink-0 ${
                   activeTab === tab.id
                     ? "border-yellow-500 text-yellow-600 dark:text-yellow-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {tab.label}
-                <span className="ml-2 text-xs bg-gray-100 dark:bg-background text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full">
+                <span className="ml-2 text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
                   {tab.count}
                 </span>
               </button>
@@ -1245,7 +1245,7 @@ export default function IndustryHubPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white dark:bg-background rounded-lg shadow-sm p-4 min-h-[500px] border border-gray-200 dark:border-gray-800">
+        <div className="bg-card text-card-foreground rounded-lg shadow-sm p-4 min-h-[500px] border border-border">
           {loading && <div className="text-center py-8 text-sm text-yellow-600">Loading live updates...</div>}
 
           {/* Industry News & Insights Tab */}
@@ -1256,7 +1256,7 @@ export default function IndustryHubPage() {
                   {filteredNews.map((news) => (
                     <Card
                       key={news.id}
-                      className="hover:shadow-lg transition-shadow bg-white dark:bg-background border-gray-200 dark:border-gray-800 rounded-lg cursor-pointer flex flex-col justify-between"
+                      className="hover:shadow-lg transition-shadow bg-card text-card-foreground border-border rounded-lg cursor-pointer flex flex-col justify-between"
                       onClick={() => {
                         setSelectedNews(news);
                         setShowNewsDetail(true);
@@ -1264,19 +1264,19 @@ export default function IndustryHubPage() {
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className="bg-gray-100 dark:bg-background text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-750 rounded-md px-1.5 py-0.5 text-xs">
+                          <Badge variant="outline" className="bg-muted text-foreground border-border rounded-md px-1.5 py-0.5 text-xs">
                             {news.category}
                           </Badge>
                         </div>
-                        <CardTitle className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 leading-tight">
+                        <CardTitle className="text-base font-semibold text-foreground line-clamp-2 leading-tight">
                           {news.title}
                         </CardTitle>
-                        <CardDescription className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3 mt-1">
+                        <CardDescription className="text-xs text-muted-foreground line-clamp-3 mt-1">
                           {news.description}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t pt-2 mt-2">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-2 mt-2">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             <span>{news.createdDate}</span>
@@ -1316,7 +1316,7 @@ export default function IndustryHubPage() {
                   {filteredEvents.map((event) => (
                     <Card
                       key={event.id}
-                      className="hover:shadow-lg transition-shadow bg-white dark:bg-background border border-gray-200 dark:border-gray-800 cursor-pointer flex flex-col justify-between"
+                      className="hover:shadow-lg transition-shadow bg-card text-card-foreground border border-border cursor-pointer flex flex-col justify-between"
                       onClick={() => {
                         setSelectedEvent(event);
                         setShowEventDetail(true);
@@ -1327,16 +1327,16 @@ export default function IndustryHubPage() {
                           <Badge variant={event.isOnline ? "default" : "secondary"}>
                             {event.isOnline ? "Online" : "In-Person"}
                           </Badge>
-                          <Badge variant="outline" className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">{event.price}</Badge>
+                          <Badge variant="outline" className="border-border text-foreground">{event.price}</Badge>
                         </div>
-                        <CardTitle className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2">{event.title}</CardTitle>
-                        <CardDescription className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
+                        <CardTitle className="text-base font-semibold text-foreground line-clamp-2">{event.title}</CardTitle>
+                        <CardDescription className="text-xs text-muted-foreground line-clamp-3">
                           {event.description}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
                         <div className="space-y-1 border-t pt-2 mt-2">
-                          <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-gray-400">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               <span>{event.date}</span>
@@ -1346,7 +1346,7 @@ export default function IndustryHubPage() {
                               <span>{event.attendees} attending</span>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-gray-400">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
                               <span className="truncate max-w-[100px]">{event.location}</span>
@@ -1388,7 +1388,7 @@ export default function IndustryHubPage() {
               ) : (
                 <div className="text-center py-12">
                   <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">No events found</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">No events found</h3>
                   <p className="text-muted-foreground mb-4">
                     {searchQuery ? "Try adjusting your search terms" : "Be the first to create an industry event"}
                   </p>
@@ -1411,7 +1411,7 @@ export default function IndustryHubPage() {
                   {filteredCourses.map((course) => (
                     <Card
                       key={course.id}
-                      className="hover:shadow-lg transition-shadow bg-white dark:bg-background border border-gray-200 dark:border-gray-800 cursor-pointer flex flex-col justify-between"
+                      className="hover:shadow-lg transition-shadow bg-card text-card-foreground border border-border cursor-pointer flex flex-col justify-between"
                       onClick={() => {
                         setSelectedCourse(course);
                         setShowCourseDetail(true);
@@ -1419,17 +1419,17 @@ export default function IndustryHubPage() {
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className="border-gray-200 dark:border-gray-750 text-gray-700 dark:text-gray-300">{course.level}</Badge>
-                          <Badge variant="secondary" className="bg-gray-100 dark:bg-gray-855 text-gray-700 dark:text-gray-300">{course.category}</Badge>
+                          <Badge variant="outline" className="border-border text-foreground">{course.level}</Badge>
+                          <Badge variant="secondary" className="bg-muted text-foreground">{course.category}</Badge>
                         </div>
-                        <CardTitle className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2">{course.title}</CardTitle>
-                        <CardDescription className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
+                        <CardTitle className="text-base font-semibold text-foreground line-clamp-2">{course.title}</CardTitle>
+                        <CardDescription className="text-xs text-muted-foreground line-clamp-3">
                           {course.description}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
                         <div className="space-y-1 border-t pt-2 mt-2">
-                          <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-gray-400">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               <span>{course.duration}</span>
@@ -1439,14 +1439,14 @@ export default function IndustryHubPage() {
                               <span>{course.enrolled} enrolled</span>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-gray-400">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <UserPlus className="w-3 h-3" />
                               <span className="truncate max-w-[100px]">By {course.createdBy}</span>
                             </div>
                             <span className="font-semibold text-primary text-xs">{course.price}</span>
                           </div>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground dark:text-gray-400 pt-1">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground pt-1">
                             <UserPlus className="w-3 h-3" />
                             <span className="truncate max-w-[180px]">Instructor: {course.instructor}</span>
                           </div>
@@ -1468,7 +1468,7 @@ export default function IndustryHubPage() {
               ) : (
                 <div className="text-center py-12">
                   <Bookmark className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">No courses found</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">No courses found</h3>
                   <p className="text-muted-foreground mb-4">
                     {searchQuery ? "Try adjusting your search terms" : "Be the first to create an industry course"}
                   </p>
@@ -1524,42 +1524,42 @@ export default function IndustryHubPage() {
                   size="sm" 
                   variant="outline" 
                   onClick={() => { setDateRange({ from: "", to: "" }); setCreatedFilter("all"); }}
-                  className="text-xs h-8 border-gray-300"
+                  className="text-xs h-8 border-border"
                 >
                   Clear Filters
                 </Button>
               </div>
 
               {/* Table */}
-              <div className="border rounded-lg bg-white dark:bg-background">
+              <div className="border rounded-lg bg-card text-card-foreground">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-background">
+                    <thead className="bg-muted/40">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created Date</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Title</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Created Date</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white dark:bg-background divide-y divide-gray-200 dark:divide-gray-800">
+                    <tbody className="bg-card text-card-foreground divide-y divide-border">
                       {filteredMyItems.length > 0 ? (
                         filteredMyItems.map((item) => (
-                          <tr key={`${item.type}-${item.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                          <tr key={`${item.type}-${item.id}`} className="hover:bg-muted/40">
                             <td className="px-4 py-4 whitespace-nowrap">
-                              <Badge variant="outline" className="bg-gray-100 dark:bg-background text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 capitalize">
+                              <Badge variant="outline" className="bg-muted text-foreground border-border capitalize">
                                 {item.type}
                               </Badge>
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate">
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground max-w-xs truncate">
                               {item.title}
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
                               {item.category}
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
                               {item.createdDate}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
@@ -1573,7 +1573,7 @@ export default function IndustryHubPage() {
                                   size="sm" 
                                   variant="outline" 
                                   onClick={() => handleEditClick(item, item.type)}
-                                  className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:hover:bg-yellow-950/20"
+                                  className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
                                 >
                                   <Edit className="w-3 h-3 mr-1" />
                                   Edit
@@ -1625,7 +1625,7 @@ export default function IndustryHubPage() {
                 {/* Post Type Selector (Only allowed if creating new) */}
                 {!editingItem && (
                   <div className="mb-4">
-                    <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">Post Type</label>
+                    <label className="text-sm font-medium mb-1 block text-foreground">Post Type</label>
                     <Select value={selectedPostType} onValueChange={setSelectedPostType}>
                       <SelectTrigger className="w-full">
                         <SelectValue />
@@ -1643,7 +1643,7 @@ export default function IndustryHubPage() {
                 {selectedPostType === "news" && (
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Title *</label>
+                      <label className="text-sm font-medium text-foreground">Title *</label>
                       <Input 
                         placeholder="Enter news title" 
                         value={formFields.newsTitle}
@@ -1651,7 +1651,7 @@ export default function IndustryHubPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Category *</label>
+                      <label className="text-sm font-medium text-foreground">Category *</label>
                       <select 
                         className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background h-10"
                         value={formFields.newsCategory}
@@ -1665,7 +1665,7 @@ export default function IndustryHubPage() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
+                      <label className="text-sm font-medium text-foreground">Description *</label>
                       <textarea
                         className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background min-h-[120px]"
                         placeholder="Enter news description..."
@@ -1682,7 +1682,7 @@ export default function IndustryHubPage() {
                       >
                         {loading ? "Saving..." : editingItem ? "Update News" : "Post News"}
                       </Button>
-                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
                         Cancel
                       </Button>
                     </div>
@@ -1692,7 +1692,7 @@ export default function IndustryHubPage() {
                 {selectedPostType === "events" && (
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Title *</label>
+                      <label className="text-sm font-medium text-foreground">Event Title *</label>
                       <Input 
                         placeholder="Enter event title" 
                         value={formFields.eventTitle}
@@ -1701,7 +1701,7 @@ export default function IndustryHubPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Date *</label>
+                        <label className="text-sm font-medium text-foreground">Date *</label>
                         <Input 
                           type="date" 
                           value={formFields.eventDate}
@@ -1709,7 +1709,7 @@ export default function IndustryHubPage() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Price *</label>
+                        <label className="text-sm font-medium text-foreground">Price *</label>
                         <Input 
                           placeholder="e.g., ₹500" 
                           value={formFields.eventPrice}
@@ -1718,7 +1718,7 @@ export default function IndustryHubPage() {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Type</label>
+                      <label className="text-sm font-medium text-foreground">Event Type</label>
                       <select 
                         className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background h-10"
                         value={formFields.eventType}
@@ -1739,7 +1739,7 @@ export default function IndustryHubPage() {
                     {formFields.eventType === "In-Person" ? (
                       <>
                         <div className="space-y-1">
-                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Location / Address *</label>
+                          <label className="text-sm font-medium text-foreground">Location / Address *</label>
                           <Input 
                             placeholder="Enter physical address or venue" 
                             value={formFields.eventLocation}
@@ -1747,7 +1747,7 @@ export default function IndustryHubPage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Google Maps Link</label>
+                          <label className="text-sm font-medium text-foreground">Google Maps Link</label>
                           <Input 
                             placeholder="https://maps.google.com/..." 
                             value={formFields.eventGoogleMapsLink}
@@ -1757,7 +1757,7 @@ export default function IndustryHubPage() {
                       </>
                     ) : (
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Meeting Link *</label>
+                        <label className="text-sm font-medium text-foreground">Meeting Link *</label>
                         <Input 
                           placeholder="https://zoom.us/j/... or Google Meet link" 
                           value={formFields.eventMeetingLink}
@@ -1767,7 +1767,7 @@ export default function IndustryHubPage() {
                     )}
 
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Registration Link</label>
+                      <label className="text-sm font-medium text-foreground">Registration Link</label>
                       <Input 
                         placeholder="https://example.com/register-event" 
                         value={formFields.eventRegistrationLink}
@@ -1776,7 +1776,7 @@ export default function IndustryHubPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
+                      <label className="text-sm font-medium text-foreground">Description *</label>
                       <textarea
                         className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background min-h-[100px]"
                         placeholder="Enter event description..."
@@ -1793,7 +1793,7 @@ export default function IndustryHubPage() {
                       >
                         {loading ? "Saving..." : editingItem ? "Update Event" : "Create Event"}
                       </Button>
-                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
                         Cancel
                       </Button>
                     </div>
@@ -1803,7 +1803,7 @@ export default function IndustryHubPage() {
                 {selectedPostType === "courses" && (
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Course Title *</label>
+                      <label className="text-sm font-medium text-foreground">Course Title *</label>
                       <Input 
                         placeholder="Enter course title" 
                         value={formFields.courseTitle}
@@ -1812,7 +1812,7 @@ export default function IndustryHubPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration *</label>
+                        <label className="text-sm font-medium text-foreground">Duration *</label>
                         <Input 
                           placeholder="e.g., 8 weeks" 
                           value={formFields.courseDuration}
@@ -1820,7 +1820,7 @@ export default function IndustryHubPage() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Price *</label>
+                        <label className="text-sm font-medium text-foreground">Price *</label>
                         <Input 
                           placeholder="e.g., ₹15,000" 
                           value={formFields.coursePrice}
@@ -1830,7 +1830,7 @@ export default function IndustryHubPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Level *</label>
+                        <label className="text-sm font-medium text-foreground">Level *</label>
                         <select 
                           className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background h-10"
                           value={formFields.courseLevel}
@@ -1842,7 +1842,7 @@ export default function IndustryHubPage() {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Category *</label>
+                        <label className="text-sm font-medium text-foreground">Category *</label>
                         <select 
                           className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background h-10"
                           value={formFields.courseCategory}
@@ -1857,7 +1857,7 @@ export default function IndustryHubPage() {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Instructor *</label>
+                      <label className="text-sm font-medium text-foreground">Instructor *</label>
                       <Input 
                         placeholder="Enter instructor name" 
                         value={formFields.courseInstructor}
@@ -1865,7 +1865,7 @@ export default function IndustryHubPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
+                      <label className="text-sm font-medium text-foreground">Description *</label>
                       <textarea
                         className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background min-h-[100px]"
                         placeholder="Enter course description..."
@@ -1882,7 +1882,7 @@ export default function IndustryHubPage() {
                       >
                         {loading ? "Saving..." : editingItem ? "Update Course" : "Create Course"}
                       </Button>
-                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                      <Button variant="outline" onClick={() => setShowCreatePopup(false)} className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
                         Cancel
                       </Button>
                     </div>
@@ -1912,7 +1912,7 @@ export default function IndustryHubPage() {
                   </Button>
                 </div>
                 
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{selectedEvent.title}</h1>
+                <h1 className="text-2xl font-bold text-foreground mb-4">{selectedEvent.title}</h1>
                 
                 <div className="space-y-4 mb-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1941,7 +1941,7 @@ export default function IndustryHubPage() {
                       <div className="grid grid-cols-1 gap-2.5">
                         {!selectedEvent.isOnline && selectedEvent.googleMapsLink && (
                           <div className="flex items-center gap-2 text-sm">
-                            <span className="font-semibold text-xs text-gray-500 dark:text-gray-400">Google Maps:</span>
+                            <span className="font-semibold text-xs text-muted-foreground">Google Maps:</span>
                             <a 
                               href={selectedEvent.googleMapsLink} 
                               target="_blank" 
@@ -1955,7 +1955,7 @@ export default function IndustryHubPage() {
                         )}
                         {selectedEvent.isOnline && selectedEvent.meetingLink && (
                           <div className="flex items-center gap-2 text-sm">
-                            <span className="font-semibold text-xs text-gray-500 dark:text-gray-400">Meeting Link:</span>
+                            <span className="font-semibold text-xs text-muted-foreground">Meeting Link:</span>
                             <a 
                               href={selectedEvent.meetingLink} 
                               target="_blank" 
@@ -1969,7 +1969,7 @@ export default function IndustryHubPage() {
                         )}
                         {selectedEvent.registrationLink && (
                           <div className="flex items-center gap-2 text-sm">
-                            <span className="font-semibold text-xs text-gray-500 dark:text-gray-400">Register:</span>
+                            <span className="font-semibold text-xs text-muted-foreground">Register:</span>
                             <a 
                               href={selectedEvent.registrationLink} 
                               target="_blank" 
@@ -1986,7 +1986,7 @@ export default function IndustryHubPage() {
                   )}
                   
                   <div className="prose max-w-none dark:prose-invert">
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{selectedEvent.description}</p>
+                    <p className="text-foreground leading-relaxed">{selectedEvent.description}</p>
                   </div>
                 </div>
                 
@@ -2016,7 +2016,7 @@ export default function IndustryHubPage() {
                       navigator.clipboard.writeText(window.location.href);
                       toast({ title: "Link copied!", description: "Event link copied to clipboard." });
                     }}
-                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 h-10"
+                    className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 h-10"
                   >
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
@@ -2043,7 +2043,7 @@ export default function IndustryHubPage() {
                   </Button>
                 </div>
                 
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{selectedCourse.title}</h1>
+                <h1 className="text-2xl font-bold text-foreground mb-4">{selectedCourse.title}</h1>
                 
                 <div className="space-y-4 mb-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2066,7 +2066,7 @@ export default function IndustryHubPage() {
                   </div>
                   
                   <div className="prose max-w-none dark:prose-invert">
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{selectedCourse.description}</p>
+                    <p className="text-foreground leading-relaxed">{selectedCourse.description}</p>
                   </div>
                 </div>
                 
@@ -2084,7 +2084,7 @@ export default function IndustryHubPage() {
                       navigator.clipboard.writeText(window.location.href);
                       toast({ title: "Link copied!", description: "Course link copied to clipboard." });
                     }}
-                    className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                    className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
                   >
                     <Share2 className="w-4 h-4 mr-2" />
                     Share

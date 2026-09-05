@@ -643,13 +643,13 @@ export default function DirectoryPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 bg-yellow-50/50 dark:bg-background text-gray-900 dark:text-white min-h-screen p-4 -m-4 transition-colors duration-200">
+      <div className="space-y-6 bg-background text-foreground min-h-screen p-4 -m-4 transition-colors duration-200">
         
         {/* Header - Upload button removed (Requirement 2) */}
-        <div className="bg-white dark:bg-background p-6 rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40">
+        <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-foreground mb-1 flex items-center gap-2">
                 {viewingLiked ? (
                   <>
                     <Heart className="w-6 h-6 text-red-500 fill-red-500" />
@@ -659,7 +659,7 @@ export default function DirectoryPage() {
                   "Asset Directory"
                 )}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">
+              <p className="text-muted-foreground text-sm">
                 {viewingLiked 
                   ? "Browse all the creative files and media references you have favorited." 
                   : "Explore creative reference media, conceptual breakdowns, documents, scripts, and foley."}
@@ -667,12 +667,12 @@ export default function DirectoryPage() {
             </div>
             <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
               <div className="relative flex-1 sm:flex-initial sm:min-w-[220px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Search assets..."
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); resetPaging(); }}
-                  className="pl-9 h-9 border-gray-300 dark:border-yellow-900/40 rounded-lg focus:border-yellow-500 focus:ring-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white text-sm w-full"
+                  className="pl-9 h-9 border-border rounded-lg focus:border-yellow-500 focus:ring-yellow-500 bg-background text-foreground text-sm w-full"
                 />
               </div>
 
@@ -704,7 +704,7 @@ export default function DirectoryPage() {
                 className={`h-9 font-bold text-xs gap-1.5 transition-all duration-200 shrink-0 ${
                   viewingLiked 
                     ? "bg-red-500 hover:bg-red-600 text-white border-red-500 shadow-sm" 
-                    : "border-gray-300 dark:border-yellow-900/40 text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 bg-white dark:bg-background"
+                    : "border-border text-foreground hover:text-red-500 dark:hover:text-red-400 bg-card"
                 }`}
               >
                 <Heart className={`w-4 h-4 ${viewingLiked ? "fill-current" : ""}`} />
@@ -715,9 +715,9 @@ export default function DirectoryPage() {
         </div>
         {/* Navigation - Tabs for Desktop, Dropdown for Mobile - Only displayed if not viewing liked items */}
         {!viewingLiked && (
-          <div className="bg-white dark:bg-background rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40 overflow-hidden">
+          <div className="bg-card text-card-foreground rounded-lg shadow-sm overflow-hidden">
             {/* Desktop View */}
-            <div className="hidden md:flex justify-between items-center border-b border-gray-200 dark:border-gray-800 px-4">
+            <div className="hidden md:flex justify-between items-center border-b border-border px-4">
               <div className="flex">
                 {[
                   { id: "images", label: "Images", icon: ImageIcon },
@@ -731,7 +731,7 @@ export default function DirectoryPage() {
                     className={`px-5 py-4 border-b-2 font-medium transition-all flex items-center gap-2 text-sm whitespace-nowrap ${
                       activeTab === tab.id
                         ? "border-yellow-600 text-yellow-600 dark:text-yellow-400 dark:border-yellow-500"
-                        : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <tab.icon className="w-4 h-4" /> {tab.label}
@@ -742,13 +742,13 @@ export default function DirectoryPage() {
                 <Button
                   variant="outline"
                   onClick={() => setSidebarOpen(true)}
-                  className="mr-2 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 font-bold h-9 text-xs shadow-sm"
+                  className="mr-2 border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 text-foreground font-bold h-9 text-xs shadow-sm transition-colors"
                 >
                   <Filter className="w-3.5 h-3.5 mr-1.5" /> Filter
                 </Button>
                 <Button
                   onClick={() => setShowAddFileDialog(true)}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold h-9 text-xs px-4 shadow-sm transition-colors"
+                  className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold h-9 text-xs px-4 shadow-sm transition-all"
                 >
                   Add Files
                 </Button>
@@ -756,7 +756,7 @@ export default function DirectoryPage() {
             </div>
 
             {/* Mobile View */}
-            <div className="flex md:hidden flex-col gap-3 p-3 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex md:hidden flex-col gap-3 p-3 border-b border-border">
               <div className="flex justify-between items-center w-full gap-2">
                 <Select value={activeTab} onValueChange={(val) => handleTabChange(val as DirType)}>
                   <SelectTrigger className="w-full text-sm font-medium border-yellow-200 focus:ring-yellow-500 h-10">
@@ -774,13 +774,13 @@ export default function DirectoryPage() {
                 <Button
                   variant="outline"
                   onClick={() => setSidebarOpen(true)}
-                  className="flex-1 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 font-bold h-10 text-xs shadow-sm"
+                  className="flex-1 border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 text-foreground font-bold h-10 text-xs shadow-sm transition-colors"
                 >
                   <Filter className="w-3.5 h-3.5 mr-1.5" /> Filter
                 </Button>
                 <Button
                   onClick={() => setShowAddFileDialog(true)}
-                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-bold h-10 text-xs shadow-sm transition-colors"
+                  className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold h-10 text-xs shadow-sm transition-all"
                 >
                   <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Files
                 </Button>
@@ -792,12 +792,12 @@ export default function DirectoryPage() {
         {/* Grid Area */}
         <div className="min-h-[400px]">
           {pageItems.length === 0 ? (
-            <div className="bg-white dark:bg-background rounded-lg border border-yellow-100 dark:border-yellow-900/40 p-12 text-center">
+            <div className="bg-card text-card-foreground rounded-lg p-12 text-center">
               <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-950/40 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Heart className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
               </div>
-              <h3 className="text-lg font-bold mb-1 text-gray-900 dark:text-white">No assets found</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm mx-auto">
+              <h3 className="text-lg font-bold mb-1 text-foreground">No assets found</h3>
+              <p className="text-muted-foreground text-sm max-w-sm mx-auto">
                 {viewingLiked 
                   ? "You haven't liked any assets in this category yet. Click the heart icon on any asset to add it here!"
                   : "No items match your query or category filter. Try clearing your filters or changing search query."}
@@ -808,7 +808,7 @@ export default function DirectoryPage() {
               {pageItems.map((it) => (
                 <Card 
                   key={it.id} 
-                  className="group overflow-hidden bg-white dark:bg-background border border-gray-200 dark:border-gray-850 hover:border-yellow-500 dark:hover:border-yellow-500 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 relative cursor-pointer"
+                  className="group overflow-hidden bg-card text-card-foreground border-0 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 relative cursor-pointer"
                   onClick={() => {
                     setSearchParams(prev => {
                       prev.set("item", it.id);
@@ -817,7 +817,7 @@ export default function DirectoryPage() {
                   }}
                 >
                   {/* Media container */}
-                  <div className="relative w-full h-[180px] overflow-hidden bg-gray-50 dark:bg-background flex flex-col justify-center">
+                  <div className="relative w-full h-[180px] overflow-hidden bg-muted/20 flex flex-col justify-center">
                     
                     {/* Top Right Corner Controls (Requirement 2: Share and Likes overlay) */}
                     <div 
@@ -1001,8 +1001,8 @@ export default function DirectoryPage() {
 
         {/* Pagination Section (Requirement 5: 12 per page) */}
         {totalPages > 1 && (
-          <div className="bg-white dark:bg-background p-4 rounded-lg shadow-sm border border-yellow-100 dark:border-yellow-900/40 flex items-center justify-between">
-            <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+          <div className="bg-card text-card-foreground p-4 rounded-lg shadow-sm flex items-center justify-between">
+            <span className="text-xs text-muted-foreground font-medium">
               Showing page <b>{page}</b> of {totalPages}
             </span>
             <div className="flex items-center gap-1.5">
@@ -1011,7 +1011,7 @@ export default function DirectoryPage() {
                 size="sm" 
                 disabled={page <= 1} 
                 onClick={() => setPage((p) => Math.max(1, p - 1))} 
-                className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:!text-yellow-600 dark:hover:!text-yellow-400 hover:!bg-yellow-50 dark:hover:!bg-yellow-950/20 h-8 text-xs font-semibold"
+                className="border-border text-foreground hover:border-yellow-500 hover:!text-yellow-600 dark:hover:!text-yellow-400 hover:!bg-yellow-50 dark:hover:!bg-yellow-950/20 transition-colors h-8 text-xs font-semibold"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" /> Previous
               </Button>
@@ -1038,7 +1038,7 @@ export default function DirectoryPage() {
                 size="sm" 
                 disabled={page >= totalPages} 
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))} 
-                className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:!text-yellow-600 dark:hover:!text-yellow-400 hover:!bg-yellow-50 dark:hover:!bg-yellow-950/20 h-8 text-xs font-semibold"
+                className="border-border text-foreground hover:border-yellow-500 hover:!text-yellow-600 dark:hover:!text-yellow-400 hover:!bg-yellow-50 dark:hover:!bg-yellow-950/20 transition-colors h-8 text-xs font-semibold"
               >
                 Next <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
@@ -1383,16 +1383,16 @@ export default function DirectoryPage() {
       />
 
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent className="bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white sm:max-w-md w-full overflow-y-auto">
+        <SheetContent className="bg-card text-card-foreground border-border sm:max-w-md w-full overflow-y-auto">
           <SheetHeader>
-            <SheetTitle className="text-xl font-bold flex items-center gap-2">
+            <SheetTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
               <Filter className="w-5 h-5 text-yellow-500" />
               Filters & Sort
             </SheetTitle>
           </SheetHeader>
           <div className="mt-8 space-y-6">
             <div className="space-y-3">
-              <Label className="text-sm font-semibold">Category</Label>
+              <Label className="text-sm font-semibold text-foreground">Category</Label>
               <CategoryDropdown
                 value={filterCategory === "all" ? "" : filterCategory}
                 onChange={(val) => { setFilterCategory(val || "all"); resetPaging(); }}
@@ -1401,36 +1401,36 @@ export default function DirectoryPage() {
             </div>
 
             <div className="space-y-3">
-              <Label className="text-sm font-semibold">Likes Range</Label>
+              <Label className="text-sm font-semibold text-foreground">Likes Range</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
                   placeholder="Min"
                   value={filterMinLikes}
                   onChange={(e) => { setFilterMinLikes(e.target.value); resetPaging(); }}
-                  className="bg-background border-input"
+                  className="bg-background border-input text-foreground"
                 />
-                <span className="text-sm text-gray-500">-</span>
+                <span className="text-sm text-muted-foreground">-</span>
                 <Input
                   type="number"
                   placeholder="Max"
                   value={filterMaxLikes}
                   onChange={(e) => { setFilterMaxLikes(e.target.value); resetPaging(); }}
-                  className="bg-background border-input"
+                  className="bg-background border-input text-foreground"
                 />
               </div>
             </div>
 
             <div className="space-y-3">
-              <Label className="text-sm font-semibold">Sort By</Label>
+              <Label className="text-sm font-semibold text-foreground">Sort By</Label>
               <select
                 value={sortBy}
                 onChange={(e) => { setSortBy(e.target.value as "recent" | "likes" | "date"); resetPaging(); }}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500"
+                className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500"
               >
-                <option value="recent">Recent</option>
-                <option value="likes">Most Liked</option>
-                <option value="date">Upload Date</option>
+                <option value="recent" className="bg-popover text-popover-foreground">Recent</option>
+                <option value="likes" className="bg-popover text-popover-foreground">Most Liked</option>
+                <option value="date" className="bg-popover text-popover-foreground">Upload Date</option>
               </select>
             </div>
 
@@ -1443,7 +1443,7 @@ export default function DirectoryPage() {
                 resetPaging();
               }}
               variant="outline" 
-              className="w-full mt-4"
+              className="w-full mt-4 border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 transition-colors"
             >
               Clear Filters
             </Button>

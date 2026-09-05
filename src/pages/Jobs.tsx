@@ -1106,7 +1106,7 @@ export default function Jobs() {
           {/* Back Button */}
           <Button 
             variant="ghost" 
-            className="flex items-center gap-2 pl-0 text-gray-600 hover:text-gray-900 hover:bg-transparent -ml-2"
+            className="flex items-center gap-2 pl-0 text-muted-foreground hover:text-foreground hover:bg-transparent -ml-2"
             onClick={() => {
               setSelectedJob(null);
               setIsViewingDetails(false);
@@ -1117,32 +1117,32 @@ export default function Jobs() {
           </Button>
 
           {/* Job details card/view inside the page */}
-          <div className="bg-white rounded-xl border border-yellow-100 shadow-sm overflow-hidden p-6 md:p-8 space-y-8 animate-in fade-in duration-300">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-6">
+          <div className="bg-card text-card-foreground rounded-xl border border-border shadow-sm overflow-hidden p-6 md:p-8 space-y-8 animate-in fade-in duration-300">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border pb-6">
               <div className="space-y-2">
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary" className="bg-yellow-50 text-yellow-800 border-yellow-200">
+                  <Badge variant="secondary" className="bg-yellow-50 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/50">
                     {selectedJob.job_type}
                   </Badge>
-                  <Badge variant="outline" className="border-gray-200">
+                  <Badge variant="outline" className="border-border">
                     {selectedJob.experience_level}
                   </Badge>
-                  <Badge variant="outline" className="border-gray-200">
+                  <Badge variant="outline" className="border-border">
                     {selectedJob.industry}
                   </Badge>
                 </div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{selectedJob.job_title}</h1>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground">{selectedJob.job_title}</h1>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
-                    <Building className="h-4 w-4 text-gray-400" />
-                    <span className="font-medium text-gray-800">{selectedJob.company_name}</span>
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-foreground">{selectedJob.company_name}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
                     <span>{selectedJob.location}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4 text-gray-400" />
+                    <Clock className="h-4 w-4 text-muted-foreground" />
                     <span>Posted {formatDate(selectedJob.posted_date)}</span>
                   </div>
                 </div>
@@ -1159,7 +1159,7 @@ export default function Jobs() {
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors"
                       onClick={() => handleSaveJob(selectedJob.id)}
                     >
                       <Bookmark className={`h-4 w-4 ${savedJobs.includes(selectedJob.id) ? "fill-current text-yellow-500" : ""}`} />
@@ -1169,7 +1169,7 @@ export default function Jobs() {
                   <>
                     <Button 
                       variant="outline" 
-                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 flex items-center gap-2"
+                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors flex items-center gap-2"
                       onClick={() => handleEditJob(selectedJob)}
                     >
                       <Edit className="h-4 w-4" />
@@ -1187,7 +1187,7 @@ export default function Jobs() {
                 )}
                 <Button 
                   variant="outline" 
-                  className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                  className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors"
                   onClick={() => handleShareJob(selectedJob)}
                 >
                   <Share2 className="h-4 w-4" />
@@ -1200,16 +1200,16 @@ export default function Jobs() {
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
                 <div>
-                  <h3 className="font-semibold text-lg text-gray-900 mb-3 border-b border-gray-100 pb-2">Job Description</h3>
-                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedJob.job_description}</p>
+                  <h3 className="font-semibold text-lg text-foreground mb-3 border-b border-border pb-2">Job Description</h3>
+                  <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">{selectedJob.job_description}</p>
                 </div>
 
                 {selectedJob.skills_required && selectedJob.skills_required.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3 border-b border-gray-100 pb-2">Required Skills</h3>
+                    <h3 className="font-semibold text-lg text-foreground mb-3 border-b border-border pb-2">Required Skills</h3>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {selectedJob.skills_required.map((skill, index) => (
-                        <Badge key={index} variant="outline" className="text-sm bg-gray-50 border-gray-200 text-gray-700 px-3 py-1">
+                        <Badge key={index} variant="outline" className="text-sm bg-muted/50 border-border text-foreground/90 px-3 py-1">
                           {skill}
                         </Badge>
                       ))}
@@ -1219,10 +1219,10 @@ export default function Jobs() {
 
                 {selectedJob.job_tags && selectedJob.job_tags.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3 border-b border-gray-100 pb-2">Tags</h3>
+                    <h3 className="font-semibold text-lg text-foreground mb-3 border-b border-border pb-2">Tags</h3>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {selectedJob.job_tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">
+                        <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-950/50 border-yellow-200 dark:border-yellow-900/50">
                           {tag}
                         </Badge>
                       ))}
@@ -1232,72 +1232,72 @@ export default function Jobs() {
 
                 {selectedJob.benefits && (
                   <div>
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3 border-b border-gray-100 pb-2">Benefits & Perks</h3>
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedJob.benefits}</p>
+                    <h3 className="font-semibold text-lg text-foreground mb-3 border-b border-border pb-2">Benefits & Perks</h3>
+                    <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">{selectedJob.benefits}</p>
                   </div>
                 )}
               </div>
 
               {/* Sidebar Info */}
-              <div className="space-y-6 bg-gray-50/50 p-6 rounded-xl border border-gray-100">
-                <h3 className="font-semibold text-lg text-gray-900 border-b border-gray-100 pb-2">Overview</h3>
+              <div className="space-y-6 bg-muted/30 p-6 rounded-xl border border-border">
+                <h3 className="font-semibold text-lg text-foreground border-b border-border pb-2">Overview</h3>
                 
                 <div className="space-y-4 text-sm">
-                  <div className="flex justify-between py-1 border-b border-gray-100">
-                    <span className="text-gray-500">Job Type</span>
-                    <span className="font-medium text-gray-900">{selectedJob.job_type}</span>
+                  <div className="flex justify-between py-1 border-b border-border">
+                    <span className="text-muted-foreground">Job Type</span>
+                    <span className="font-medium text-foreground">{selectedJob.job_type}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-gray-100">
-                    <span className="text-gray-500">Experience Level</span>
-                    <span className="font-medium text-gray-900">{selectedJob.experience_level}</span>
+                  <div className="flex justify-between py-1 border-b border-border">
+                    <span className="text-muted-foreground">Experience Level</span>
+                    <span className="font-medium text-foreground">{selectedJob.experience_level}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-gray-100">
-                    <span className="text-gray-500">Category</span>
-                    <span className="font-medium text-gray-900">{selectedJob.industry}</span>
+                  <div className="flex justify-between py-1 border-b border-border">
+                    <span className="text-muted-foreground">Category</span>
+                    <span className="font-medium text-foreground">{selectedJob.industry}</span>
                   </div>
                   {selectedJob.salary_range && (
-                    <div className="flex justify-between py-1 border-b border-gray-100">
-                      <span className="text-gray-500">Salary Range</span>
+                    <div className="flex justify-between py-1 border-b border-border">
+                      <span className="text-muted-foreground">Salary Range</span>
                       <span className="font-semibold text-green-600">{selectedJob.salary_range}</span>
                     </div>
                   )}
                   <div className="flex justify-between py-1">
-                    <span className="text-gray-500">Posted On</span>
-                    <span className="font-medium text-gray-900">{formatDate(selectedJob.posted_date)}</span>
+                    <span className="text-muted-foreground">Posted On</span>
+                    <span className="font-medium text-foreground">{formatDate(selectedJob.posted_date)}</span>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100 space-y-3">
-                  <h4 className="font-medium text-sm text-gray-500">Posted By</h4>
+                <div className="pt-4 border-t border-border space-y-3">
+                  <h4 className="font-medium text-sm text-muted-foreground">Posted By</h4>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center border border-yellow-200">
-                      <span className="text-yellow-700 font-bold text-sm">
+                    <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-950/50 rounded-full flex items-center justify-center border border-yellow-200 dark:border-yellow-900/40">
+                      <span className="text-yellow-700 dark:text-yellow-400 font-bold text-sm">
                         {selectedJob.user_id === user?.id ? "Y" : (profilesMap[selectedJob.user_id]?.[0]?.toUpperCase() || "F")}
                       </span>
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-800">
+                      <div className="font-semibold text-foreground">
                         {selectedJob.user_id === user?.id ? "You" : (profilesMap[selectedJob.user_id] || "FilmCollab User")}
                       </div>
-                      <div className="text-xs text-gray-500">Job Poster</div>
+                      <div className="text-xs text-muted-foreground">Job Poster</div>
                     </div>
                   </div>
                 </div>
 
                 {selectedJob.user_id === user?.id && applicants.length > 0 && (
-                  <div className="pt-4 border-t border-gray-100 space-y-3">
-                    <h4 className="font-medium text-sm text-gray-500">Applicants ({applicants.length})</h4>
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <h4 className="font-medium text-sm text-muted-foreground">Applicants ({applicants.length})</h4>
                     <div className="space-y-2">
                       {applicants.map((applicant) => (
-                        <div key={applicant.id} className="p-3 bg-white border border-gray-100 rounded-lg text-xs space-y-1">
+                        <div key={applicant.id} className="p-3 bg-card text-card-foreground border border-border rounded-lg text-xs space-y-1">
                           <div className="flex justify-between items-center">
-                            <span className="font-semibold text-gray-800">{applicant.name}</span>
+                            <span className="font-semibold text-foreground">{applicant.name}</span>
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                               {applicant.status}
                             </Badge>
                           </div>
-                          <div className="text-gray-500">{applicant.email}</div>
-                          <div className="text-gray-400">Exp: {applicant.experience}</div>
+                          <div className="text-muted-foreground">{applicant.email}</div>
+                          <div className="text-muted-foreground/80">Exp: {applicant.experience}</div>
                         </div>
                       ))}
                     </div>
@@ -1317,8 +1317,8 @@ export default function Jobs() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Jobs</h1>
-            <p className="text-gray-600">Discover opportunities in the film industry</p>
+            <h1 className="text-3xl font-bold text-foreground">Jobs</h1>
+            <p className="text-muted-foreground">Discover opportunities in the film industry</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -1344,9 +1344,9 @@ export default function Jobs() {
                       name="job_title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700">Job Title</FormLabel>
+                          <FormLabel className="text-foreground">Job Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Senior Director" className="border-yellow-200 focus:border-yellow-500" {...field} />
+                            <Input placeholder="e.g. Senior Director" className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1358,9 +1358,9 @@ export default function Jobs() {
                       name="company_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700">Company Name</FormLabel>
+                          <FormLabel className="text-foreground">Company Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Netflix Studios" className="border-yellow-200 focus:border-yellow-500" {...field} />
+                            <Input placeholder="e.g. Netflix Studios" className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1374,9 +1374,9 @@ export default function Jobs() {
                       name="location"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700">Location</FormLabel>
+                          <FormLabel className="text-foreground">Location</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Mumbai, Maharashtra" className="border-yellow-200 focus:border-yellow-500" {...field} />
+                            <Input placeholder="e.g. Mumbai, Maharashtra" className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1388,14 +1388,14 @@ export default function Jobs() {
                       name="salary_min"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700">Min Salary</FormLabel>
+                          <FormLabel className="text-foreground">Min Salary</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">₹</span>
                               <Input 
                                 type="number"
                                 placeholder="e.g. 500000" 
-                                className="pl-8 border-yellow-200 focus:border-yellow-500"
+                                className="pl-8 border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                                 value={field.value === 0 ? "" : field.value || ""}
                                 onChange={(e) => {
                                   const value = e.target.value;
@@ -1414,14 +1414,14 @@ export default function Jobs() {
                       name="salary_max"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700">Max Salary</FormLabel>
+                          <FormLabel className="text-foreground">Max Salary</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">₹</span>
                               <Input 
                                 type="number"
                                 placeholder="e.g. 800000" 
-                                className="pl-8 border-yellow-200 focus:border-yellow-500"
+                                className="pl-8 border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                                 value={field.value === 0 ? "" : field.value || ""}
                                 onChange={(e) => {
                                   const value = e.target.value;
@@ -1442,10 +1442,10 @@ export default function Jobs() {
                       name="job_type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700">Job Type</FormLabel>
+                          <FormLabel className="text-foreground">Job Type</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
+                              <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                                 <SelectValue placeholder="Select type" />
                               </SelectTrigger>
                             </FormControl>
@@ -1466,10 +1466,10 @@ export default function Jobs() {
                       name="experience_level"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700">Experience Level</FormLabel>
+                          <FormLabel className="text-foreground">Experience Level</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
+                              <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                                 <SelectValue placeholder="Select level" />
                               </SelectTrigger>
                             </FormControl>
@@ -1490,7 +1490,7 @@ export default function Jobs() {
                       name="industry"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700">Category</FormLabel>
+                          <FormLabel className="text-foreground">Category</FormLabel>
                           <CategoryDropdown
                             value={field.value}
                             onChange={field.onChange}
@@ -1507,9 +1507,9 @@ export default function Jobs() {
                     name="skills_required"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Required Skills (Optional)</FormLabel>
+                        <FormLabel className="text-foreground">Required Skills (Optional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Adobe Premiere, Final Cut Pro, Cinematography (comma separated)" className="border-yellow-200 focus:border-yellow-500" {...field} />
+                          <Input placeholder="e.g. Adobe Premiere, Final Cut Pro, Cinematography (comma separated)" className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1521,11 +1521,11 @@ export default function Jobs() {
                     name="job_description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Job Description</FormLabel>
+                        <FormLabel className="text-foreground">Job Description</FormLabel>
                         <FormControl>
                           <Textarea 
                             placeholder="Describe the role, responsibilities, and requirements..."
-                            className="min-h-[120px] border-yellow-200 focus:border-yellow-500"
+                            className="min-h-[120px] border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                             {...field}
                           />
                         </FormControl>
@@ -1539,11 +1539,11 @@ export default function Jobs() {
                     name="benefits"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Benefits (Optional)</FormLabel>
+                        <FormLabel className="text-foreground">Benefits (Optional)</FormLabel>
                         <FormControl>
                           <Textarea 
                             placeholder="Describe benefits, perks, and additional compensation..."
-                            className="min-h-[80px] border-yellow-200 focus:border-yellow-500"
+                            className="min-h-[80px] border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                             {...field}
                           />
                         </FormControl>
@@ -1553,7 +1553,7 @@ export default function Jobs() {
                   />
 
                   <div className="flex justify-end gap-2 pt-4">
-                    <Button type="button" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50" onClick={() => setIsDialogOpen(false)}>
+                    <Button type="button" variant="outline" className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30" onClick={() => setIsDialogOpen(false)}>
                       Cancel
                     </Button>
                     <Button type="submit" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
@@ -1569,7 +1569,7 @@ export default function Jobs() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-yellow-100 pb-4 mb-6">
-            <TabsList className="bg-yellow-50 border-yellow-200 self-start shrink-0">
+            <TabsList className="bg-yellow-50/50 dark:bg-muted/40 border border-yellow-200/50 dark:border-border self-start shrink-0">
               <TabsTrigger value="all" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">All Jobs</TabsTrigger>
               <TabsTrigger value="applied" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">My Jobs</TabsTrigger>
               <TabsTrigger value="saved" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Saved Jobs ({savedJobs.length})</TabsTrigger>
@@ -1578,19 +1578,19 @@ export default function Jobs() {
 
             <div className="flex items-center gap-2 w-full md:w-auto">
               <div className="relative flex-1 md:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Search jobs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-yellow-200 focus:border-yellow-500 h-9"
+                  className="pl-10 border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500 h-9"
                 />
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsFilterSidebarOpen(true)}
-                className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 h-9 flex items-center gap-2 shrink-0 text-gray-700"
+                className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 h-9 flex items-center gap-2 shrink-0 text-foreground transition-colors"
               >
                 <Filter className="h-4 w-4" />
                 <span>Filters</span>
@@ -1619,9 +1619,9 @@ export default function Jobs() {
               <div className="space-y-6 py-6 overflow-y-auto max-h-[calc(100vh-200px)] pr-1">
                 {/* Job Type Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Job Type</label>
+                  <label className="text-sm font-medium text-foreground">Job Type</label>
                   <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger className="w-full border-yellow-200 focus:border-yellow-500">
+                    <SelectTrigger className="w-full border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                       <SelectValue placeholder="Job Type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1636,9 +1636,9 @@ export default function Jobs() {
 
                 {/* Experience Level Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Experience Level</label>
+                  <label className="text-sm font-medium text-foreground">Experience Level</label>
                   <Select value={filterExperience} onValueChange={setFilterExperience}>
-                    <SelectTrigger className="w-full border-yellow-200 focus:border-yellow-500">
+                    <SelectTrigger className="w-full border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                       <SelectValue placeholder="Experience Level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1653,7 +1653,7 @@ export default function Jobs() {
 
                 {/* Category Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Category</label>
+                  <label className="text-sm font-medium text-foreground">Category</label>
                   <CategoryDropdown
                     value={filterCategory === "all" ? "" : filterCategory}
                     onChange={(val) => setFilterCategory(val || "all")}
@@ -1663,9 +1663,9 @@ export default function Jobs() {
 
                 {/* Location Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Location</label>
+                  <label className="text-sm font-medium text-foreground">Location</label>
                   <Select value={filterLocation} onValueChange={setFilterLocation}>
-                    <SelectTrigger className="w-full border-yellow-200 focus:border-yellow-500">
+                    <SelectTrigger className="w-full border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                       <SelectValue placeholder="Location" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1681,9 +1681,9 @@ export default function Jobs() {
 
                 {/* Posted Date Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Date Posted</label>
+                  <label className="text-sm font-medium text-foreground">Date Posted</label>
                   <Select value={filterDate} onValueChange={setFilterDate}>
-                    <SelectTrigger className="w-full border-yellow-200 focus:border-yellow-500">
+                    <SelectTrigger className="w-full border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                       <SelectValue placeholder="Posted" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1698,7 +1698,7 @@ export default function Jobs() {
 
                 {/* Salary Filter */}
                 <div className="space-y-2 pb-6">
-                  <label className="text-sm font-medium text-gray-700">Salary Range (₹)</label>
+                  <label className="text-sm font-medium text-foreground">Salary Range (₹)</label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Input
@@ -1706,7 +1706,7 @@ export default function Jobs() {
                         placeholder="Min Salary"
                         value={filterSalaryMin}
                         onChange={(e) => setFilterSalaryMin(e.target.value)}
-                        className="border-yellow-200 focus:border-yellow-500 h-9"
+                        className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500 h-9"
                       />
                     </div>
                     <div className="relative flex-1">
@@ -1715,14 +1715,14 @@ export default function Jobs() {
                         placeholder="Max Salary"
                         value={filterSalaryMax}
                         onChange={(e) => setFilterSalaryMax(e.target.value)}
-                        className="border-yellow-200 focus:border-yellow-500 h-9"
+                        className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500 h-9"
                       />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="absolute bottom-6 left-6 right-6 flex gap-3 bg-white pt-2 border-t border-gray-100">
+              <div className="absolute bottom-6 left-6 right-6 flex gap-3 bg-background pt-2 border-t border-border">
                 <Button 
                   variant="outline" 
                   onClick={() => {
@@ -1739,7 +1739,7 @@ export default function Jobs() {
                       description: "All job listings have been reset."
                     });
                   }}
-                  className="flex-1 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 text-gray-700"
+                  className="flex-1 border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors"
                 >
                   Reset
                 </Button>
@@ -1770,11 +1770,11 @@ export default function Jobs() {
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
               </div>
             ) : filteredJobs.length === 0 ? (
-              <Card className="border-yellow-200">
+              <Card className="border-yellow-200 dark:border-yellow-900/40 bg-card text-card-foreground">
                 <CardContent className="text-center py-12">
-                  <Briefcase className="mx-auto h-12 w-12 text-gray-500 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No jobs found</h3>
-                  <p className="text-gray-600">
+                  <Briefcase className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No jobs found</h3>
+                  <p className="text-muted-foreground">
                     {activeTab === 'created' 
                       ? "You haven't posted any jobs yet. Click 'Post Job' to get started."
                       : activeTab === 'applied'
@@ -1872,7 +1872,7 @@ export default function Jobs() {
                                     <Button 
                                       size="sm" 
                                       variant="outline"
-                                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-muted-foreground transition-colors"
                                       onClick={() => handleViewDetails(job)}
                                       title="View Details"
                                     >
@@ -1881,7 +1881,7 @@ export default function Jobs() {
                                     <Button 
                                       size="sm" 
                                       variant="outline"
-                                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-muted-foreground transition-colors"
                                       onClick={() => handleEditJob(job)}
                                       title="Edit Job"
                                     >
@@ -1889,7 +1889,7 @@ export default function Jobs() {
                                     </Button>
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="hover:bg-yellow-50">
+                                        <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 transition-colors">
                                           <MoreVertical className="h-4 w-4" />
                                         </Button>
                                       </DropdownMenuTrigger>
@@ -1920,7 +1920,7 @@ export default function Jobs() {
                                     <Button 
                                       size="sm" 
                                       variant="outline"
-                                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-muted-foreground transition-colors"
                                       onClick={() => handleViewDetails(job)}
                                       title="View Details"
                                     >
@@ -1929,7 +1929,7 @@ export default function Jobs() {
                                     <Button 
                                       size="sm" 
                                       variant="outline"
-                                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-muted-foreground transition-colors"
                                       onClick={() => handleShareJob(job)}
                                       title="Share"
                                     >
@@ -1941,7 +1941,7 @@ export default function Jobs() {
                                     <Button 
                                       size="sm" 
                                       variant="outline"
-                                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-muted-foreground transition-colors"
                                       onClick={() => handleViewDetails(job)}
                                       title="View Details"
                                     >
@@ -1950,16 +1950,16 @@ export default function Jobs() {
                                     <Button 
                                       size="sm" 
                                       variant="outline"
-                                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-muted-foreground transition-colors"
                                       onClick={() => handleSaveJob(job.id)}
                                       title={savedJobs.includes(job.id) ? "Unsave" : "Save"}
                                     >
-                                      <Bookmark className={`h-4 w-4 ${savedJobs.includes(job.id) ? "fill-current text-yellow-500" : ""}`} />
+                                      <Bookmark className={`h-4 w-4 ${savedJobs.includes(job.id) ? "fill-yellow-500 text-yellow-500" : ""}`} />
                                     </Button>
                                     <Button 
                                       size="sm" 
                                       variant="outline"
-                                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-muted-foreground transition-colors"
                                       onClick={() => handleShareJob(job)}
                                       title="Share"
                                     >
@@ -1977,12 +1977,12 @@ export default function Jobs() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {paginatedJobs.map((job) => (
-                  <Card key={job.id} className="hover:shadow-soft transition-shadow border-yellow-200">
+                  <Card key={job.id} className="hover:shadow-soft transition-shadow border-yellow-200 dark:border-yellow-900/40 bg-card text-card-foreground">
                     <CardHeader className="pb-4">
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex-1 min-w-0 cursor-pointer group/title" onClick={() => handleViewDetails(job)}>
-                          <CardTitle className="text-lg line-clamp-2 text-gray-900 group-hover/title:text-yellow-600 transition-colors">{job.job_title}</CardTitle>
-                          <CardDescription className="flex items-center gap-1 mt-1 text-gray-600">
+                          <CardTitle className="text-lg line-clamp-2 text-foreground group-hover/title:text-yellow-600 dark:group-hover/title:text-yellow-400 transition-colors">{job.job_title}</CardTitle>
+                          <CardDescription className="flex items-center gap-1 mt-1 text-muted-foreground">
                             <Building className="h-4 w-4" />
                             {job.company_name}
                           </CardDescription>
@@ -1991,15 +1991,16 @@ export default function Jobs() {
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            className="hover:bg-yellow-50"
+                            className={`hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 transition-colors ${savedJobs.includes(job.id) ? "text-yellow-500" : "text-muted-foreground"}`}
                             onClick={() => handleSaveJob(job.id)}
+                            title={savedJobs.includes(job.id) ? "Unsave" : "Save"}
                           >
-                            <Bookmark className={`h-4 w-4 ${savedJobs.includes(job.id) ? "fill-current" : ""}`} />
+                            <Bookmark className={`h-4 w-4 ${savedJobs.includes(job.id) ? "fill-yellow-500 text-yellow-500" : ""}`} />
                           </Button>
                           {activeTab === "created" ? (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="hover:bg-yellow-50">
+                                <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 transition-colors">
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -2021,7 +2022,9 @@ export default function Jobs() {
                             <Button 
                               variant="ghost" 
                               size="sm"
+                              className="text-muted-foreground hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 transition-colors"
                               onClick={() => handleShareJob(job)}
+                              title="Share"
                             >
                               <Share2 className="h-4 w-4" />
                             </Button>
@@ -2031,7 +2034,7 @@ export default function Jobs() {
                     </CardHeader>
                     
                     <CardContent className="space-y-4 cursor-pointer" onClick={() => handleViewDetails(job)}>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-600">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
                           {job.location}
@@ -2041,9 +2044,9 @@ export default function Jobs() {
                           {formatDate(job.posted_date)}
                         </div>
                         <div className="flex items-center gap-1 text-xs">
-                          <Users className="h-3.5 w-3.5 text-gray-400" />
-                          <span className="text-gray-500">Posted by:</span>
-                          <span className="text-gray-700 font-medium">
+                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-muted-foreground">Posted by:</span>
+                          <span className="text-foreground font-medium">
                             {job.user_id === user?.id ? "You" : (profilesMap[job.user_id] || "FilmCollab User")}
                           </span>
                         </div>
@@ -2083,7 +2086,7 @@ export default function Jobs() {
                       {job.job_tags && job.job_tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {job.job_tags.map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="text-[10px] px-1.5 py-0 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">
+                            <Badge key={index} variant="secondary" className="text-[10px] px-1.5 py-0 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-950/50 border-yellow-200 dark:border-yellow-900/50">
                               {tag}
                             </Badge>
                           ))}
@@ -2103,7 +2106,7 @@ export default function Jobs() {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          className={`border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 ${job.user_id === user?.id ? "w-full" : "flex-1"}`}
+                          className={`border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors ${job.user_id === user?.id ? "w-full" : "flex-1"}`}
                           onClick={() => handleViewDetails(job)}
                         >
                           <Eye className="h-4 w-4 mr-1" />
@@ -2317,7 +2320,7 @@ export default function Jobs() {
                         <Button 
                           variant="outline" 
                           size="lg"
-                          className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                          className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
                           onClick={() => handleSaveJob(selectedJob.id)}
                         >
                           <Bookmark className={`h-4 w-4 mr-2 ${savedJobs.includes(selectedJob.id) ? "fill-current" : ""}`} />
@@ -2326,7 +2329,7 @@ export default function Jobs() {
                         <Button 
                           variant="outline" 
                           size="lg"
-                          className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                          className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
                           onClick={() => handleShareJob(selectedJob)}
                         >
                           <Share2 className="h-4 w-4 mr-2" />
@@ -2381,10 +2384,10 @@ export default function Jobs() {
                                       {applicant.status}
                                     </Badge>
                                     <div className="flex gap-2">
-                                      <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                                      <Button size="sm" variant="outline" className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
                                         View Resume
                                       </Button>
-                                      <Button size="sm" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                                      <Button size="sm" variant="outline" className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
                                         Contact
                                       </Button>
                                     </div>
@@ -2539,7 +2542,7 @@ export default function Jobs() {
                     <Button 
                       variant="outline" 
                       size="lg"
-                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
                       onClick={() => handleSaveJob(selectedJob.id)}
                     >
                       <Bookmark className={`h-4 w-4 mr-2 ${savedJobs.includes(selectedJob.id) ? "fill-current" : ""}`} />
@@ -2548,7 +2551,7 @@ export default function Jobs() {
                     <Button 
                       variant="outline" 
                       size="lg"
-                      className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                      className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
                       onClick={() => handleShareJob(selectedJob)}
                     >
                       <Share2 className="h-4 w-4 mr-2" />
@@ -2799,7 +2802,7 @@ export default function Jobs() {
                 />
 
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50" onClick={() => setIsEditDialogOpen(false)}>
+                  <Button type="button" variant="outline" className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30" onClick={() => setIsEditDialogOpen(false)}>
                     Cancel
                   </Button>
                   <Button type="submit" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">

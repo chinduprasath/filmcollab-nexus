@@ -398,7 +398,7 @@ export default function JobDetails() {
           <Button 
             variant="outline" 
             onClick={() => navigate("/jobs")}
-            className="flex items-center gap-2 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+            className="flex items-center gap-2 border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Jobs
@@ -406,36 +406,36 @@ export default function JobDetails() {
         </div>
 
         {/* Job Header */}
-        <Card className="border-yellow-200">
+        <Card className="border-yellow-200 dark:border-yellow-900/40 bg-card text-card-foreground">
           <CardHeader>
             <div className="flex justify-between items-start">
               <div className="space-y-2">
-                <CardTitle className="text-2xl font-bold text-gray-900">
+                <CardTitle className="text-2xl font-bold text-foreground">
                   {job.title}
                 </CardTitle>
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Building className="h-4 w-4" />
                   <span className="font-medium">{job.company}</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="h-4 w-4" />
                   <span>{job.location}</span>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={handleEdit} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                <Button variant="outline" onClick={handleEdit} className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors">
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
-                <Button variant="outline" onClick={handleDelete} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                <Button variant="outline" onClick={handleDelete} className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors">
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
-                <Button variant="outline" onClick={handleSave} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
-                  <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                <Button variant="outline" onClick={handleSave} className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors">
+                  <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? 'fill-yellow-500 text-yellow-500' : ''}`} />
                   {isSaved ? 'Saved' : 'Save'}
                 </Button>
-                <Button variant="outline" onClick={handleShare} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                <Button variant="outline" onClick={handleShare} className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors">
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
@@ -446,7 +446,7 @@ export default function JobDetails() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-yellow-50 border-yellow-200">
+          <TabsList className="grid w-full grid-cols-2 bg-yellow-50/50 dark:bg-muted/40 border border-yellow-200/50 dark:border-border">
             <TabsTrigger value="overview" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Overview</TabsTrigger>
             <TabsTrigger value="applicants" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Applicants ({applicants.length})</TabsTrigger>
           </TabsList>
@@ -457,31 +457,31 @@ export default function JobDetails() {
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Job Description */}
-                <Card className="border-yellow-200">
+                <Card className="border-yellow-200 dark:border-yellow-900/40 bg-card text-card-foreground">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <CardTitle className="flex items-center gap-2 text-foreground">
                       <Briefcase className="h-5 w-5 text-yellow-600" />
                       Job Description
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 whitespace-pre-wrap">
+                    <p className="text-muted-foreground whitespace-pre-wrap">
                       {job.description}
                     </p>
                   </CardContent>
                 </Card>
 
                 {/* Requirements */}
-                <Card className="border-yellow-200">
+                <Card className="border-yellow-200 dark:border-yellow-900/40 bg-card text-card-foreground">
                   <CardHeader>
-                    <CardTitle className="text-gray-900">Requirements</CardTitle>
+                    <CardTitle className="text-foreground">Requirements</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 whitespace-pre-wrap mb-4">
+                    <p className="text-muted-foreground whitespace-pre-wrap mb-4">
                       {job.requirements}
                     </p>
                     <div className="space-y-2">
-                      <h4 className="font-medium text-gray-900">Required Skills:</h4>
+                      <h4 className="font-medium text-foreground">Required Skills:</h4>
                       <div className="flex flex-wrap gap-2">
                         {(Array.isArray(job.skills_required) ? job.skills_required : [job.skills_required]).map((skill, index) => (
                           <Badge key={index} variant="secondary" className="bg-yellow-100 text-yellow-800">
@@ -493,10 +493,10 @@ export default function JobDetails() {
                     
                     {job.job_tags && job.job_tags.length > 0 && (
                       <div className="space-y-2 mt-4">
-                        <h4 className="font-medium text-gray-900">Tags:</h4>
+                        <h4 className="font-medium text-foreground">Tags:</h4>
                         <div className="flex flex-wrap gap-2">
                           {job.job_tags.map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">
+                            <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-950/50 border-yellow-200 dark:border-yellow-900/50">
                               {tag}
                             </Badge>
                           ))}
@@ -507,12 +507,12 @@ export default function JobDetails() {
                 </Card>
 
                 {/* Benefits */}
-                <Card className="border-yellow-200">
+                <Card className="border-yellow-200 dark:border-yellow-900/40 bg-card text-card-foreground">
                   <CardHeader>
-                    <CardTitle className="text-gray-900">Benefits</CardTitle>
+                    <CardTitle className="text-foreground">Benefits</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 whitespace-pre-wrap">
+                    <p className="text-muted-foreground whitespace-pre-wrap">
                       {job.benefits}
                     </p>
                   </CardContent>
@@ -522,16 +522,16 @@ export default function JobDetails() {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Job Info */}
-                <Card className="border-yellow-200">
+                <Card className="border-yellow-200 dark:border-yellow-900/40 bg-card text-card-foreground">
                   <CardHeader>
-                    <CardTitle className="text-gray-900">Job Information</CardTitle>
+                    <CardTitle className="text-foreground">Job Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <DollarSign className="h-4 w-4 text-gray-500" />
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Salary Range</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm font-medium text-foreground">Salary Range</p>
+                        <p className="text-sm text-muted-foreground">
                           {formatSalary(job.min_salary, job.max_salary)}
                         </p>
                       </div>
@@ -540,40 +540,40 @@ export default function JobDetails() {
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Clock className="h-4 w-4 text-gray-500" />
+                      <Clock className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Job Type</p>
-                        <p className="text-sm text-gray-600">{job.job_type}</p>
+                        <p className="text-sm font-medium text-foreground">Job Type</p>
+                        <p className="text-sm text-muted-foreground">{job.job_type}</p>
                       </div>
                     </div>
 
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Star className="h-4 w-4 text-gray-500" />
+                      <Star className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Experience Level</p>
-                        <p className="text-sm text-gray-600">{job.experience_level}</p>
+                        <p className="text-sm font-medium text-foreground">Experience Level</p>
+                        <p className="text-sm text-muted-foreground">{job.experience_level}</p>
                       </div>
                     </div>
 
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Users className="h-4 w-4 text-gray-500" />
+                      <Users className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Category</p>
-                        <p className="text-sm text-gray-600">{job.category}</p>
+                        <p className="text-sm font-medium text-foreground">Category</p>
+                        <p className="text-sm text-muted-foreground">{job.category}</p>
                       </div>
                     </div>
 
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Posted Date</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm font-medium text-foreground">Posted Date</p>
+                        <p className="text-sm text-muted-foreground">
                           {formatDate(job.posted_date)}
                         </p>
                       </div>
@@ -582,10 +582,10 @@ export default function JobDetails() {
                     <Separator />
 
                     <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Application Deadline</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm font-medium text-foreground">Application Deadline</p>
+                        <p className="text-sm text-muted-foreground">
                           {formatDate(job.application_deadline)}
                         </p>
                       </div>
@@ -606,7 +606,7 @@ export default function JobDetails() {
 
                 {job.user_id !== user?.id && (
                   /* Apply Button */
-                  <Card className="border-yellow-200">
+                  <Card className="border-yellow-200 dark:border-yellow-900/40 bg-card text-card-foreground">
                     <CardContent className="pt-6">
                       <Button 
                         className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white" 
@@ -629,22 +629,22 @@ export default function JobDetails() {
           </TabsContent>
 
           <TabsContent value="applicants" className="space-y-6">
-            <Card className="border-yellow-200">
+            <Card className="border-yellow-200 dark:border-yellow-900/40 bg-card text-card-foreground">
               <CardHeader>
-                <CardTitle className="text-gray-900">Job Applicants</CardTitle>
+                <CardTitle className="text-foreground">Job Applicants</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {applicants.map((applicant) => (
-                    <Card key={applicant.id} className="p-4 border-yellow-200">
+                    <Card key={applicant.id} className="p-4 border-yellow-200 dark:border-yellow-900/40 bg-card text-card-foreground">
                       <div className="flex justify-between items-start">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-500" />
-                            <h3 className="font-semibold text-gray-900">{applicant.name}</h3>
-                            <Badge variant="outline" className="border-yellow-200">{applicant.status}</Badge>
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <h3 className="font-semibold text-foreground">{applicant.name}</h3>
+                            <Badge variant="outline" className="border-yellow-200 dark:border-yellow-900/40">{applicant.status}</Badge>
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Mail className="h-3 w-3" />
                               {applicant.email}
@@ -665,15 +665,15 @@ export default function JobDetails() {
                               </Badge>
                             ))}
                           </div>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             Applied on {formatDate(applicant.appliedDate)}
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                          <Button variant="outline" size="sm" className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
                             View Resume
                           </Button>
-                          <Button variant="outline" size="sm" className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                          <Button variant="outline" size="sm" className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
                             View Portfolio
                           </Button>
                         </div>
@@ -690,104 +690,104 @@ export default function JobDetails() {
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-gray-900">Edit Job</DialogTitle>
+              <DialogTitle className="text-foreground">Edit Job</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title" className="text-gray-700">Job Title</Label>
+                  <Label htmlFor="title" className="text-foreground">Job Title</Label>
                   <Input
                     id="title"
                     value={editForm.title || ''}
                     onChange={(e) => setEditForm({...editForm, title: e.target.value})}
-                    className="border-yellow-200 focus:border-yellow-500"
+                    className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="company" className="text-gray-700">Company</Label>
+                  <Label htmlFor="company" className="text-foreground">Company</Label>
                   <Input
                     id="company"
                     value={editForm.company || ''}
                     onChange={(e) => setEditForm({...editForm, company: e.target.value})}
-                    className="border-yellow-200 focus:border-yellow-500"
+                    className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor="location" className="text-gray-700">Location</Label>
+                <Label htmlFor="location" className="text-foreground">Location</Label>
                 <Input
                   id="location"
                   value={editForm.location || ''}
                   onChange={(e) => setEditForm({...editForm, location: e.target.value})}
-                  className="border-yellow-200 focus:border-yellow-500"
+                  className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="min_salary" className="text-gray-700">Min Salary</Label>
+                  <Label htmlFor="min_salary" className="text-foreground">Min Salary</Label>
                   <Input
                     id="min_salary"
                     type="number"
                     value={editForm.min_salary || ''}
                     onChange={(e) => setEditForm({...editForm, min_salary: parseInt(e.target.value)})}
-                    className="border-yellow-200 focus:border-yellow-500"
+                    className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="max_salary" className="text-gray-700">Max Salary</Label>
+                  <Label htmlFor="max_salary" className="text-foreground">Max Salary</Label>
                   <Input
                     id="max_salary"
                     type="number"
                     value={editForm.max_salary || ''}
                     onChange={(e) => setEditForm({...editForm, max_salary: parseInt(e.target.value)})}
-                    className="border-yellow-200 focus:border-yellow-500"
+                    className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor="description" className="text-gray-700">Description</Label>
+                <Label htmlFor="description" className="text-foreground">Description</Label>
                 <Textarea
                   id="description"
                   value={editForm.description || ''}
                   onChange={(e) => setEditForm({...editForm, description: e.target.value})}
                   rows={4}
-                  className="border-yellow-200 focus:border-yellow-500"
+                  className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                 />
               </div>
               <div>
-                <Label htmlFor="requirements" className="text-gray-700">Requirements</Label>
+                <Label htmlFor="requirements" className="text-foreground">Requirements</Label>
                 <Textarea
                   id="requirements"
                   value={editForm.requirements || ''}
                   onChange={(e) => setEditForm({...editForm, requirements: e.target.value})}
                   rows={3}
-                  className="border-yellow-200 focus:border-yellow-500"
+                  className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                 />
               </div>
               <div>
-                <Label htmlFor="skills_required" className="text-gray-700">Skills Required (comma separated)</Label>
+                <Label htmlFor="skills_required" className="text-foreground">Skills Required (comma separated)</Label>
                 <Input
                   id="skills_required"
                   value={editForm.skills_required || ''}
                   onChange={(e) => setEditForm({...editForm, skills_required: e.target.value})}
-                  className="border-yellow-200 focus:border-yellow-500"
+                  className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                 />
               </div>
               <div>
-                <Label htmlFor="benefits" className="text-gray-700">Benefits</Label>
+                <Label htmlFor="benefits" className="text-foreground">Benefits</Label>
                 <Textarea
                   id="benefits"
                   value={editForm.benefits || ''}
                   onChange={(e) => setEditForm({...editForm, benefits: e.target.value})}
                   rows={3}
-                  className="border-yellow-200 focus:border-yellow-500"
+                  className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="job_type" className="text-gray-700">Job Type</Label>
+                  <Label htmlFor="job_type" className="text-foreground">Job Type</Label>
                   <Select value={editForm.job_type || ''} onValueChange={(value) => setEditForm({...editForm, job_type: value})}>
-                    <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
+                    <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                       <SelectValue placeholder="Select job type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -799,9 +799,9 @@ export default function JobDetails() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="experience_level" className="text-gray-700">Experience Level</Label>
+                  <Label htmlFor="experience_level" className="text-foreground">Experience Level</Label>
                   <Select value={editForm.experience_level || ''} onValueChange={(value) => setEditForm({...editForm, experience_level: value})}>
-                    <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
+                    <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                       <SelectValue placeholder="Select experience level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -814,7 +814,7 @@ export default function JobDetails() {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowEditDialog(false)} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
+                <Button variant="outline" onClick={() => setShowEditDialog(false)} className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
                   Cancel
                 </Button>
                 <Button onClick={handleUpdateJob} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">

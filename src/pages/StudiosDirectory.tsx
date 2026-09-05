@@ -1230,7 +1230,7 @@ export default function StudiosDirectory() {
             {/* Back Header */}
             <Button
               variant="ghost"
-              className="flex items-center gap-2 pl-0 text-gray-600 hover:text-gray-900 hover:bg-transparent -ml-2"
+              className="flex items-center gap-2 pl-0 text-muted-foreground hover:text-foreground hover:bg-transparent -ml-2"
               onClick={() => {
                 setViewingCompany(null);
                 window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1241,9 +1241,9 @@ export default function StudiosDirectory() {
             </Button>
 
             {/* Profile Frame */}
-            <div className="bg-white rounded-2xl border border-yellow-100 shadow-sm overflow-hidden">
+            <div className="bg-card text-card-foreground rounded-2xl border border-border shadow-sm overflow-hidden">
               {/* Cover Banner */}
-              <div className="h-48 md:h-64 w-full relative bg-gray-100">
+              <div className="h-48 md:h-64 w-full relative bg-muted">
                 <img
                   src={viewingCompany.coverImage}
                   alt={viewingCompany.name}
@@ -1263,7 +1263,7 @@ export default function StudiosDirectory() {
                 {/* Logo & Headline */}
                 <div className="absolute bottom-6 left-6 md:left-10 flex flex-col md:flex-row items-start md:items-end gap-4 md:gap-6 text-white w-[calc(100%-48px)]">
                   <div className="relative group">
-                    <div className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-gradient-to-tr from-yellow-500 to-yellow-600 border-4 border-white flex items-center justify-center font-bold text-2xl shadow-md overflow-hidden">
+                    <div className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-gradient-to-tr from-yellow-500 to-yellow-600 border-4 border-card flex items-center justify-center font-bold text-2xl shadow-md overflow-hidden">
                       {viewingCompany.logo ? (viewingCompany.logo.length <= 4 ? viewingCompany.logo : <img src={viewingCompany.logo} alt={viewingCompany.name} className="w-full h-full object-cover" />) : <Building2 className="h-5 w-5" />}
                     </div>
                     {isOwner && (
@@ -1278,7 +1278,7 @@ export default function StudiosDirectory() {
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge className="bg-yellow-500 text-white border-none">{viewingCompany.category}</Badge>
+                      <Badge className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white border-none">{viewingCompany.category}</Badge>
                       {viewingCompany.verified && (
                         <Badge className="bg-green-500 text-white flex items-center gap-1 border-none">
                           <ShieldCheck className="h-3 w-3" />
@@ -1305,22 +1305,22 @@ export default function StudiosDirectory() {
               </div>
 
               {/* Profile Bar Control */}
-              <div className="px-6 md:px-10 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4 bg-gray-50/50">
-                <div className="flex items-center gap-6 text-sm text-gray-500">
-                  <div><strong className="text-gray-900 font-bold">{viewingCompany.projectsCompleted}</strong> Projects</div>
-                  <div><strong className="text-gray-900 font-bold">{viewingCompany.employeeCount}</strong> Crew</div>
+              <div className="px-6 md:px-10 py-4 border-b border-border flex flex-wrap justify-between items-center gap-4 bg-muted/40">
+                <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  <div><strong className="text-foreground font-bold">{viewingCompany.projectsCompleted}</strong> Projects</div>
+                  <div><strong className="text-foreground font-bold">{viewingCompany.employeeCount}</strong> Crew</div>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Button
                     variant="outline"
-                    className="border-yellow-200 hover:border-yellow-500 text-gray-700 hover:bg-yellow-50"
+                    className="border-border bg-transparent text-foreground hover:bg-muted transition-colors cursor-pointer"
                     onClick={() => handleSave(viewingCompany.id)}
                   >
                     <Bookmark className={`h-4 w-4 ${savedIds.includes(viewingCompany.id) ? "fill-yellow-500 text-yellow-500" : ""}`} />
                   </Button>
                   <Button
                     variant="outline"
-                    className="border-yellow-200 hover:border-yellow-500 text-gray-700 hover:bg-yellow-50"
+                    className="border-border bg-transparent text-foreground hover:bg-muted transition-colors cursor-pointer"
                     onClick={() => {
                       setContactCompany(viewingCompany);
                       setIsContactOpen(true);
@@ -1330,14 +1330,14 @@ export default function StudiosDirectory() {
                     <span>Contact</span>
                   </Button>
                   {isOwner && (
-                    <Button variant="outline" className="border-yellow-200 hover:border-yellow-500 text-gray-700 hover:bg-yellow-50" onClick={handleOpenEditAbout}>
+                    <Button variant="outline" className="border-border bg-transparent text-foreground hover:bg-muted transition-colors cursor-pointer" onClick={handleOpenEditAbout}>
                       <Edit className="h-4 w-4 mr-2" />
                       <span>Edit Studio</span>
                     </Button>
                   )}
                   <Button
                     variant="outline"
-                    className="border-yellow-200 hover:border-yellow-500 text-gray-700 hover:bg-yellow-50"
+                    className="border-border bg-transparent text-foreground hover:bg-muted transition-colors cursor-pointer"
                     onClick={() => handleShare(viewingCompany)}
                   >
                     <Share2 className="h-4 w-4" />
@@ -1348,9 +1348,9 @@ export default function StudiosDirectory() {
               {/* Profile Details Area */}
               <div className="px-0 py-2 md:p-10">
                 <Tabs value={activeViewTab} onValueChange={setActiveViewTab} className="space-y-8">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-gray-100">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-border/60">
                     {/* Desktop View */}
-                    <TabsList className="bg-gray-100 p-1 rounded-xl hidden md:inline-flex flex-wrap h-auto gap-1">
+                    <TabsList className="bg-muted p-1 rounded-xl hidden md:inline-flex flex-wrap h-auto gap-1">
                       <TabsTrigger value="about" className="rounded-lg text-xs font-semibold py-2 px-4 whitespace-nowrap">About & Crew</TabsTrigger>
                       <TabsTrigger value="projects" className="rounded-lg text-xs font-semibold py-2 px-4 whitespace-nowrap">Projects</TabsTrigger>
                       <TabsTrigger value="media" className="rounded-lg text-xs font-semibold py-2 px-4 whitespace-nowrap">Media</TabsTrigger>
@@ -1363,7 +1363,7 @@ export default function StudiosDirectory() {
                     {/* Mobile View */}
                     <div className="md:hidden w-full">
                       <Select value={activeViewTab} onValueChange={setActiveViewTab}>
-                        <SelectTrigger className="w-full bg-gray-50 border-gray-200">
+                        <SelectTrigger className="w-full bg-muted/40 border-border">
                           <SelectValue placeholder="Select tab" />
                         </SelectTrigger>
                         <SelectContent position="popper" side="bottom" avoidCollisions={false}>
@@ -1380,31 +1380,31 @@ export default function StudiosDirectory() {
                     {isOwner && (
                       <div className="ml-auto flex gap-2 shrink-0">
                         {activeViewTab === "projects" && (
-                          <Button variant="outline" size="sm" onClick={() => setIsEditProjectsOpen(true)} className="border-yellow-200 hover:bg-yellow-50 text-gray-700 h-9 gap-1.5 text-xs">
+                          <Button variant="outline" size="sm" onClick={() => setIsEditProjectsOpen(true)} className="border-border bg-transparent text-foreground hover:bg-muted h-9 gap-1.5 text-xs transition-colors cursor-pointer">
                             <Plus className="h-4 w-4 text-yellow-600" />
                             <span>Manage Projects</span>
                           </Button>
                         )}
                         {activeViewTab === "media" && (
-                          <Button variant="outline" size="sm" onClick={() => setIsUploadMediaOpen(true)} className="border-yellow-200 hover:bg-yellow-50 text-gray-700 h-9 gap-1.5 text-xs">
+                          <Button variant="outline" size="sm" onClick={() => setIsUploadMediaOpen(true)} className="border-border bg-transparent text-foreground hover:bg-muted h-9 gap-1.5 text-xs transition-colors cursor-pointer">
                             <Plus className="h-4 w-4 text-yellow-600" />
                             <span>Upload Media</span>
                           </Button>
                         )}
                         {activeViewTab === "jobs" && (
-                          <Button variant="outline" size="sm" onClick={() => navigate(`/jobs?create=true&company_name=${encodeURIComponent(viewingCompany.name)}&company_id=${viewingCompany.id}`)} className="border-yellow-200 hover:bg-yellow-50 text-gray-700 h-9 gap-1.5 text-xs">
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/jobs?create=true&company_name=${encodeURIComponent(viewingCompany.name)}&company_id=${viewingCompany.id}`)} className="border-border bg-transparent text-foreground hover:bg-muted h-9 gap-1.5 text-xs transition-colors cursor-pointer">
                             <Plus className="h-4 w-4 text-yellow-600" />
                             <span>Post a New Job</span>
                           </Button>
                         )}
                         {activeViewTab === "events" && (
-                          <Button variant="outline" size="sm" onClick={() => navigate(`/industry-hub?create=events&company_id=${viewingCompany.id}`)} className="border-yellow-200 hover:bg-yellow-50 text-gray-700 h-9 gap-1.5 text-xs">
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/industry-hub?create=events&company_id=${viewingCompany.id}`)} className="border-border bg-transparent text-foreground hover:bg-muted h-9 gap-1.5 text-xs transition-colors cursor-pointer">
                             <Plus className="h-4 w-4 text-yellow-600" />
                             <span>Create Event</span>
                           </Button>
                         )}
                         {activeViewTab === "courses" && (
-                          <Button variant="outline" size="sm" onClick={() => navigate(`/industry-hub?create=courses&company_id=${viewingCompany.id}`)} className="border-yellow-200 hover:bg-yellow-50 text-gray-700 h-9 gap-1.5 text-xs">
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/industry-hub?create=courses&company_id=${viewingCompany.id}`)} className="border-border bg-transparent text-foreground hover:bg-muted h-9 gap-1.5 text-xs transition-colors cursor-pointer">
                             <Plus className="h-4 w-4 text-yellow-600" />
                             <span>Create Course</span>
                           </Button>
@@ -1418,15 +1418,15 @@ export default function StudiosDirectory() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                       <div className="lg:col-span-2 space-y-6">
                         <div>
-                          <h3 className="text-lg font-bold text-gray-900 border-b pb-2 mb-3">About the Studio</h3>
-                          <p className="text-gray-700 leading-relaxed whitespace-pre-line">{viewingCompany.description}</p>
+                          <h3 className="text-lg font-bold text-foreground border-b pb-2 mb-3">About the Studio</h3>
+                          <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{viewingCompany.description}</p>
                         </div>
 
                         <div>
-                          <h3 className="text-lg font-bold text-gray-900 border-b pb-2 mb-3">Core Expertise</h3>
+                          <h3 className="text-lg font-bold text-foreground border-b pb-2 mb-3">Core Expertise</h3>
                           <div className="flex flex-wrap gap-2">
                             {viewingCompany.services.map(service => (
-                              <Badge key={service} variant="secondary" className="bg-yellow-50 hover:bg-yellow-100 text-yellow-800 border-yellow-200 text-sm px-3 py-1 font-medium">
+                              <Badge key={service} variant="secondary" className="bg-yellow-50 dark:bg-yellow-950/20 hover:bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-900/40 text-sm px-3 py-1 font-medium">
                                 {service}
                               </Badge>
                             ))}
@@ -1435,19 +1435,19 @@ export default function StudiosDirectory() {
 
                         {/* Team members */}
                         <div>
-                          <h3 className="text-lg font-bold text-gray-900 border-b pb-2 mb-4">Core Team</h3>
+                          <h3 className="text-lg font-bold text-foreground border-b pb-2 mb-4">Core Team</h3>
                           {viewingCompany.team.length === 0 ? (
-                            <p className="text-sm text-gray-500 italic">No registered team members shown yet.</p>
+                            <p className="text-sm text-muted-foreground italic">No registered team members shown yet.</p>
                           ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               {viewingCompany.team.map(member => (
-                                <div key={member.id} className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 flex items-center gap-3">
-                                  <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center font-bold text-yellow-800">
+                                <div key={member.id} className="p-4 rounded-xl border border-border bg-card flex items-center gap-3">
+                                  <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center font-bold text-yellow-800 dark:text-yellow-200">
                                     {member.name[0]}
                                   </div>
                                   <div>
-                                    <div className="font-semibold text-gray-900 text-sm">{member.name}</div>
-                                    <div className="text-xs text-gray-500">{member.role}</div>
+                                    <div className="font-semibold text-foreground text-sm">{member.name}</div>
+                                    <div className="text-xs text-muted-foreground">{member.role}</div>
                                   </div>
                                 </div>
                               ))}
@@ -1457,50 +1457,50 @@ export default function StudiosDirectory() {
                       </div>
 
                       {/* Contact & Sidebar Details */}
-                      <div className="bg-gray-50/80 rounded-2xl p-6 border border-gray-100 space-y-6">
-                        <h4 className="font-bold text-gray-900 text-md">Studio Details</h4>
+                      <div className="bg-card rounded-2xl p-6 border border-border/60 space-y-6">
+                        <h4 className="font-bold text-foreground text-md">Studio Details</h4>
                         
                         <div className="space-y-4 text-sm">
-                          <div className="flex justify-between border-b pb-2 border-gray-100">
-                            <span className="text-gray-500">Founder</span>
-                            <span className="font-semibold text-gray-800">{viewingCompany.founder}</span>
+                          <div className="flex justify-between border-b pb-2 border-border/60">
+                            <span className="text-muted-foreground">Founder</span>
+                            <span className="font-semibold text-foreground/90">{viewingCompany.founder}</span>
                           </div>
-                          <div className="flex justify-between border-b pb-2 border-gray-100">
-                            <span className="text-gray-500">Established</span>
-                            <span className="font-semibold text-gray-800">{viewingCompany.establishedYear}</span>
+                          <div className="flex justify-between border-b pb-2 border-border/60">
+                            <span className="text-muted-foreground">Established</span>
+                            <span className="font-semibold text-foreground/90">{viewingCompany.establishedYear}</span>
                           </div>
-                          <div className="flex justify-between border-b pb-2 border-gray-100">
-                            <span className="text-gray-500">Working Hours</span>
-                            <span className="font-semibold text-gray-800 text-right">{viewingCompany.workingHours || "Not listed"}</span>
+                          <div className="flex justify-between border-b pb-2 border-border/60">
+                            <span className="text-muted-foreground">Working Hours</span>
+                            <span className="font-semibold text-foreground/90 text-right">{viewingCompany.workingHours || "Not listed"}</span>
                           </div>
-                          <div className="flex justify-between border-b pb-2 border-gray-100">
-                            <span className="text-gray-500">City & State</span>
-                            <span className="font-semibold text-gray-800">{viewingCompany.city}, {viewingCompany.state}</span>
+                          <div className="flex justify-between border-b pb-2 border-border/60">
+                            <span className="text-muted-foreground">City & State</span>
+                            <span className="font-semibold text-foreground/90">{viewingCompany.city}, {viewingCompany.state}</span>
                           </div>
-                          <div className="flex justify-between border-b pb-2 border-gray-100">
-                            <span className="text-gray-500">Languages</span>
-                            <span className="font-semibold text-gray-800 text-right">{viewingCompany.languages.join(", ")}</span>
+                          <div className="flex justify-between border-b pb-2 border-border/60">
+                            <span className="text-muted-foreground">Languages</span>
+                            <span className="font-semibold text-foreground/90 text-right">{viewingCompany.languages.join(", ")}</span>
                           </div>
                         </div>
 
                         <div className="pt-2 space-y-3.5 text-sm">
-                          <div className="flex items-center gap-2 text-gray-700">
-                            <Mail className="h-4 w-4 text-gray-400 shrink-0" />
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
                             <a href={`mailto:${viewingCompany.email}`} className="hover:underline hover:text-yellow-600 truncate">{viewingCompany.email}</a>
                           </div>
-                          <div className="flex items-center gap-2 text-gray-700">
-                            <Phone className="h-4 w-4 text-gray-400 shrink-0" />
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
                             <a href={`tel:${viewingCompany.phone}`} className="hover:underline hover:text-yellow-600">{viewingCompany.phone}</a>
                           </div>
-                          <div className="flex items-center gap-2 text-gray-700">
-                            <Globe className="h-4 w-4 text-gray-400 shrink-0" />
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
                             <a href={viewingCompany.website} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-yellow-600 truncate flex items-center gap-1">
                               <span>Website</span>
                               <ExternalLink className="h-3 w-3" />
                             </a>
                           </div>
-                          <div className="flex items-start gap-2 text-gray-700">
-                            <MapPin className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
+                          <div className="flex items-start gap-2 text-muted-foreground">
+                            <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                             <a 
                               href={viewingCompany.mapsLocation || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${viewingCompany.name} ${viewingCompany.address} ${viewingCompany.city}`)}`}
                               target="_blank"
@@ -1517,12 +1517,12 @@ export default function StudiosDirectory() {
                           href={viewingCompany.mapsLocation || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${viewingCompany.name} ${viewingCompany.address} ${viewingCompany.city}`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block h-36 rounded-xl overflow-hidden relative border border-gray-200 hover:opacity-90 transition cursor-pointer"
+                          className="block h-36 rounded-xl overflow-hidden relative border border-border hover:opacity-90 transition cursor-pointer"
                         >
-                          <div className="absolute inset-0 bg-yellow-50 flex items-center justify-center flex-col text-center p-3">
+                          <div className="absolute inset-0 bg-yellow-50 dark:bg-yellow-950/20 flex items-center justify-center flex-col text-center p-3">
                             <MapPin className="h-8 w-8 text-yellow-600 mb-1" />
-                            <span className="text-[10px] font-bold text-gray-700">CLICK TO VIEW ON GOOGLE MAPS</span>
-                            <span className="text-[9px] text-gray-500 truncate max-w-full">{viewingCompany.city}, {viewingCompany.state}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground">CLICK TO VIEW ON GOOGLE MAPS</span>
+                            <span className="text-[9px] text-muted-foreground truncate max-w-full">{viewingCompany.city}, {viewingCompany.state}</span>
                           </div>
                         </a>
                       </div>
@@ -1533,36 +1533,36 @@ export default function StudiosDirectory() {
                   <TabsContent value="projects" className="space-y-8 outline-none">
                     <div className="space-y-6">
                       <div className="flex justify-between items-center border-b pb-2 mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">Completed Projects & Catalog</h3>
+                        <h3 className="text-lg font-bold text-foreground">Completed Projects & Catalog</h3>
                       </div>
                       {viewingCompany.projects.length === 0 ? (
-                        <div className="p-8 text-center bg-gray-50 rounded-xl border border-dashed">
+                        <div className="p-8 text-center bg-muted/40 rounded-xl border border-dashed">
                           <Film className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">No showcase projects registered yet.</p>
+                          <p className="text-sm text-muted-foreground">No showcase projects registered yet.</p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {viewingCompany.projects.map(proj => (
-                            <Card key={proj.id} className="border border-gray-100 overflow-hidden shadow-none hover:shadow-sm transition-shadow relative">
-                              <CardHeader className="bg-gray-50/50 p-4 border-b border-gray-100 flex flex-row items-start justify-between">
+                            <Card key={proj.id} className="border border-border/60 overflow-hidden shadow-none hover:shadow-sm transition-shadow relative">
+                              <CardHeader className="bg-muted/40 p-4 border-b border-border flex flex-row items-start justify-between">
                                 <div>
                                   <h4 
-                                    className="font-bold text-gray-900 pr-12 hover:text-yellow-600 hover:underline cursor-pointer transition-colors"
+                                    className="font-bold text-foreground pr-12 hover:text-yellow-600 hover:underline cursor-pointer transition-colors"
                                     onClick={() => handleViewProjectDetails(proj)}
                                   >
                                     {proj.title}
                                   </h4>
-                                  <p className="text-xs text-gray-500 font-medium">{proj.role}</p>
+                                  <p className="text-xs text-muted-foreground font-medium">{proj.role}</p>
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                  <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">{proj.year}</Badge>
+                                  <Badge className="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-100 dark:bg-yellow-900/40 border-yellow-200 dark:border-yellow-900/40">{proj.year}</Badge>
                                   {isOwner && (
                                     <>
                                       <Button
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="h-7 w-7 text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-0"
+                                        className="h-7 w-7 text-muted-foreground hover:text-muted-foreground hover:bg-muted p-0"
                                         onClick={() => handleEditProject(proj)}
                                         title="Edit Project"
                                       >
@@ -1582,7 +1582,7 @@ export default function StudiosDirectory() {
                                   )}
                                 </div>
                               </CardHeader>
-                              <CardContent className="p-4 text-sm text-gray-600">
+                              <CardContent className="p-4 text-sm text-muted-foreground">
                                 {proj.description}
                               </CardContent>
                             </Card>
@@ -1596,17 +1596,17 @@ export default function StudiosDirectory() {
                   <TabsContent value="media" className="space-y-8 outline-none">
                     <div className="space-y-6">
                       <div className="flex justify-between items-center border-b pb-2 mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">Studio Media Gallery</h3>
+                        <h3 className="text-lg font-bold text-foreground">Studio Media Gallery</h3>
                       </div>
                       {viewingCompany.gallery.length === 0 ? (
-                        <div className="p-8 text-center bg-gray-50 rounded-xl border border-dashed">
+                        <div className="p-8 text-center bg-muted/40 rounded-xl border border-dashed">
                           <Video className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">No media gallery uploads available.</p>
+                          <p className="text-sm text-muted-foreground">No media gallery uploads available.</p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           {viewingCompany.gallery.map((img, i) => (
-                            <div key={i} className="aspect-video rounded-xl overflow-hidden bg-gray-100 group relative border border-gray-100 shadow-sm">
+                            <div key={i} className="aspect-video rounded-xl overflow-hidden bg-muted group relative border border-border/60 shadow-sm">
                               <img src={img} alt="Gallery item" className="w-full h-full object-cover transition duration-300 group-hover:scale-105" referrerPolicy="no-referrer" />
                               {isOwner && (
                                 <button
@@ -1629,24 +1629,24 @@ export default function StudiosDirectory() {
                   <TabsContent value="jobs" className="space-y-8 outline-none">
                     <div className="space-y-6">
                       <div className="flex justify-between items-center border-b pb-2 mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">Open Job Positions</h3>
+                        <h3 className="text-lg font-bold text-foreground">Open Job Positions</h3>
                       </div>
                       {(!viewingCompany.jobs || viewingCompany.jobs.length === 0) ? (
-                        <div className="p-8 text-center bg-gray-50 rounded-xl border border-dashed">
+                        <div className="p-8 text-center bg-muted/40 rounded-xl border border-dashed">
                           <Briefcase className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">No jobs posted yet.</p>
+                          <p className="text-sm text-muted-foreground">No jobs posted yet.</p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {viewingCompany.jobs.map((job) => (
-                            <Card key={job.id} className="border border-yellow-100 shadow-sm hover:shadow-md transition bg-white p-5 flex flex-col relative">
+                            <Card key={job.id} className="border border-border shadow-sm hover:shadow-md transition bg-card text-card-foreground p-5 flex flex-col relative">
                               {isOwner && (
                                 <div className="absolute top-3 right-3 flex items-center gap-1">
                                   <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => navigate(`/jobs?editJobId=${job.id}&company_id=${viewingCompany.id}&job_title=${encodeURIComponent(job.position)}&company_name=${encodeURIComponent(job.companyName)}&location=${encodeURIComponent(job.location)}&experience_level=${encodeURIComponent(job.experience)}&salary=${encodeURIComponent(job.salary || '')}&job_description=${encodeURIComponent(job.description)}`)}
-                                    className="h-8 w-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                                    className="h-8 w-8 text-muted-foreground hover:text-muted-foreground hover:bg-muted"
                                   >
                                     <Edit className="h-4 w-4" />
                                   </Button>
@@ -1661,12 +1661,12 @@ export default function StudiosDirectory() {
                                 </div>
                               )}
                               <h4 
-                                className="font-bold text-gray-900 text-lg mb-1 pr-16 hover:text-yellow-600 hover:underline cursor-pointer"
+                                className="font-bold text-foreground text-lg mb-1 pr-16 hover:text-yellow-600 hover:underline cursor-pointer"
                                 onClick={() => navigate(`/jobs?jobId=${job.id}`)}
                               >
                                 {job.position}
                               </h4>
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-3">
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mb-3">
                                 <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {job.location}</span>
                                 <span>•</span>
                                 <span>Exp: {job.experience}</span>
@@ -1677,10 +1677,10 @@ export default function StudiosDirectory() {
                                   </>
                                 )}
                               </div>
-                              <p className="text-gray-700 text-sm whitespace-pre-line line-clamp-4 flex-1">{job.description}</p>
+                              <p className="text-muted-foreground text-sm whitespace-pre-line line-clamp-4 flex-1">{job.description}</p>
                               {!isOwner && (
-                                <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-                                  <Button className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs h-8">
+                                <div className="mt-4 pt-3 border-t border-border/60 flex justify-end">
+                                  <Button className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white text-xs h-8">
                                     Apply Now
                                   </Button>
                                 </div>
@@ -1696,24 +1696,24 @@ export default function StudiosDirectory() {
                   <TabsContent value="events" className="space-y-8 outline-none">
                     <div className="space-y-6">
                       <div className="flex justify-between items-center border-b pb-2 mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">Upcoming Events & Workshops</h3>
+                        <h3 className="text-lg font-bold text-foreground">Upcoming Events & Workshops</h3>
                       </div>
                       {(!viewingCompany.events || viewingCompany.events.length === 0) ? (
-                        <div className="p-8 text-center bg-gray-50 rounded-xl border border-dashed">
+                        <div className="p-8 text-center bg-muted/40 rounded-xl border border-dashed">
                           <Calendar className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">No events listed yet.</p>
+                          <p className="text-sm text-muted-foreground">No events listed yet.</p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {viewingCompany.events.map((event) => (
-                            <Card key={event.id} className="border border-yellow-100 shadow-sm hover:shadow-md transition bg-white p-5 flex flex-col relative">
+                            <Card key={event.id} className="border border-border shadow-sm hover:shadow-md transition bg-card text-card-foreground p-5 flex flex-col relative">
                               {isOwner && (
                                 <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
                                   <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleEditEvent(event)}
-                                    className="h-8 w-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                                    className="h-8 w-8 text-muted-foreground hover:text-muted-foreground hover:bg-muted"
                                   >
                                     <Edit className="h-4 w-4" />
                                   </Button>
@@ -1734,21 +1734,21 @@ export default function StudiosDirectory() {
                                 <span className="text-xs text-yellow-600 font-bold ml-auto">{event.price}</span>
                               </div>
                               <h4 
-                                className="font-bold text-gray-900 text-lg mb-1 hover:text-yellow-600 hover:underline cursor-pointer"
+                                className="font-bold text-foreground text-lg mb-1 hover:text-yellow-600 hover:underline cursor-pointer"
                                 onClick={() => navigate(`/industry-hub?eventId=${event.id}`)}
                               >
                                 {event.title}
                               </h4>
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-3">
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mb-3">
                                 <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {event.date}</span>
                                 <span>•</span>
                                 <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {event.location}</span>
                               </div>
-                              <p className="text-gray-700 text-sm whitespace-pre-line line-clamp-4 flex-1">{event.description}</p>
-                              <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-                                <span className="text-xs text-gray-500">{event.attendees || 0} registered</span>
+                              <p className="text-muted-foreground text-sm whitespace-pre-line line-clamp-4 flex-1">{event.description}</p>
+                              <div className="mt-4 pt-3 border-t border-border/60 flex justify-between items-center">
+                                <span className="text-xs text-muted-foreground">{event.attendees || 0} registered</span>
                                 {!isOwner && (
-                                  <Button className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs h-8">
+                                  <Button className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white text-xs h-8">
                                     Register Event
                                   </Button>
                                 )}
@@ -1764,24 +1764,24 @@ export default function StudiosDirectory() {
                   <TabsContent value="courses" className="space-y-8 outline-none">
                     <div className="space-y-6">
                       <div className="flex justify-between items-center border-b pb-2 mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">Industry Courses</h3>
+                        <h3 className="text-lg font-bold text-foreground">Industry Courses</h3>
                       </div>
                       {(!viewingCompany.courses || viewingCompany.courses.length === 0) ? (
-                        <div className="p-8 text-center bg-gray-50 rounded-xl border border-dashed">
+                        <div className="p-8 text-center bg-muted/40 rounded-xl border border-dashed">
                           <GraduationCap className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">No courses published yet.</p>
+                          <p className="text-sm text-muted-foreground">No courses published yet.</p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {viewingCompany.courses.map((course) => (
-                            <Card key={course.id} className="border border-yellow-100 shadow-sm hover:shadow-md transition bg-white p-5 flex flex-col relative">
+                            <Card key={course.id} className="border border-border shadow-sm hover:shadow-md transition bg-card text-card-foreground p-5 flex flex-col relative">
                               {isOwner && (
                                 <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
                                   <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleEditCourse(course)}
-                                    className="h-8 w-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                                    className="h-8 w-8 text-muted-foreground hover:text-muted-foreground hover:bg-muted"
                                   >
                                     <Edit className="h-4 w-4" />
                                   </Button>
@@ -1796,28 +1796,28 @@ export default function StudiosDirectory() {
                                 </div>
                               )}
                               <div className="flex items-center gap-2 mb-2 pr-16">
-                                <Badge variant="outline" className="border-yellow-200 text-yellow-800">
+                                <Badge variant="outline" className="border-yellow-200 dark:border-yellow-900/40 text-yellow-800 dark:text-yellow-200">
                                   {course.category}
                                 </Badge>
-                                <Badge className="bg-gray-100 text-gray-800 border-none">{course.level}</Badge>
+                                <Badge className="bg-muted text-foreground/90 border-none">{course.level}</Badge>
                                 <span className="text-xs text-yellow-600 font-bold ml-auto font-mono">{course.price}</span>
                               </div>
                               <h4 
-                                className="font-bold text-gray-900 text-lg mb-1 hover:text-yellow-600 hover:underline cursor-pointer"
+                                className="font-bold text-foreground text-lg mb-1 hover:text-yellow-600 hover:underline cursor-pointer"
                                 onClick={() => navigate(`/industry-hub?courseId=${course.id}`)}
                               >
                                 {course.title}
                               </h4>
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-3">
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mb-3">
                                 <span>Duration: {course.duration}</span>
                                 <span>•</span>
                                 <span>Instructor: {course.instructor}</span>
                               </div>
-                              <p className="text-gray-700 text-sm whitespace-pre-line line-clamp-4 flex-1">{course.description}</p>
-                              <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-                                <span className="text-xs text-gray-500">{course.enrolled || 0} enrolled</span>
+                              <p className="text-muted-foreground text-sm whitespace-pre-line line-clamp-4 flex-1">{course.description}</p>
+                              <div className="mt-4 pt-3 border-t border-border/60 flex justify-between items-center">
+                                <span className="text-xs text-muted-foreground">{course.enrolled || 0} enrolled</span>
                                 {!isOwner && (
-                                  <Button className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs h-8">
+                                  <Button className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white text-xs h-8">
                                     Enroll Now
                                   </Button>
                                 )}
@@ -1833,13 +1833,13 @@ export default function StudiosDirectory() {
                   <TabsContent value="reviews" className="space-y-8 outline-none">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                       {/* Left: Leave Review */}
-                      <div className="space-y-4 bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
-                        <h4 className="font-bold text-gray-900">Add Feedback / Review</h4>
+                      <div className="space-y-4 bg-card p-6 rounded-2xl border border-border">
+                        <h4 className="font-bold text-foreground">Add Feedback / Review</h4>
                         <form onSubmit={(e) => handleAddReview(e, viewingCompany.id)} className="space-y-4">
                           <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-600">Rating Scale</label>
+                            <label className="text-xs font-semibold text-muted-foreground">Rating Scale</label>
                             <Select value={reviewRating.toString()} onValueChange={(val) => setReviewRating(parseInt(val))}>
-                              <SelectTrigger className="w-full bg-white border-yellow-200">
+                              <SelectTrigger className="w-full bg-card text-card-foreground border-yellow-200 dark:border-yellow-900/40">
                                 <SelectValue placeholder="Select star rating" />
                               </SelectTrigger>
                               <SelectContent position="popper" side="bottom" avoidCollisions={false}>
@@ -1853,16 +1853,16 @@ export default function StudiosDirectory() {
                           </div>
                           
                           <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-600">Your Comment</label>
+                            <label className="text-xs font-semibold text-muted-foreground">Your Comment</label>
                             <Textarea
                               placeholder="Write a clear recommendation or describe your experience collaborating with this studio..."
-                              className="bg-white border-yellow-200 min-h-24 text-sm"
+                              className="bg-card text-card-foreground border-yellow-200 dark:border-yellow-900/40 min-h-24 text-sm"
                               value={reviewComment}
                               onChange={(e) => setReviewComment(e.target.value)}
                             />
                           </div>
 
-                          <Button type="submit" className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-xs">
+                          <Button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white text-xs">
                             Submit Review
                           </Button>
                         </form>
@@ -1870,32 +1870,32 @@ export default function StudiosDirectory() {
 
                       {/* Right: Reviews List */}
                       <div className="lg:col-span-2 space-y-4">
-                        <h4 className="font-bold text-gray-900 text-md">User Recommendations</h4>
+                        <h4 className="font-bold text-foreground text-md">User Recommendations</h4>
                         
                         {viewingCompany.reviews.length === 0 ? (
-                          <div className="p-8 text-center bg-gray-50 border border-dashed rounded-xl">
+                          <div className="p-8 text-center bg-muted/40 border border-dashed rounded-xl">
                             <Star className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                            <p className="text-sm text-gray-500">No recommendations posted yet. Be the first!</p>
+                            <p className="text-sm text-muted-foreground">No recommendations posted yet. Be the first!</p>
                           </div>
                         ) : (
                           <div className="space-y-3">
                             {viewingCompany.reviews.map(rev => (
-                              <div key={rev.id} className="p-4 rounded-xl border border-gray-100 space-y-2">
+                              <div key={rev.id} className="p-4 rounded-xl border border-border bg-card space-y-2">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
-                                    <div className="h-7 w-7 rounded-full bg-yellow-100 flex items-center justify-center text-xs font-bold text-yellow-800">
+                                    <div className="h-7 w-7 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center text-xs font-bold text-yellow-800 dark:text-yellow-200">
                                       {rev.author[0].toUpperCase()}
                                     </div>
-                                    <span className="font-semibold text-sm text-gray-800">{rev.author}</span>
+                                    <span className="font-semibold text-sm text-foreground/90">{rev.author}</span>
                                   </div>
-                                  <span className="text-xs text-gray-400">{rev.date}</span>
+                                  <span className="text-xs text-muted-foreground">{rev.date}</span>
                                 </div>
                                 <div className="flex gap-0.5 text-xs text-yellow-500">
                                   {Array.from({ length: 5 }).map((_, idx) => (
                                     <Star key={idx} className={`h-3 w-3 ${idx < rev.rating ? "fill-current" : "opacity-20"}`} />
                                   ))}
                                 </div>
-                                <p className="text-sm text-gray-600 leading-relaxed">{rev.comment}</p>
+                                <p className="text-sm text-muted-foreground leading-relaxed">{rev.comment}</p>
                               </div>
                             ))}
                           </div>
@@ -1914,28 +1914,28 @@ export default function StudiosDirectory() {
             {isManageWorkspace ? (
               // WORKSPACE/MANAGEMENT VIEW
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-5 border-gray-100">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-5 border-border/60">
                   <div className="space-y-1">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
                       <Building2 className="h-6 w-6 text-yellow-500" />
                       <span>My Studio Workspace</span>
                     </h2>
-                    <p className="text-sm text-gray-500">Manage your business profile, open listings, and direct submissions.</p>
+                    <p className="text-sm text-muted-foreground">Manage your business profile, open listings, and direct submissions.</p>
                   </div>
-                  <Button variant="outline" className="border-yellow-200 text-gray-700 hover:bg-yellow-50 h-10" onClick={() => setIsManageWorkspace(false)}>
+                  <Button variant="outline" className="border-yellow-200 dark:border-yellow-900/40 text-muted-foreground hover:bg-yellow-50 dark:hover:bg-yellow-950/30 dark:bg-yellow-950/20 h-10" onClick={() => setIsManageWorkspace(false)}>
                     <ArrowLeft className="h-4 w-4 mr-1.5" />
                     <span>Back to Directory</span>
                   </Button>
                 </div>
 
                 {!userCompany ? (
-                  <Card className="p-8 text-center max-w-xl mx-auto space-y-4 border-yellow-200 bg-yellow-50/10">
+                  <Card className="p-8 text-center max-w-xl mx-auto space-y-4 border-yellow-200 dark:border-yellow-900/40 bg-yellow-50 dark:bg-yellow-950/20/10">
                     <Building2 className="h-12 w-12 text-yellow-600 mx-auto" />
                     <div className="space-y-1">
-                      <h3 className="text-xl font-bold text-gray-900">My Studio Workspace</h3>
-                      <p className="text-sm text-gray-500">Do you own a casting house, production agency, film academy, camera supplier, or vfx setup?</p>
+                      <h3 className="text-xl font-bold text-foreground">My Studio Workspace</h3>
+                      <p className="text-sm text-muted-foreground">Do you own a casting house, production agency, film academy, camera supplier, or vfx setup?</p>
                     </div>
-                    <p className="text-xs text-gray-600 leading-relaxed max-w-sm mx-auto">
+                    <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
                       Register your business profile to showcase works, post audition calls, accept internships, manage followers, and view direct talent applications inside a unified dashboard!
                     </p>
                     <Button
@@ -1950,31 +1950,31 @@ export default function StudiosDirectory() {
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Workspace Owner Profile & Actions */}
                     <div className="space-y-6">
-                      <Card className="border border-yellow-200 overflow-hidden shadow-md">
+                      <Card className="border border-yellow-200 dark:border-yellow-900/40 overflow-hidden shadow-md">
                         <div className="h-24 bg-gradient-to-tr from-yellow-500 to-yellow-600 p-4 text-white relative">
-                          <Badge className="absolute top-3 right-3 bg-white/20 hover:bg-white/20 border-none text-white font-bold text-[9px] uppercase">Owner Workspace</Badge>
+                          <Badge className="absolute top-3 right-3 bg-card text-card-foreground/20 hover:bg-card text-card-foreground/20 border-none text-white font-bold text-[9px] uppercase">Owner Workspace</Badge>
                         </div>
                         <CardContent className="p-5 relative pt-10">
-                          <div className="absolute -top-10 left-5 h-16 w-16 bg-yellow-500 border-4 border-white rounded-xl flex items-center justify-center font-bold text-lg text-white shadow-sm overflow-hidden">
+                          <div className="absolute -top-10 left-5 h-16 w-16 bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 border-4 border-card rounded-xl flex items-center justify-center font-bold text-lg text-white shadow-sm overflow-hidden">
                             {userCompany.logo ? (userCompany.logo.length <= 4 ? userCompany.logo : <img src={userCompany.logo} alt={userCompany.name} className="w-full h-full object-cover" />) : <Building2 className="h-5 w-5" />}
                           </div>
                           
                           <div className="space-y-2">
                             <div className="flex items-center gap-1.5">
-                              <h3 className="font-extrabold text-gray-900 text-lg">{userCompany.name}</h3>
+                              <h3 className="font-extrabold text-foreground text-lg">{userCompany.name}</h3>
                               {userCompany.verified ? (
                                 <CheckCircle className="h-4 w-4 text-green-500 fill-current" />
                               ) : (
-                                <Badge className="bg-gray-100 text-gray-600 text-[9px] hover:bg-gray-100">Unverified</Badge>
+                                <Badge className="bg-muted text-muted-foreground text-[9px] hover:bg-muted">Unverified</Badge>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500">{userCompany.category} • {userCompany.city}</p>
-                            <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">{userCompany.description}</p>
+                            <p className="text-xs text-muted-foreground">{userCompany.category} • {userCompany.city}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">{userCompany.description}</p>
                           </div>
 
                           {!userCompany.verified && (
-                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-100 rounded-lg space-y-2">
-                              <p className="text-[11px] text-yellow-800 leading-relaxed font-medium">Verify your studio to acquire a secure green badge and gain priority placement in search outcomes.</p>
+                            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 rounded-lg space-y-2">
+                              <p className="text-[11px] text-yellow-800 dark:text-yellow-200 leading-relaxed font-medium">Verify your studio to acquire a secure green badge and gain priority placement in search outcomes.</p>
                               <Button size="sm" className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-[10px] h-7" onClick={handleVerifyCompanyWorkspace}>
                                 Verify Studio Now
                               </Button>
@@ -1984,26 +1984,26 @@ export default function StudiosDirectory() {
                       </Card>
 
                       {/* Interactive Post Item Builder Form */}
-                      <Card className="border border-gray-100 p-5 space-y-4">
-                        <h4 className="font-extrabold text-gray-900 text-sm">Post Opportunities / Showcase Works</h4>
+                      <Card className="border border-border/60 p-5 space-y-4">
+                        <h4 className="font-extrabold text-foreground text-sm">Post Opportunities / Showcase Works</h4>
                         
-                        <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 rounded-lg text-[11px] font-medium text-center text-gray-600">
-                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "job" ? "bg-white text-gray-900 font-bold shadow-sm" : ""}`} onClick={() => setPostType("job")}>Job</span>
-                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "audition" ? "bg-white text-gray-900 font-bold shadow-sm" : ""}`} onClick={() => setPostType("audition")}>Audition</span>
-                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "internship" ? "bg-white text-gray-900 font-bold shadow-sm" : ""}`} onClick={() => setPostType("internship")}>Intern</span>
-                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "project" ? "bg-white text-gray-900 font-bold shadow-sm" : ""}`} onClick={() => setPostType("project")}>Project</span>
-                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "team" ? "bg-white text-gray-900 font-bold shadow-sm" : ""}`} onClick={() => setPostType("team")}>Team</span>
-                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "gallery" ? "bg-white text-gray-900 font-bold shadow-sm" : ""}`} onClick={() => setPostType("gallery")}>Gallery</span>
+                        <div className="grid grid-cols-3 gap-1 p-1 bg-muted rounded-lg text-[11px] font-medium text-center text-muted-foreground">
+                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "job" ? "bg-yellow-600 text-white dark:bg-yellow-500 dark:text-zinc-950 font-bold shadow-sm" : "hover:text-foreground"}`} onClick={() => setPostType("job")}>Job</span>
+                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "audition" ? "bg-yellow-600 text-white dark:bg-yellow-500 dark:text-zinc-950 font-bold shadow-sm" : "hover:text-foreground"}`} onClick={() => setPostType("audition")}>Audition</span>
+                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "internship" ? "bg-yellow-600 text-white dark:bg-yellow-500 dark:text-zinc-950 font-bold shadow-sm" : "hover:text-foreground"}`} onClick={() => setPostType("internship")}>Intern</span>
+                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "project" ? "bg-yellow-600 text-white dark:bg-yellow-500 dark:text-zinc-950 font-bold shadow-sm" : "hover:text-foreground"}`} onClick={() => setPostType("project")}>Project</span>
+                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "team" ? "bg-yellow-600 text-white dark:bg-yellow-500 dark:text-zinc-950 font-bold shadow-sm" : "hover:text-foreground"}`} onClick={() => setPostType("team")}>Team</span>
+                          <span className={`p-1.5 cursor-pointer rounded-md ${postType === "gallery" ? "bg-yellow-600 text-white dark:bg-yellow-500 dark:text-zinc-950 font-bold shadow-sm" : "hover:text-foreground"}`} onClick={() => setPostType("gallery")}>Gallery</span>
                         </div>
 
                         <div className="space-y-3 pt-2">
                           {postType === "job" && (
                             <div className="space-y-2.5 text-xs">
-                              <Input placeholder="Job Position (e.g. Video Editor)" value={newJob.position} onChange={(e) => setNewJob({ ...newJob, position: e.target.value })} className="h-8 border-yellow-100 text-xs" />
-                              <Input placeholder="Experience Level (e.g. 2+ Years)" value={newJob.experience} onChange={(e) => setNewJob({ ...newJob, experience: e.target.value })} className="h-8 border-yellow-100 text-xs" />
-                              <Input placeholder="Salary Offer (Optional)" value={newJob.salary} onChange={(e) => setNewJob({ ...newJob, salary: e.target.value })} className="h-8 border-yellow-100 text-xs" />
-                              <Input placeholder="Location (e.g. Mumbai / Hybrid)" value={newJob.location} onChange={(e) => setNewJob({ ...newJob, location: e.target.value })} className="h-8 border-yellow-100 text-xs" />
-                              <Textarea placeholder="Job description and requirements..." value={newJob.description} onChange={(e) => setNewJob({ ...newJob, description: e.target.value })} className="min-h-20 text-xs border-yellow-100" />
+                              <Input placeholder="Job Position (e.g. Video Editor)" value={newJob.position} onChange={(e) => setNewJob({ ...newJob, position: e.target.value })} className="h-8 border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 text-xs" />
+                              <Input placeholder="Experience Level (e.g. 2+ Years)" value={newJob.experience} onChange={(e) => setNewJob({ ...newJob, experience: e.target.value })} className="h-8 border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 text-xs" />
+                              <Input placeholder="Salary Offer (Optional)" value={newJob.salary} onChange={(e) => setNewJob({ ...newJob, salary: e.target.value })} className="h-8 border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 text-xs" />
+                              <Input placeholder="Location (e.g. Mumbai / Hybrid)" value={newJob.location} onChange={(e) => setNewJob({ ...newJob, location: e.target.value })} className="h-8 border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 text-xs" />
+                              <Textarea placeholder="Job description and requirements..." value={newJob.description} onChange={(e) => setNewJob({ ...newJob, description: e.target.value })} className="min-h-20 text-xs border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30" />
                             </div>
                           )}
 
@@ -2048,27 +2048,27 @@ export default function StudiosDirectory() {
 
                           {postType === "project" && (
                             <div className="space-y-2.5 text-xs">
-                              <Input placeholder="Project Title" value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} className="h-8 border-gray-200 text-xs" />
-                              <Input placeholder="Release Year (e.g. 2024)" value={newProject.year} onChange={(e) => setNewProject({ ...newProject, year: e.target.value })} className="h-8 border-gray-200 text-xs" />
-                              <Input placeholder="Your Company's Role (e.g. VFX & CGI)" value={newProject.role} onChange={(e) => setNewProject({ ...newProject, role: e.target.value })} className="h-8 border-gray-200 text-xs" />
+                              <Input placeholder="Project Title" value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} className="h-8 border-border text-xs" />
+                              <Input placeholder="Release Year (e.g. 2024)" value={newProject.year} onChange={(e) => setNewProject({ ...newProject, year: e.target.value })} className="h-8 border-border text-xs" />
+                              <Input placeholder="Your Company's Role (e.g. VFX & CGI)" value={newProject.role} onChange={(e) => setNewProject({ ...newProject, role: e.target.value })} className="h-8 border-border text-xs" />
                               <Textarea placeholder="Short overview of execution..." value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} className="min-h-16 text-xs" />
                             </div>
                           )}
 
                           {postType === "team" && (
                             <div className="space-y-2.5 text-xs">
-                              <Input placeholder="Member Name" value={newTeam.name} onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })} className="h-8 border-gray-200 text-xs" />
-                              <Input placeholder="Role (e.g. Executive Producer)" value={newTeam.role} onChange={(e) => setNewTeam({ ...newTeam, role: e.target.value })} className="h-8 border-gray-200 text-xs" />
+                              <Input placeholder="Member Name" value={newTeam.name} onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })} className="h-8 border-border text-xs" />
+                              <Input placeholder="Role (e.g. Executive Producer)" value={newTeam.role} onChange={(e) => setNewTeam({ ...newTeam, role: e.target.value })} className="h-8 border-border text-xs" />
                             </div>
                           )}
 
                           {postType === "gallery" && (
                             <div className="space-y-2.5 text-xs">
-                              <Input placeholder="Image URL (Unsplash/Direct link)" value={newGalleryUrl} onChange={(e) => setNewGalleryUrl(e.target.value)} className="h-8 border-gray-200 text-xs" />
+                              <Input placeholder="Image URL (Unsplash/Direct link)" value={newGalleryUrl} onChange={(e) => setNewGalleryUrl(e.target.value)} className="h-8 border-border text-xs" />
                             </div>
                           )}
 
-                          <Button className="w-full text-xs h-8 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold" onClick={handlePostWorkspaceItem}>
+                          <Button className="w-full text-xs h-8 bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white font-semibold" onClick={handlePostWorkspaceItem}>
                             <Plus className="h-3.5 w-3.5 mr-1" />
                             <span>Confirm Addition</span>
                           </Button>
@@ -2079,28 +2079,28 @@ export default function StudiosDirectory() {
                     {/* Right Side: Applicants / Submissions inbox */}
                     <div className="lg:col-span-2 space-y-6">
                       <div className="flex justify-between items-center border-b pb-2">
-                        <h3 className="font-extrabold text-lg text-gray-900">Direct Submissions Inbox</h3>
-                        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border border-yellow-200 font-bold text-xs">
+                        <h3 className="font-extrabold text-lg text-foreground">Direct Submissions Inbox</h3>
+                        <Badge className="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-200 dark:border-yellow-900/40 font-bold text-xs">
                           {applications.filter(a => a.companyId === userCompany.id).length} applications
                         </Badge>
                       </div>
 
                       {applications.filter(a => a.companyId === userCompany.id).length === 0 ? (
-                        <div className="text-center py-16 bg-white border border-dashed rounded-2xl">
+                        <div className="text-center py-16 bg-card text-card-foreground border border-dashed rounded-2xl">
                           <Mail className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-                          <h4 className="font-bold text-gray-800 text-sm">Inbox Empty</h4>
-                          <p className="text-gray-500 text-xs max-w-xs mx-auto mt-0.5">As soon as talents submit reels/resumes to your active listings, they will show up here.</p>
+                          <h4 className="font-bold text-foreground/90 text-sm">Inbox Empty</h4>
+                          <p className="text-muted-foreground text-xs max-w-xs mx-auto mt-0.5">As soon as talents submit reels/resumes to your active listings, they will show up here.</p>
                         </div>
                       ) : (
                         <div className="space-y-4">
                           {applications.filter(a => a.companyId === userCompany.id).map(app => (
-                            <Card key={app.id} className="border border-gray-100 p-5 space-y-3 shadow-none bg-white">
+                            <Card key={app.id} className="border border-border/60 p-5 space-y-3 shadow-none bg-card text-card-foreground">
                               <div className="flex flex-wrap justify-between items-start gap-2">
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <h4 className="font-bold text-gray-900 text-sm">{app.applicantName}</h4>
+                                    <h4 className="font-bold text-foreground text-sm">{app.applicantName}</h4>
                                     <Badge variant="outline" className={`text-[10px] py-0 h-4 px-1.5 font-bold ${
-                                      app.status === "Pending" ? "bg-yellow-50 text-yellow-800 border-yellow-200" :
+                                      app.status === "Pending" ? "bg-yellow-50 dark:bg-yellow-950/20 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-900/40" :
                                       app.status === "Shortlisted" ? "bg-green-50 text-green-800 border-green-200" :
                                       app.status === "Reviewed" ? "bg-blue-50 text-blue-800 border-blue-200" :
                                       "bg-red-50 text-red-800 border-red-200"
@@ -2108,18 +2108,18 @@ export default function StudiosDirectory() {
                                       {app.status}
                                     </Badge>
                                   </div>
-                                  <p className="text-xs text-gray-500">Applied for: <strong className="text-gray-700 font-bold">{app.opportunityTitle}</strong> ({app.type})</p>
-                                  <p className="text-[10px] text-gray-400 mt-0.5">Submitted on: {app.date} • Experience: {app.experienceYears} Years</p>
+                                  <p className="text-xs text-muted-foreground">Applied for: <strong className="text-muted-foreground font-bold">{app.opportunityTitle}</strong> ({app.type})</p>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">Submitted on: {app.date} • Experience: {app.experienceYears} Years</p>
                                 </div>
                                 
                                 {/* Contact references */}
-                                <div className="text-right text-xs text-gray-500 space-y-0.5">
+                                <div className="text-right text-xs text-muted-foreground space-y-0.5">
                                   <div>{app.applicantEmail}</div>
                                   <div>{app.applicantPhone}</div>
                                 </div>
                               </div>
 
-                              <div className="p-3 bg-gray-50 rounded-lg text-xs text-gray-700 border border-gray-100 leading-relaxed italic">
+                              <div className="p-3 bg-muted/40 rounded-lg text-xs text-muted-foreground border border-border/60 leading-relaxed italic">
                                 "{app.coverLetter}"
                               </div>
 
@@ -2163,10 +2163,10 @@ export default function StudiosDirectory() {
               // MAIN LIST VIEW: list all studios with search, filter, and direct listing
               <div className="space-y-6">
                 {/* Clean Header Row */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-5 border-gray-100">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-5 border-border/60">
                   <div className="space-y-1">
-                    <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Companies Directory</h1>
-                    <p className="text-sm text-gray-500">Discover and connect with verified casting houses, production studios, and post-facilities.</p>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Companies Directory</h1>
+                    <p className="text-sm text-muted-foreground">Discover and connect with verified casting houses, production studios, and post-facilities.</p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
                     <Button
@@ -2182,7 +2182,7 @@ export default function StudiosDirectory() {
                 {/* Directory Navigation, Search & Filters Row */}
                 <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
                   <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
-                    <TabsList className="bg-gray-100 p-1 rounded-xl w-full sm:w-[380px] grid grid-cols-3">
+                    <TabsList className="bg-muted p-1 rounded-xl w-full sm:w-[380px] grid grid-cols-3">
                       <TabsTrigger value="all" className="rounded-lg text-xs font-semibold">
                         Companies
                       </TabsTrigger>
@@ -2197,10 +2197,10 @@ export default function StudiosDirectory() {
 
                   <div className="flex flex-col sm:flex-row gap-3 items-center w-full xl:w-auto">
                     <div className="relative w-full sm:w-64 shrink-0">
-                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Search companies..."
-                        className="pl-9 h-10 border-gray-200 bg-white"
+                        className="pl-9 h-10 border-border bg-card text-foreground"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
@@ -2208,7 +2208,7 @@ export default function StudiosDirectory() {
                     
                     <div className="grid grid-cols-2 gap-3 w-full sm:flex sm:w-auto">
                       <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger className="w-full sm:w-[180px] h-10 bg-white border-gray-200 shrink-0">
+                      <SelectTrigger className="w-full sm:w-[180px] h-10 bg-card border-border text-foreground shrink-0">
                         <SelectValue placeholder="Sort By" />
                       </SelectTrigger>
                       <SelectContent>
@@ -2224,11 +2224,11 @@ export default function StudiosDirectory() {
 
                     <Sheet>
                       <SheetTrigger asChild>
-                        <Button variant="outline" className="h-10 border-gray-200 bg-white px-4 shrink-0 w-full sm:w-auto">
+                        <Button variant="outline" className="h-10 border-border bg-card text-foreground hover:bg-muted px-4 shrink-0 w-full sm:w-auto">
                           <Filter className="h-4 w-4 mr-2" />
                           Filters
                           {(selectedCategory !== "all" || selectedCity !== "all" || selectedState !== "all" || selectedLanguage !== "all" || filterVerified || filterHiring || filterAuditions || filterInternships || filterFreshers || minRating !== "all" || companySize !== "all" || filterCollab || yearsInIndustry !== "all" || filterRecentlyJoined) && (
-                            <Badge className="bg-yellow-500 hover:bg-yellow-500 text-white rounded-full px-1 py-0 h-4 min-w-4 text-[10px] flex items-center justify-center ml-2">
+                            <Badge className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 dark:bg-yellow-950/200 text-white rounded-full px-1 py-0 h-4 min-w-4 text-[10px] flex items-center justify-center ml-2">
                               !
                             </Badge>
                           )}
@@ -2243,7 +2243,7 @@ export default function StudiosDirectory() {
                       <div className="space-y-5 py-4">
                         {/* Category */}
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-gray-600">Business Category</label>
+                          <label className="text-xs font-semibold text-muted-foreground">Business Category</label>
                           <CategoryDropdown
                             value={selectedCategory === "all" ? "" : selectedCategory}
                             onChange={(val) => setSelectedCategory(val || "all")}
@@ -2253,7 +2253,7 @@ export default function StudiosDirectory() {
 
                         {/* City */}
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-gray-600">Metro City</label>
+                          <label className="text-xs font-semibold text-muted-foreground">Metro City</label>
                           <Select value={selectedCity} onValueChange={setSelectedCity}>
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="All Cities" />
@@ -2267,7 +2267,7 @@ export default function StudiosDirectory() {
 
                         {/* State */}
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-gray-600">State Location</label>
+                          <label className="text-xs font-semibold text-muted-foreground">State Location</label>
                           <Select value={selectedState} onValueChange={setSelectedState}>
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="All States" />
@@ -2281,7 +2281,7 @@ export default function StudiosDirectory() {
 
                         {/* Languages */}
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-gray-600">Language Specialties</label>
+                          <label className="text-xs font-semibold text-muted-foreground">Language Specialties</label>
                           <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="All Languages" />
@@ -2295,7 +2295,7 @@ export default function StudiosDirectory() {
 
                         {/* Minimum rating */}
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-gray-600">Minimum Rating</label>
+                          <label className="text-xs font-semibold text-muted-foreground">Minimum Rating</label>
                           <Select value={minRating} onValueChange={setMinRating}>
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="All Ratings" />
@@ -2311,7 +2311,7 @@ export default function StudiosDirectory() {
 
                         {/* Company Size */}
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-gray-600">Company Size (Crew count)</label>
+                          <label className="text-xs font-semibold text-muted-foreground">Company Size (Crew count)</label>
                           <Select value={companySize} onValueChange={setCompanySize}>
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Any Size" />
@@ -2327,7 +2327,7 @@ export default function StudiosDirectory() {
 
                         {/* Years in Industry */}
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-gray-600">Years in Industry</label>
+                          <label className="text-xs font-semibold text-muted-foreground">Years in Industry</label>
                           <Select value={yearsInIndustry} onValueChange={setYearsInIndustry}>
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Any Years" />
@@ -2344,31 +2344,31 @@ export default function StudiosDirectory() {
                         {/* Switch options */}
                         <div className="space-y-3.5 pt-2">
                           <div className="flex items-center justify-between">
-                            <label className="text-xs font-medium text-gray-600">Verified Companies Only</label>
+                            <label className="text-xs font-medium text-muted-foreground">Verified Companies Only</label>
                             <Switch checked={filterVerified} onCheckedChange={setFilterVerified} />
                           </div>
                           <div className="flex items-center justify-between">
-                            <label className="text-xs font-medium text-gray-600">Hiring Now</label>
+                            <label className="text-xs font-medium text-muted-foreground">Hiring Now</label>
                             <Switch checked={filterHiring} onCheckedChange={setFilterHiring} />
                           </div>
                           <div className="flex items-center justify-between">
-                            <label className="text-xs font-medium text-gray-600">Open Auditions</label>
+                            <label className="text-xs font-medium text-muted-foreground">Open Auditions</label>
                             <Switch checked={filterAuditions} onCheckedChange={setFilterAuditions} />
                           </div>
                           <div className="flex items-center justify-between">
-                            <label className="text-xs font-medium text-gray-600">Internships Available</label>
+                            <label className="text-xs font-medium text-muted-foreground">Internships Available</label>
                             <Switch checked={filterInternships} onCheckedChange={setFilterInternships} />
                           </div>
                           <div className="flex items-center justify-between">
-                            <label className="text-xs font-medium text-gray-600">Accepting Freshers</label>
+                            <label className="text-xs font-medium text-muted-foreground">Accepting Freshers</label>
                             <Switch checked={filterFreshers} onCheckedChange={setFilterFreshers} />
                           </div>
                           <div className="flex items-center justify-between">
-                            <label className="text-xs font-medium text-gray-600">Open for Collaboration</label>
+                            <label className="text-xs font-medium text-muted-foreground">Open for Collaboration</label>
                             <Switch checked={filterCollab} onCheckedChange={setFilterCollab} />
                           </div>
                           <div className="flex items-center justify-between">
-                            <label className="text-xs font-medium text-gray-600">Recently Joined</label>
+                            <label className="text-xs font-medium text-muted-foreground">Recently Joined</label>
                             <Switch checked={filterRecentlyJoined} onCheckedChange={setFilterRecentlyJoined} />
                           </div>
                         </div>
@@ -2376,7 +2376,7 @@ export default function StudiosDirectory() {
                       </div>
                       <div className="flex gap-2.5 pt-4 border-t">
                         <Button variant="outline" className="flex-1" onClick={resetFilters}>Reset</Button>
-                        <Button className="flex-1 bg-yellow-500 text-white hover:bg-yellow-600">Apply Filters</Button>
+                        <Button className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 font-semibold shadow-sm transition-all duration-200 cursor-pointer">Apply Filters</Button>
                       </div>
                     </SheetContent>
                   </Sheet>
@@ -2387,10 +2387,10 @@ export default function StudiosDirectory() {
                 {/* Studios Grid */}
                 {filteredCompanies.length === 0 ? (
                   activeTab === "all" || activeTab === "created" ? (
-                    <div className="mt-8 mb-8 bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center max-w-3xl mx-auto shadow-sm">
-                      <Building2 className="h-10 w-10 text-gray-400 mx-auto mb-4" />
-                      <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Own a Film Industry Company?</h2>
-                      <p className="text-gray-600 mb-6 max-w-xl mx-auto">
+                    <div className="mt-8 mb-8 bg-muted/30 border border-border rounded-2xl p-8 text-center max-w-3xl mx-auto shadow-sm">
+                      <Building2 className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
+                      <h2 className="text-2xl font-extrabold text-foreground mb-2">Own a Film Industry Company?</h2>
+                      <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
                         Join FilmCollab&apos;s directory to get discovered by filmmakers, talent, and production houses looking for your services, equipment, or locations.
                       </p>
                       <Button className="bg-gray-900 hover:bg-gray-800 text-white font-bold h-11 px-8" onClick={() => setIsRegisterOpen(true)}>
@@ -2399,15 +2399,15 @@ export default function StudiosDirectory() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+                    <div className="text-center py-16 bg-card text-card-foreground rounded-2xl border border-dashed border-border">
                       <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                      <h3 className="text-lg font-bold text-gray-800">
+                      <h3 className="text-lg font-bold text-foreground/90">
                         No saved studios yet
                       </h3>
-                      <p className="text-gray-500 text-sm max-w-md mx-auto mt-1">
+                      <p className="text-muted-foreground text-sm max-w-md mx-auto mt-1">
                         Browse the directory and click the bookmark icon on any studio to save it for quick access.
                       </p>
-                      <Button variant="outline" className="mt-4 border-yellow-200" onClick={() => setActiveTab("all")}>
+                      <Button variant="outline" className="mt-4 border-yellow-200 dark:border-yellow-900/40" onClick={() => setActiveTab("all")}>
                         Browse All Studios
                       </Button>
                     </div>
@@ -2416,12 +2416,12 @@ export default function StudiosDirectory() {
                   <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {sortedCompanies.map(company => (
-                      <Card key={company.id} className="border border-gray-200 hover:border-gray-300 overflow-hidden shadow-sm hover:shadow-md transition duration-300 flex flex-col bg-white">
+                      <Card key={company.id} className="border border-border hover:border-border/80 overflow-hidden shadow-sm hover:shadow-md transition duration-300 flex flex-col bg-card text-card-foreground">
                         {/* Card Cover Header */}
-                        <div className="h-36 relative bg-gray-100 overflow-hidden">
+                        <div className="h-36 relative bg-muted overflow-hidden">
                           <img src={company.coverImage} alt={company.name} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                          <Badge className="absolute top-3 right-3 bg-white/95 text-gray-900 border-none font-semibold text-[10px] hover:bg-white shadow-sm">
+                          <Badge className="absolute top-3 right-3 bg-card/90 text-foreground border border-border/60 font-semibold text-[10px] hover:bg-card shadow-sm backdrop-blur-sm">
                             {company.category}
                           </Badge>
                           
@@ -2466,39 +2466,39 @@ export default function StudiosDirectory() {
                           <div className="space-y-2">
                             <div className="flex items-start gap-3">
                               {/* Logo */}
-                              <div className="h-10 w-10 bg-gray-100 rounded-lg shrink-0 flex items-center justify-center font-bold text-gray-400 overflow-hidden border border-gray-100 text-sm">
+                              <div className="h-10 w-10 bg-muted rounded-lg shrink-0 flex items-center justify-center font-bold text-muted-foreground overflow-hidden border border-border/60 text-sm">
                                 {company.logo ? (company.logo.length <= 4 ? company.logo : <img src={company.logo} alt={company.name} className="w-full h-full object-cover" />) : <Building2 className="h-5 w-5" />}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
-                                  <h3 className="font-extrabold text-gray-900 text-base hover:text-gray-600 cursor-pointer transition truncate" onClick={() => setViewingCompany(company)}>
+                                  <h3 className="font-extrabold text-foreground text-base hover:text-muted-foreground cursor-pointer transition truncate" onClick={() => setViewingCompany(company)}>
                                     {company.name}
                                   </h3>
-                                  <span className="flex items-center gap-0.5 text-xs font-semibold text-gray-700 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 shrink-0">
+                                  <span className="flex items-center gap-0.5 text-xs font-semibold text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded border border-border/60 shrink-0">
                                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                                     <span>{company.rating}</span>
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                                   <MapPin className="h-3 w-3 shrink-0" />
                                   <span className="truncate">{company.city}, {company.state}</span>
                                 </div>
                               </div>
                             </div>
                             
-                            <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mt-3">{company.description}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mt-3">{company.description}</p>
                           </div>
 
                           <div className="space-y-3 pt-2">
                             {/* Service Tags list */}
                             <div className="flex flex-wrap gap-1">
                               {company.services.slice(0, 3).map(service => (
-                                <Badge key={service} variant="outline" className="text-[10px] text-gray-600 border-gray-200 bg-gray-50/50 py-0 px-1.5 h-5">
+                                <Badge key={service} variant="outline" className="text-[10px] text-muted-foreground border-border bg-muted/20 py-0 px-1.5 h-5">
                                   {service}
                                 </Badge>
                               ))}
                               {company.services.length > 3 && (
-                                <Badge variant="outline" className="text-[10px] text-gray-400 border-gray-100 py-0 px-1.5 h-5">
+                                <Badge variant="outline" className="text-[10px] text-muted-foreground border-border/60 py-0 px-1.5 h-5">
                                   +{company.services.length - 3}
                                 </Badge>
                               )}
@@ -2507,12 +2507,12 @@ export default function StudiosDirectory() {
                             {/* Languages */}
                             <div className="flex flex-wrap gap-1">
                                {company.languages.slice(0, 3).map(lang => (
-                                 <span key={lang} className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{lang}</span>
+                                 <span key={lang} className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{lang}</span>
                                ))}
                             </div>
 
                             {/* Mini properties row */}
-                            <div className="flex justify-between items-center text-[10px] text-gray-500 border-t pt-3 border-gray-100">
+                            <div className="flex justify-between items-center text-[10px] text-muted-foreground border-t pt-3 border-border/60">
                               <span className="flex items-center gap-1"><Briefcase className="h-3 w-3" /> {company.projectsCompleted} Projects</span>
                               <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {company.employeeCount} Team</span>
                               <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {new Date().getFullYear() - company.establishedYear} Yrs</span>
@@ -2524,14 +2524,14 @@ export default function StudiosDirectory() {
                         <CardFooter className="p-4 pt-0 gap-2 flex-wrap sm:flex-nowrap">
                           <Button
                             variant="default"
-                            className="flex-1 text-xs h-9 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold shadow-sm border-none"
+                            className="flex-1 text-xs h-9 bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 font-semibold shadow-sm border-none transition-all duration-200 cursor-pointer"
                             onClick={() => setViewingCompany(company)}
                           >
                             View Profile
                           </Button>
                           <Button
                             variant="outline"
-                            className="flex-1 text-xs h-9 border-gray-200"
+                            className="flex-1 text-xs h-9 border-border bg-transparent text-foreground hover:bg-muted transition-colors"
                             onClick={() => {
                               setContactCompany(company);
                               setIsContactOpen(true);
@@ -2543,18 +2543,18 @@ export default function StudiosDirectory() {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-9 w-9 shrink-0 flex-1 sm:flex-none border-gray-200"
+                              className="h-9 w-9 shrink-0 flex-1 sm:flex-none border-border bg-transparent text-foreground hover:bg-muted transition-colors"
                               onClick={() => handleSave(company.id)}
                             >
-                              <Bookmark className={`h-4 w-4 ${savedIds.includes(company.id) ? "fill-current text-gray-900" : "text-gray-500"}`} />
+                              <Bookmark className={`h-4 w-4 ${savedIds.includes(company.id) ? "fill-current text-foreground" : "text-muted-foreground"}`} />
                             </Button>
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-9 w-9 shrink-0 flex-1 sm:flex-none border-gray-200"
+                              className="h-9 w-9 shrink-0 flex-1 sm:flex-none border-border bg-transparent text-foreground hover:bg-muted transition-colors"
                               onClick={() => handleShare(company)}
                             >
-                              <Share2 className="h-4 w-4 text-gray-500" />
+                              <Share2 className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </div>
                         </CardFooter>
@@ -2576,36 +2576,36 @@ export default function StudiosDirectory() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <div className="flex items-center gap-2 mb-2">
-                <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
+                <Badge className="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-100 dark:bg-yellow-900/40 border-yellow-200 dark:border-yellow-900/40">
                   {selectedProjectForView?.year}
                 </Badge>
                 {selectedProjectForView?.role && (
-                  <Badge variant="outline" className="border-gray-200 text-gray-600">
+                  <Badge variant="outline" className="border-border text-muted-foreground">
                     {selectedProjectForView?.role}
                   </Badge>
                 )}
               </div>
-              <DialogTitle className="text-xl font-extrabold text-gray-900">
+              <DialogTitle className="text-xl font-extrabold text-foreground">
                 {selectedProjectForView?.title}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 pt-4 border-t border-gray-100 text-sm text-gray-700">
+            <div className="space-y-4 pt-4 border-t border-border/60 text-sm text-muted-foreground">
               <div className="space-y-1.5">
-                <h4 className="font-semibold text-gray-900">Studio's Role / Contribution</h4>
-                <p className="bg-gray-50/50 p-2.5 rounded-lg border border-gray-100 text-xs">
+                <h4 className="font-semibold text-foreground">Studio's Role / Contribution</h4>
+                <p className="bg-muted/20 p-2.5 rounded-lg border border-border/60 text-xs">
                   {selectedProjectForView?.role}
                 </p>
               </div>
               {selectedProjectForView?.description && (
                 <div className="space-y-1.5">
-                  <h4 className="font-semibold text-gray-900">Project Description</h4>
-                  <p className="whitespace-pre-line leading-relaxed text-xs text-gray-600 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
+                  <h4 className="font-semibold text-foreground">Project Description</h4>
+                  <p className="whitespace-pre-line leading-relaxed text-xs text-muted-foreground bg-muted/20 p-3 rounded-lg border border-border/60">
                     {selectedProjectForView?.description}
                   </p>
                 </div>
               )}
             </div>
-            <DialogFooter className="pt-2 border-t border-gray-100">
+            <DialogFooter className="pt-2 border-t border-border/60">
               <Button type="button" variant="outline" onClick={() => setIsViewProjectDetailsOpen(false)}>
                 Close
               </Button>
@@ -2630,58 +2630,58 @@ export default function StudiosDirectory() {
             </DialogHeader>
             <form onSubmit={handlePostJob} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Position / Title</label>
+                <label className="text-xs font-semibold text-muted-foreground">Position / Title</label>
                 <Input
                   required
                   placeholder="e.g. Lead Video Editor"
                   value={jobForm.position}
                   onChange={(e) => setJobForm({ ...jobForm, position: e.target.value })}
-                  className="border-yellow-200"
+                  className="border-yellow-200 dark:border-yellow-900/40"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Experience Required</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Experience Required</label>
                   <Input
                     required
                     placeholder="e.g. 3+ years"
                     value={jobForm.experience}
                     onChange={(e) => setJobForm({ ...jobForm, experience: e.target.value })}
-                    className="border-yellow-200"
+                    className="border-yellow-200 dark:border-yellow-900/40"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Salary Range</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Salary Range</label>
                   <Input
                     placeholder="e.g. ₹50k - ₹80k/mo"
                     value={jobForm.salary}
                     onChange={(e) => setJobForm({ ...jobForm, salary: e.target.value })}
-                    className="border-yellow-200"
+                    className="border-yellow-200 dark:border-yellow-900/40"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Location</label>
+                <label className="text-xs font-semibold text-muted-foreground">Location</label>
                 <Input
                   placeholder={`e.g. Remote, or default to ${viewingCompany?.city || "Office"}`}
                   value={jobForm.location}
                   onChange={(e) => setJobForm({ ...jobForm, location: e.target.value })}
-                  className="border-yellow-200"
+                  className="border-yellow-200 dark:border-yellow-900/40"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Job Description & Requirements</label>
+                <label className="text-xs font-semibold text-muted-foreground">Job Description & Requirements</label>
                 <Textarea
                   required
                   placeholder="Outline roles, responsibilities, and key qualification criteria..."
                   value={jobForm.description}
                   onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
-                  className="min-h-[100px] border-yellow-200"
+                  className="min-h-[100px] border-yellow-200 dark:border-yellow-900/40"
                 />
               </div>
               <DialogFooter className="pt-2">
                 <Button type="button" variant="ghost" onClick={() => setIsPostJobDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">
+                <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white font-semibold">
                   {editingJobId ? "Save Changes" : "Post Opportunity"}
                 </Button>
               </DialogFooter>
@@ -2706,40 +2706,40 @@ export default function StudiosDirectory() {
             </DialogHeader>
             <form onSubmit={handleCreateEvent} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Event Title</label>
+                <label className="text-xs font-semibold text-muted-foreground">Event Title</label>
                 <Input
                   required
                   placeholder="e.g. Motion Graphics Masterclass"
                   value={eventForm.title}
                   onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
-                  className="border-yellow-200"
+                  className="border-yellow-200 dark:border-yellow-900/40"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Date & Time</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Date & Time</label>
                   <Input
                     required
                     placeholder="e.g. July 25, 6:00 PM"
                     value={eventForm.date}
                     onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
-                    className="border-yellow-200"
+                    className="border-yellow-200 dark:border-yellow-900/40"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Ticket Price / Type</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Ticket Price / Type</label>
                   <Input
                     placeholder="e.g. Free, or ₹499"
                     value={eventForm.price}
                     onChange={(e) => setEventForm({ ...eventForm, price: e.target.value })}
-                    className="border-yellow-200"
+                    className="border-yellow-200 dark:border-yellow-900/40"
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-between py-2 border-y border-gray-100">
+              <div className="flex items-center justify-between py-2 border-y border-border/60">
                 <div className="space-y-0.5">
-                  <label className="text-xs font-semibold text-gray-600">Online Event?</label>
-                  <p className="text-[10px] text-gray-400">Will this event take place online (e.g. via Zoom/Meet)?</p>
+                  <label className="text-xs font-semibold text-muted-foreground">Online Event?</label>
+                  <p className="text-[10px] text-muted-foreground">Will this event take place online (e.g. via Zoom/Meet)?</p>
                 </div>
                 <Switch
                   checked={eventForm.isOnline}
@@ -2747,28 +2747,28 @@ export default function StudiosDirectory() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Location / Meeting Link</label>
+                <label className="text-xs font-semibold text-muted-foreground">Location / Meeting Link</label>
                 <Input
                   required
                   placeholder={eventForm.isOnline ? "e.g. Google Meet Link" : "e.g. Main Studio Hall, Mumbai"}
                   value={eventForm.location}
                   onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
-                  className="border-yellow-200"
+                  className="border-yellow-200 dark:border-yellow-900/40"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Event Description</label>
+                <label className="text-xs font-semibold text-muted-foreground">Event Description</label>
                 <Textarea
                   required
                   placeholder="Provide schedule details, speaker profiles, and learning goals..."
                   value={eventForm.description}
                   onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
-                  className="min-h-[100px] border-yellow-200"
+                  className="min-h-[100px] border-yellow-200 dark:border-yellow-900/40"
                 />
               </div>
               <DialogFooter className="pt-2">
                 <Button type="button" variant="ghost" onClick={() => setIsCreateEventDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">
+                <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white font-semibold">
                   {editingEventId ? "Save Changes" : "Publish Event"}
                 </Button>
               </DialogFooter>
@@ -2793,45 +2793,45 @@ export default function StudiosDirectory() {
             </DialogHeader>
             <form onSubmit={handleCreateCourse} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Course Title</label>
+                <label className="text-xs font-semibold text-muted-foreground">Course Title</label>
                 <Input
                   required
                   placeholder="e.g. DaVinci Resolve Masterclass"
                   value={courseForm.title}
                   onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })}
-                  className="border-yellow-200"
+                  className="border-yellow-200 dark:border-yellow-900/40"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Course Duration</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Course Duration</label>
                   <Input
                     required
                     placeholder="e.g. 6 Weeks (24 hours)"
                     value={courseForm.duration}
                     onChange={(e) => setCourseForm({ ...courseForm, duration: e.target.value })}
-                    className="border-yellow-200"
+                    className="border-yellow-200 dark:border-yellow-900/40"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Instructor Name</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Instructor Name</label>
                   <Input
                     required
                     placeholder="e.g. Kabir Bose"
                     value={courseForm.instructor}
                     onChange={(e) => setCourseForm({ ...courseForm, instructor: e.target.value })}
-                    className="border-yellow-200"
+                    className="border-yellow-200 dark:border-yellow-900/40"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Level</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Level</label>
                   <Select
                     value={courseForm.level}
                     onValueChange={(val) => setCourseForm({ ...courseForm, level: val })}
                   >
-                    <SelectTrigger className="border-yellow-200">
+                    <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40">
                       <SelectValue placeholder="Select Level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2842,22 +2842,22 @@ export default function StudiosDirectory() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Course Price</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Course Price</label>
                   <Input
                     placeholder="e.g. Free, or ₹2,999"
                     value={courseForm.price}
                     onChange={(e) => setCourseForm({ ...courseForm, price: e.target.value })}
-                    className="border-yellow-200"
+                    className="border-yellow-200 dark:border-yellow-900/40"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Category</label>
+                <label className="text-xs font-semibold text-muted-foreground">Category</label>
                 <Select
                   value={courseForm.category}
                   onValueChange={(val) => setCourseForm({ ...courseForm, category: val })}
                 >
-                  <SelectTrigger className="border-yellow-200">
+                  <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40">
                     <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -2872,18 +2872,18 @@ export default function StudiosDirectory() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Course Description & Syllabus Summary</label>
+                <label className="text-xs font-semibold text-muted-foreground">Course Description & Syllabus Summary</label>
                 <Textarea
                   required
                   placeholder="Outline the modules, skills taught, tools used, and certification details..."
                   value={courseForm.description}
                   onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
-                  className="min-h-[100px] border-yellow-200"
+                  className="min-h-[100px] border-yellow-200 dark:border-yellow-900/40"
                 />
               </div>
               <DialogFooter className="pt-2">
                 <Button type="button" variant="ghost" onClick={() => setIsCreateCourseDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">
+                <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white font-semibold">
                   {editingCourseId ? "Save Changes" : "Publish Course"}
                 </Button>
               </DialogFooter>
@@ -2899,10 +2899,10 @@ export default function StudiosDirectory() {
               <DialogDescription>Select or drag and drop an image file to update your studio cover banner.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-2">
-              <label className="flex flex-col items-center justify-center border-2 border-dashed border-yellow-300 rounded-xl p-6 bg-yellow-50/20 hover:bg-yellow-50/50 hover:border-yellow-400 cursor-pointer transition-all duration-200">
+              <label className="flex flex-col items-center justify-center border-2 border-dashed border-yellow-300 rounded-xl p-6 bg-yellow-50 dark:bg-yellow-950/20/20 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 dark:bg-yellow-950/20/50 hover:border-yellow-400 cursor-pointer transition-all duration-200">
                 <Upload className="h-8 w-8 text-yellow-600 mb-2" />
-                <span className="text-sm font-semibold text-gray-700">Upload Image File</span>
-                <span className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG, GIF</span>
+                <span className="text-sm font-semibold text-muted-foreground">Upload Image File</span>
+                <span className="text-xs text-muted-foreground mt-1">PNG, JPG, JPEG, GIF</span>
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -2942,10 +2942,10 @@ export default function StudiosDirectory() {
               <DialogDescription>Upload an image file, or enter an emoji / brand initials to represent your brand logo.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-2">
-              <label className="flex flex-col items-center justify-center border-2 border-dashed border-yellow-300 rounded-xl p-6 bg-yellow-50/20 hover:bg-yellow-50/50 hover:border-yellow-400 cursor-pointer transition-all duration-200">
+              <label className="flex flex-col items-center justify-center border-2 border-dashed border-yellow-300 rounded-xl p-6 bg-yellow-50 dark:bg-yellow-950/20/20 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 dark:bg-yellow-950/20/50 hover:border-yellow-400 cursor-pointer transition-all duration-200">
                 <Upload className="h-8 w-8 text-yellow-600 mb-2" />
-                <span className="text-sm font-semibold text-gray-700">Upload Image / Logo File</span>
-                <span className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG, GIF</span>
+                <span className="text-sm font-semibold text-muted-foreground">Upload Image / Logo File</span>
+                <span className="text-xs text-muted-foreground mt-1">PNG, JPG, JPEG, GIF</span>
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -2971,26 +2971,26 @@ export default function StudiosDirectory() {
               </label>
 
               <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-gray-200"></div>
-                <span className="flex-shrink mx-4 text-gray-400 text-xs font-semibold">OR</span>
-                <div className="flex-grow border-t border-gray-200"></div>
+                <div className="flex-grow border-t border-border"></div>
+                <span className="flex-shrink mx-4 text-muted-foreground text-xs font-semibold">OR</span>
+                <div className="flex-grow border-t border-border"></div>
               </div>
 
               <form onSubmit={handleUpdateLogo} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Logo Characters / Emoji</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Logo Characters / Emoji</label>
                   <Input
                     required
                     maxLength={4}
                     placeholder="e.g. Red, or 🎬"
                     value={logoInput}
                     onChange={(e) => setLogoInput(e.target.value)}
-                    className="border-yellow-200 text-center font-bold text-lg"
+                    className="border-yellow-200 dark:border-yellow-900/40 text-center font-bold text-lg"
                   />
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="ghost" onClick={() => setIsEditLogoOpen(false)}>Cancel</Button>
-                  <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">Save Brand Initials</Button>
+                  <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white font-semibold">Save Brand Initials</Button>
                 </DialogFooter>
               </form>
             </div>
@@ -3006,31 +3006,31 @@ export default function StudiosDirectory() {
             </DialogHeader>
             <form onSubmit={handleContactSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Your Full Name</label>
+                <label className="text-xs font-semibold text-muted-foreground">Your Full Name</label>
                 <Input
                   placeholder="e.g. Sreya Jayadevan"
-                  className="border-yellow-200"
+                  className="border-yellow-200 dark:border-yellow-900/40"
                   value={contactForm.name}
                   onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                   required
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Your Email Address</label>
+                <label className="text-xs font-semibold text-muted-foreground">Your Email Address</label>
                 <Input
                   type="email"
                   placeholder="e.g. sreya@gmail.com"
-                  className="border-yellow-200"
+                  className="border-yellow-200 dark:border-yellow-900/40"
                   value={contactForm.email}
                   onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                   required
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Your Inquiry Message</label>
+                <label className="text-xs font-semibold text-muted-foreground">Your Inquiry Message</label>
                 <Textarea
                   placeholder="State your intent clearly: casting pitch, line production quotes, or booking rental slots..."
-                  className="border-yellow-200 min-h-24 text-sm"
+                  className="border-yellow-200 dark:border-yellow-900/40 min-h-24 text-sm"
                   value={contactForm.message}
                   onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                   required
@@ -3038,7 +3038,7 @@ export default function StudiosDirectory() {
               </div>
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setIsContactOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">Dispatch Message</Button>
+                <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white font-semibold">Dispatch Message</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -3054,34 +3054,34 @@ export default function StudiosDirectory() {
             <form onSubmit={handleApplySubmit} className="space-y-4 pt-2">
               <div className="grid grid-cols-2 gap-3.5">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Full Name *</label>
-                  <Input placeholder="e.g. Alan Kurian" className="border-yellow-100 text-xs" value={appForm.name} onChange={(e) => setAppForm({ ...appForm, name: e.target.value })} required />
+                  <label className="text-xs font-semibold text-muted-foreground">Full Name *</label>
+                  <Input placeholder="e.g. Alan Kurian" className="border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 text-xs" value={appForm.name} onChange={(e) => setAppForm({ ...appForm, name: e.target.value })} required />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Contact Email *</label>
-                  <Input type="email" placeholder="e.g. alan@example.com" className="border-yellow-100 text-xs" value={appForm.email} onChange={(e) => setAppForm({ ...appForm, email: e.target.value })} required />
+                  <label className="text-xs font-semibold text-muted-foreground">Contact Email *</label>
+                  <Input type="email" placeholder="e.g. alan@example.com" className="border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 text-xs" value={appForm.email} onChange={(e) => setAppForm({ ...appForm, email: e.target.value })} required />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Phone Number *</label>
-                  <Input placeholder="e.g. +91 98460 12345" className="border-yellow-100 text-xs" value={appForm.phone} onChange={(e) => setAppForm({ ...appForm, phone: e.target.value })} required />
+                  <label className="text-xs font-semibold text-muted-foreground">Phone Number *</label>
+                  <Input placeholder="e.g. +91 98460 12345" className="border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 text-xs" value={appForm.phone} onChange={(e) => setAppForm({ ...appForm, phone: e.target.value })} required />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Years of Relevant Experience *</label>
-                  <Input placeholder="e.g. 3 Years, Fresh Graduate" className="border-yellow-100 text-xs" value={appForm.experience} onChange={(e) => setAppForm({ ...appForm, experience: e.target.value })} required />
+                  <label className="text-xs font-semibold text-muted-foreground">Years of Relevant Experience *</label>
+                  <Input placeholder="e.g. 3 Years, Fresh Graduate" className="border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 text-xs" value={appForm.experience} onChange={(e) => setAppForm({ ...appForm, experience: e.target.value })} required />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Cover Letter & Statement *</label>
-                <Textarea placeholder="Explain why you are the perfect fit. Highlight any completed projects or unique talents." className="border-yellow-100 min-h-20 text-xs leading-relaxed" value={appForm.coverLetter} onChange={(e) => setAppForm({ ...appForm, coverLetter: e.target.value })} required />
+                <label className="text-xs font-semibold text-muted-foreground">Cover Letter & Statement *</label>
+                <Textarea placeholder="Explain why you are the perfect fit. Highlight any completed projects or unique talents." className="border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 min-h-20 text-xs leading-relaxed" value={appForm.coverLetter} onChange={(e) => setAppForm({ ...appForm, coverLetter: e.target.value })} required />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Resume Link / Portfolio Link (Optional)</label>
-                <Input placeholder="e.g. https://drive.google.com/your-resume.pdf" className="border-yellow-100 text-xs" value={appForm.resumeUrl} onChange={(e) => setAppForm({ ...appForm, resumeUrl: e.target.value })} />
+                <label className="text-xs font-semibold text-muted-foreground">Resume Link / Portfolio Link (Optional)</label>
+                <Input placeholder="e.g. https://drive.google.com/your-resume.pdf" className="border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 text-xs" value={appForm.resumeUrl} onChange={(e) => setAppForm({ ...appForm, resumeUrl: e.target.value })} />
               </div>
 
               {applicationTarget?.type === "audition" && (
@@ -3090,21 +3090,21 @@ export default function StudiosDirectory() {
                     <Video className="h-3.5 w-3.5" />
                     <span>Casting Video Reel / Audition Tape URL *</span>
                   </label>
-                  <Input placeholder="e.g. https://youtube.com/your-monologue-video" className="border-orange-200 bg-white text-xs" value={appForm.demoReelUrl} onChange={(e) => setAppForm({ ...appForm, demoReelUrl: e.target.value })} required />
+                  <Input placeholder="e.g. https://youtube.com/your-monologue-video" className="border-orange-200 bg-card text-card-foreground text-xs" value={appForm.demoReelUrl} onChange={(e) => setAppForm({ ...appForm, demoReelUrl: e.target.value })} required />
                   <p className="text-[10px] text-orange-700/80 mt-1">Casting agencies require a video tape (monologue, action reel, or previous scene clips) to qualify.</p>
                 </div>
               )}
 
               {applicationTarget?.type !== "audition" && (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-600">Demo Reel / Work Catalog link (Optional)</label>
-                  <Input placeholder="e.g. https://vimeo.com/your-creative-work" className="border-yellow-100 text-xs" value={appForm.demoReelUrl} onChange={(e) => setAppForm({ ...appForm, demoReelUrl: e.target.value })} />
+                  <label className="text-xs font-semibold text-muted-foreground">Demo Reel / Work Catalog link (Optional)</label>
+                  <Input placeholder="e.g. https://vimeo.com/your-creative-work" className="border-yellow-200 dark:border-yellow-900/40 dark:border-yellow-900/30 text-xs" value={appForm.demoReelUrl} onChange={(e) => setAppForm({ ...appForm, demoReelUrl: e.target.value })} />
                 </div>
               )}
 
               <DialogFooter className="pt-2">
                 <Button type="button" variant="ghost" className="text-xs" onClick={() => setIsApplicationOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold text-xs px-6">
+                <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white font-bold text-xs px-6">
                   Submit Dossier Application
                 </Button>
               </DialogFooter>
@@ -3123,13 +3123,13 @@ export default function StudiosDirectory() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">Company Name *</label>
-                  <Input placeholder="e.g. Madras VFX Hub" className="border-yellow-200" value={regForm.name} onChange={(e) => setRegForm({ ...regForm, name: e.target.value })} required />
+                  <label className="text-xs font-semibold text-muted-foreground">Company Name *</label>
+                  <Input placeholder="e.g. Madras VFX Hub" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.name} onChange={(e) => setRegForm({ ...regForm, name: e.target.value })} required />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">Business Category *</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Business Category *</label>
                   <Select value={regForm.category} onValueChange={(val) => setRegForm({ ...regForm, category: val })}>
-                    <SelectTrigger className="border-yellow-200">
+                    <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -3140,59 +3140,59 @@ export default function StudiosDirectory() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-700">Studio Description & Mission *</label>
-                <Textarea placeholder="Explain your specialties, camera gear catalog, space sizes, and key historical productions completed..." className="border-yellow-200 min-h-24 text-xs leading-relaxed" value={regForm.description} onChange={(e) => setRegForm({ ...regForm, description: e.target.value })} required />
+                <label className="text-xs font-semibold text-muted-foreground">Studio Description & Mission *</label>
+                <Textarea placeholder="Explain your specialties, camera gear catalog, space sizes, and key historical productions completed..." className="border-yellow-200 dark:border-yellow-900/40 min-h-24 text-xs leading-relaxed" value={regForm.description} onChange={(e) => setRegForm({ ...regForm, description: e.target.value })} required />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">Established Year</label>
-                  <Input type="number" placeholder="e.g. 2018" className="border-yellow-200" value={regForm.establishedYear} onChange={(e) => setRegForm({ ...regForm, establishedYear: e.target.value })} />
+                  <label className="text-xs font-semibold text-muted-foreground">Established Year</label>
+                  <Input type="number" placeholder="e.g. 2018" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.establishedYear} onChange={(e) => setRegForm({ ...regForm, establishedYear: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">Founder Name / Managing Board</label>
-                  <Input placeholder="e.g. Gauri Shanker" className="border-yellow-200" value={regForm.founder} onChange={(e) => setRegForm({ ...regForm, founder: e.target.value })} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">Official Email *</label>
-                  <Input type="email" placeholder="e.g. contact@hub.com" className="border-yellow-200" value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} required />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">Contact Hotline *</label>
-                  <Input placeholder="e.g. +91 44 123 456" className="border-yellow-200" value={regForm.phone} onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })} required />
+                  <label className="text-xs font-semibold text-muted-foreground">Founder Name / Managing Board</label>
+                  <Input placeholder="e.g. Gauri Shanker" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.founder} onChange={(e) => setRegForm({ ...regForm, founder: e.target.value })} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">Website Address</label>
-                  <Input placeholder="e.g. https://www.studio.com" className="border-yellow-200" value={regForm.website} onChange={(e) => setRegForm({ ...regForm, website: e.target.value })} />
+                  <label className="text-xs font-semibold text-muted-foreground">Official Email *</label>
+                  <Input type="email" placeholder="e.g. contact@hub.com" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} required />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">GST Number (Optional)</label>
-                  <Input placeholder="e.g. 22AAAAA0000A1Z5" className="border-yellow-200" value={regForm.gstNumber} onChange={(e) => setRegForm({ ...regForm, gstNumber: e.target.value })} />
+                  <label className="text-xs font-semibold text-muted-foreground">Contact Hotline *</label>
+                  <Input placeholder="e.g. +91 44 123 456" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.phone} onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })} required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">Website Address</label>
+                  <Input placeholder="e.g. https://www.studio.com" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.website} onChange={(e) => setRegForm({ ...regForm, website: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">GST Number (Optional)</label>
+                  <Input placeholder="e.g. 22AAAAA0000A1Z5" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.gstNumber} onChange={(e) => setRegForm({ ...regForm, gstNumber: e.target.value })} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">Google Maps URL</label>
-                  <Input placeholder="e.g. https://maps.google.com/?q=..." className="border-yellow-200" value={regForm.mapsLocation} onChange={(e) => setRegForm({ ...regForm, mapsLocation: e.target.value })} />
+                  <label className="text-xs font-semibold text-muted-foreground">Google Maps URL</label>
+                  <Input placeholder="e.g. https://maps.google.com/?q=..." className="border-yellow-200 dark:border-yellow-900/40" value={regForm.mapsLocation} onChange={(e) => setRegForm({ ...regForm, mapsLocation: e.target.value })} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-xs font-semibold text-gray-700">Office Street Address *</label>
-                  <Input placeholder="e.g. Plot 15, Panampilly Nagar" className="border-yellow-200" value={regForm.address} onChange={(e) => setRegForm({ ...regForm, address: e.target.value })} required />
+                  <label className="text-xs font-semibold text-muted-foreground">Office Street Address *</label>
+                  <Input placeholder="e.g. Plot 15, Panampilly Nagar" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.address} onChange={(e) => setRegForm({ ...regForm, address: e.target.value })} required />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">State *</label>
+                  <label className="text-xs font-semibold text-muted-foreground">State *</label>
                   <Select value={regForm.state} onValueChange={(val) => setRegForm({ ...regForm, state: val, city: STATE_CITY_MAP[val] ? STATE_CITY_MAP[val][0] : "" })}>
-                    <SelectTrigger className="border-yellow-200">
+                    <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40">
                       <SelectValue placeholder="State" />
                     </SelectTrigger>
                     <SelectContent>
@@ -3201,9 +3201,9 @@ export default function StudiosDirectory() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">City *</label>
+                  <label className="text-xs font-semibold text-muted-foreground">City *</label>
                   <Select value={regForm.city} onValueChange={(val) => setRegForm({ ...regForm, city: val })}>
-                    <SelectTrigger className="border-yellow-200">
+                    <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40">
                       <SelectValue placeholder="City" />
                     </SelectTrigger>
                     <SelectContent>
@@ -3212,17 +3212,17 @@ export default function StudiosDirectory() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-700">Zip Code *</label>
-                  <Input placeholder="e.g. 500001" className="border-yellow-200" value={regForm.zipCode} onChange={(e) => setRegForm({ ...regForm, zipCode: e.target.value })} required />
+                  <label className="text-xs font-semibold text-muted-foreground">Zip Code *</label>
+                  <Input placeholder="e.g. 500001" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.zipCode} onChange={(e) => setRegForm({ ...regForm, zipCode: e.target.value })} required />
                 </div>
               </div>
 
-              <div className="p-4 bg-gray-50 rounded-xl space-y-4">
-                <h4 className="font-bold text-gray-800 text-xs border-b pb-1">Company Services & Timings</h4>
+              <div className="p-4 bg-muted/40 rounded-xl space-y-4">
+                <h4 className="font-bold text-foreground/90 text-xs border-b pb-1">Company Services & Timings</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <span className="text-[11px] font-bold text-gray-500">Industry Services Offered</span>
-                    <div className="h-32 overflow-y-auto border p-2 bg-white rounded-lg space-y-1.5">
+                    <span className="text-[11px] font-bold text-muted-foreground">Industry Services Offered</span>
+                    <div className="h-32 overflow-y-auto border p-2 bg-card text-card-foreground rounded-lg space-y-1.5">
                       {SERVICES.map((s) => (
                         <div key={s} className="flex items-center gap-1.5">
                           <input
@@ -3237,7 +3237,7 @@ export default function StudiosDirectory() {
                               }
                             }}
                           />
-                          <label htmlFor={`reg_s_${s}`} className="text-[10px] text-gray-700">{s}</label>
+                          <label htmlFor={`reg_s_${s}`} className="text-[10px] text-muted-foreground">{s}</label>
                         </div>
                       ))}
                     </div>
@@ -3245,12 +3245,12 @@ export default function StudiosDirectory() {
 
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-gray-700">Office Open Time</label>
-                      <Input type="time" className="border-yellow-200" value={regForm.officeOpenTime} onChange={(e) => setRegForm({ ...regForm, officeOpenTime: e.target.value })} required />
+                      <label className="text-xs font-semibold text-muted-foreground">Office Open Time</label>
+                      <Input type="time" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.officeOpenTime} onChange={(e) => setRegForm({ ...regForm, officeOpenTime: e.target.value })} required />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-gray-700">Office Close Time</label>
-                      <Input type="time" className="border-yellow-200" value={regForm.officeCloseTime} onChange={(e) => setRegForm({ ...regForm, officeCloseTime: e.target.value })} required />
+                      <label className="text-xs font-semibold text-muted-foreground">Office Close Time</label>
+                      <Input type="time" className="border-yellow-200 dark:border-yellow-900/40" value={regForm.officeCloseTime} onChange={(e) => setRegForm({ ...regForm, officeCloseTime: e.target.value })} required />
                     </div>
                   </div>
                 </div>
@@ -3258,7 +3258,7 @@ export default function StudiosDirectory() {
 
               <DialogFooter className="pt-2">
                 <Button type="button" variant="ghost" onClick={() => setIsRegisterOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-white font-extrabold px-6">
+                <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white font-extrabold px-6">
                   Register & Create Portfolio
                 </Button>
               </DialogFooter>
@@ -3276,18 +3276,18 @@ export default function StudiosDirectory() {
             <form onSubmit={handleSaveAbout} className="space-y-4 pt-2">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Studio Name *</label>
+                  <label className="font-semibold text-muted-foreground">Studio Name *</label>
                   <Input
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={editAboutForm.name}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, name: e.target.value })}
                     required
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Category *</label>
+                  <label className="font-semibold text-muted-foreground">Category *</label>
                   <Select value={editAboutForm.category} onValueChange={(val) => setEditAboutForm({ ...editAboutForm, category: val })}>
-                    <SelectTrigger className="border-yellow-200 h-9">
+                    <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 h-9">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -3299,9 +3299,9 @@ export default function StudiosDirectory() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">City *</label>
+                  <label className="font-semibold text-muted-foreground">City *</label>
                   <Select value={editAboutForm.city} onValueChange={(val) => setEditAboutForm({ ...editAboutForm, city: val })}>
-                    <SelectTrigger className="border-yellow-200 h-9">
+                    <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 h-9">
                       <SelectValue placeholder="City" />
                     </SelectTrigger>
                     <SelectContent>
@@ -3310,9 +3310,9 @@ export default function StudiosDirectory() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">State *</label>
+                  <label className="font-semibold text-muted-foreground">State *</label>
                   <Select value={editAboutForm.state} onValueChange={(val) => setEditAboutForm({ ...editAboutForm, state: val })}>
-                    <SelectTrigger className="border-yellow-200 h-9">
+                    <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 h-9">
                       <SelectValue placeholder="State" />
                     </SelectTrigger>
                     <SelectContent>
@@ -3324,17 +3324,17 @@ export default function StudiosDirectory() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">GST Number (Optional)</label>
+                  <label className="font-semibold text-muted-foreground">GST Number (Optional)</label>
                   <Input
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={editAboutForm.gstNumber}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, gstNumber: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Country</label>
+                  <label className="font-semibold text-muted-foreground">Country</label>
                   <Input
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={editAboutForm.country}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, country: e.target.value })}
                   />
@@ -3343,18 +3343,18 @@ export default function StudiosDirectory() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Email Address</label>
+                  <label className="font-semibold text-muted-foreground">Email Address</label>
                   <Input
                     type="email"
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={editAboutForm.email}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, email: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Phone Number</label>
+                  <label className="font-semibold text-muted-foreground">Phone Number</label>
                   <Input
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={editAboutForm.phone}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, phone: e.target.value })}
                   />
@@ -3363,17 +3363,17 @@ export default function StudiosDirectory() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Website URL</label>
+                  <label className="font-semibold text-muted-foreground">Website URL</label>
                   <Input
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={editAboutForm.website}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, website: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Working Hours</label>
+                  <label className="font-semibold text-muted-foreground">Working Hours</label>
                   <Input
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     placeholder="e.g. 09:00 AM - 06:00 PM"
                     value={editAboutForm.workingHours}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, workingHours: e.target.value })}
@@ -3383,17 +3383,17 @@ export default function StudiosDirectory() {
 
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Full Address</label>
+                  <label className="font-semibold text-muted-foreground">Full Address</label>
                   <Input
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={editAboutForm.address}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, address: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Google Maps URL</label>
+                  <label className="font-semibold text-muted-foreground">Google Maps URL</label>
                   <Input
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={editAboutForm.mapsLocation}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, mapsLocation: e.target.value })}
                   />
@@ -3401,8 +3401,8 @@ export default function StudiosDirectory() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-gray-700">Core Expertise (Services)</label>
-                <div className="h-32 overflow-y-auto border p-2 bg-white rounded-lg space-y-1.5 border-yellow-200">
+                <label className="font-semibold text-muted-foreground">Core Expertise (Services)</label>
+                <div className="h-32 overflow-y-auto border p-2 bg-card text-card-foreground rounded-lg space-y-1.5 border-yellow-200 dark:border-yellow-900/40">
                   {SERVICES.map((s) => (
                     <div key={s} className="flex items-center gap-1.5">
                       <input
@@ -3417,16 +3417,16 @@ export default function StudiosDirectory() {
                           }
                         }}
                       />
-                      <label htmlFor={`edit_s_${s}`} className="text-xs text-gray-700">{s}</label>
+                      <label htmlFor={`edit_s_${s}`} className="text-xs text-muted-foreground">{s}</label>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-gray-700">Studio Description *</label>
+                <label className="font-semibold text-muted-foreground">Studio Description *</label>
                 <Textarea
-                  className="border-yellow-200 min-h-24 text-xs"
+                  className="border-yellow-200 dark:border-yellow-900/40 min-h-24 text-xs"
                   value={editAboutForm.description}
                   onChange={(e) => setEditAboutForm({ ...editAboutForm, description: e.target.value })}
                   required
@@ -3435,18 +3435,18 @@ export default function StudiosDirectory() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Founder / Managing Board</label>
+                  <label className="font-semibold text-muted-foreground">Founder / Managing Board</label>
                   <Input
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={editAboutForm.founder}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, founder: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Established Year</label>
+                  <label className="font-semibold text-muted-foreground">Established Year</label>
                   <Input
                     type="number"
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={editAboutForm.establishedYear}
                     onChange={(e) => setEditAboutForm({ ...editAboutForm, establishedYear: e.target.value })}
                   />
@@ -3454,39 +3454,39 @@ export default function StudiosDirectory() {
               </div>
 
               <div className="border-t pt-4 mt-2 space-y-3">
-                <h4 className="font-bold text-gray-900 text-sm">Manage Core Crew</h4>
+                <h4 className="font-bold text-foreground text-sm">Manage Core Crew</h4>
                 <div className="flex gap-2 items-end">
                   <div className="flex-1 space-y-1.5">
-                    <label className="font-semibold text-gray-700">Crew Name</label>
+                    <label className="font-semibold text-muted-foreground">Crew Name</label>
                     <Input
                       placeholder="e.g. Stephen Spielberg"
-                      className="border-yellow-200 h-8"
+                      className="border-yellow-200 dark:border-yellow-900/40 h-8"
                       value={newCrewMember.name}
                       onChange={(e) => setNewCrewMember({ ...newCrewMember, name: e.target.value })}
                     />
                   </div>
                   <div className="flex-1 space-y-1.5">
-                    <label className="font-semibold text-gray-700">Crew Role</label>
+                    <label className="font-semibold text-muted-foreground">Crew Role</label>
                     <Input
                       placeholder="e.g. Lead Director"
-                      className="border-yellow-200 h-8"
+                      className="border-yellow-200 dark:border-yellow-900/40 h-8"
                       value={newCrewMember.role}
                       onChange={(e) => setNewCrewMember({ ...newCrewMember, role: e.target.value })}
                     />
                   </div>
-                  <Button type="button" size="sm" className="bg-yellow-500 hover:bg-yellow-600 h-8" onClick={handleAddCrewMember}>
+                  <Button type="button" size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 h-8" onClick={handleAddCrewMember}>
                     <Plus className="h-3.5 w-3.5 mr-1" />
                     <span>Add</span>
                   </Button>
                 </div>
 
                 {viewingCompany && viewingCompany.team.length > 0 && (
-                  <div className="border rounded-lg p-2 bg-gray-50 max-h-40 overflow-y-auto space-y-2 mt-2">
+                  <div className="border rounded-lg p-2 bg-muted/40 max-h-40 overflow-y-auto space-y-2 mt-2">
                     {viewingCompany.team.map((member) => (
-                      <div key={member.id} className="flex justify-between items-center bg-white p-2 rounded border border-gray-100 shadow-sm">
+                      <div key={member.id} className="flex justify-between items-center bg-card text-card-foreground p-2 rounded border border-border/60 shadow-sm">
                         <div>
-                          <div className="font-bold text-gray-800">{member.name}</div>
-                          <div className="text-gray-500 text-[10px]">{member.role}</div>
+                          <div className="font-bold text-foreground/90">{member.name}</div>
+                          <div className="text-muted-foreground text-[10px]">{member.role}</div>
                         </div>
                         <Button
                           type="button"
@@ -3505,7 +3505,7 @@ export default function StudiosDirectory() {
 
               <DialogFooter className="pt-2">
                 <Button type="button" variant="ghost" onClick={() => setIsEditAboutOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-white">Save Changes</Button>
+                <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white">Save Changes</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -3530,20 +3530,20 @@ export default function StudiosDirectory() {
             <form onSubmit={handleAddProjectDirect} className="space-y-4 pt-2">
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2 space-y-1.5">
-                  <label className="font-semibold text-gray-700">Project Title *</label>
+                  <label className="font-semibold text-muted-foreground">Project Title *</label>
                   <Input
                     placeholder="e.g. Baahubali Re-VFX"
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={newProjForm.title}
                     onChange={(e) => setNewProjForm({ ...newProjForm, title: e.target.value })}
                     required
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700">Release Year *</label>
+                  <label className="font-semibold text-muted-foreground">Release Year *</label>
                   <Input
                     placeholder="e.g. 2024"
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={newProjForm.year}
                     onChange={(e) => setNewProjForm({ ...newProjForm, year: e.target.value })}
                     required
@@ -3552,10 +3552,10 @@ export default function StudiosDirectory() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-gray-700">Studio's Role / Contribution *</label>
+                <label className="font-semibold text-muted-foreground">Studio's Role / Contribution *</label>
                 <Input
                   placeholder="e.g. Lead Colorist & CGI Post Facility"
-                  className="border-yellow-200 h-9"
+                  className="border-yellow-200 dark:border-yellow-900/40 h-9"
                   value={newProjForm.role}
                   onChange={(e) => setNewProjForm({ ...newProjForm, role: e.target.value })}
                   required
@@ -3563,17 +3563,17 @@ export default function StudiosDirectory() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-gray-700">Short Project Description</label>
+                <label className="font-semibold text-muted-foreground">Short Project Description</label>
                 <Textarea
                   placeholder="Explain production scales, technology used, cameras, and budget..."
-                  className="border-yellow-200 min-h-16 text-xs"
+                  className="border-yellow-200 dark:border-yellow-900/40 min-h-16 text-xs"
                   value={newProjForm.description}
                   onChange={(e) => setNewProjForm({ ...newProjForm, description: e.target.value })}
                 />
               </div>
 
               <div className="flex justify-end pt-2">
-                <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-white">
+                <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white">
                   {!editingProjectId && <Plus className="h-4 w-4 mr-1.5" />}
                   <span>{editingProjectId ? "Save Changes" : "Add Project Entry"}</span>
                 </Button>
@@ -3581,7 +3581,7 @@ export default function StudiosDirectory() {
             </form>
 
             <div className="flex justify-end pt-4 border-t mt-4">
-              <Button type="button" variant="outline" className="border-yellow-200" onClick={() => setIsEditProjectsOpen(false)}>Close</Button>
+              <Button type="button" variant="outline" className="border-yellow-200 dark:border-yellow-900/40" onClick={() => setIsEditProjectsOpen(false)}>Close</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -3592,14 +3592,14 @@ export default function StudiosDirectory() {
         <Dialog open={isUploadMediaOpen} onOpenChange={setIsUploadMediaOpen}>
           <DialogContent className="max-w-md p-6">
             <DialogHeader>
-              <DialogTitle className="text-lg font-bold text-gray-900">Upload Studio Media</DialogTitle>
+              <DialogTitle className="text-lg font-bold text-foreground">Upload Studio Media</DialogTitle>
               <DialogDescription>Select or drag and drop an image from your system folders/gallery to showcase in your studio media section.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-4">
-              <label className="flex flex-col items-center justify-center border-2 border-dashed border-yellow-300 rounded-xl p-8 bg-yellow-50/20 hover:bg-yellow-50/50 hover:border-yellow-400 cursor-pointer transition-all duration-200">
+              <label className="flex flex-col items-center justify-center border-2 border-dashed border-yellow-300 rounded-xl p-8 bg-yellow-50 dark:bg-yellow-950/20/20 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 dark:bg-yellow-950/20/50 hover:border-yellow-400 cursor-pointer transition-all duration-200">
                 <Upload className="h-10 w-10 text-yellow-600 mb-2 animate-pulse" />
-                <span className="text-sm font-semibold text-gray-700">Choose file or drag here</span>
-                <span className="text-xs text-gray-400 mt-1">Supports PNG, JPG, JPEG, GIF</span>
+                <span className="text-sm font-semibold text-muted-foreground">Choose file or drag here</span>
+                <span className="text-xs text-muted-foreground mt-1">Supports PNG, JPG, JPEG, GIF</span>
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -3625,18 +3625,18 @@ export default function StudiosDirectory() {
               </label>
 
               <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-gray-200"></div>
-                <span className="flex-shrink mx-4 text-gray-400 text-xs font-semibold">OR</span>
-                <div className="flex-grow border-t border-gray-200"></div>
+                <div className="flex-grow border-t border-border"></div>
+                <span className="flex-shrink mx-4 text-muted-foreground text-xs font-semibold">OR</span>
+                <div className="flex-grow border-t border-border"></div>
               </div>
 
               <form onSubmit={handleAddMediaUrl} className="space-y-4 pt-2">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-gray-700 text-xs">Image Web URL</label>
+                  <label className="font-semibold text-muted-foreground text-xs">Image Web URL</label>
                   <Input
                     type="url"
                     placeholder="e.g. https://images.unsplash.com/photo-..."
-                    className="border-yellow-200 h-9"
+                    className="border-yellow-200 dark:border-yellow-900/40 h-9"
                     value={mediaUrlInput}
                     onChange={(e) => setMediaUrlInput(e.target.value)}
                   />
@@ -3644,7 +3644,7 @@ export default function StudiosDirectory() {
 
                 <DialogFooter className="pt-2">
                   <Button type="button" variant="ghost" onClick={() => setIsUploadMediaOpen(false)}>Cancel</Button>
-                  <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold">Add Image URL</Button>
+                  <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:text-zinc-950 text-white font-bold">Add Image URL</Button>
                 </DialogFooter>
               </form>
             </div>

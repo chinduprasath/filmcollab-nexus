@@ -1,0 +1,869 @@
+[
+  {
+    "id": "TC001",
+    "title": "New user creates an account and reaches the authenticated experience",
+    "description": "This verifies that a new user can register with valid details and gain access to the authenticated app experience.",
+    "category": "User Registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /signup"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the first name field with a valid first name"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the last name field with a valid last name"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with a unique valid email address"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with a valid password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user reaches the authenticated experience"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify protected navigation is available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Post a new job from the jobs board",
+    "description": "An authenticated user can create a job posting from the jobs board and immediately see it in the listings.",
+    "category": "Job Board",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /jobs"
+      },
+      {
+        "type": "action",
+        "description": "Open the job posting dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the job title field with Lighting Technician"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the company field with Frame House Studios"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the location field with Los Angeles"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid job type"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid experience level"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid industry"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the job description field with Support the production team on set and during post-production."
+      },
+      {
+        "type": "action",
+        "description": "Submit the job posting form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new job posting appears in the jobs list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Returning user signs in and reaches the dashboard",
+    "description": "This verifies that a returning user can sign in successfully and access the dashboard overview.",
+    "category": "User Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user reaches the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify account overview metrics are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Create a job with all required details",
+    "description": "An authenticated user can complete the full job posting flow by providing all required fields and successfully creating a listing.",
+    "category": "Job Board",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /jobs"
+      },
+      {
+        "type": "action",
+        "description": "Open the job posting dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the job title field with Camera Assistant"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the company field with Silver Frame Productions"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the location field with Atlanta"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid job type"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid experience level"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid industry"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the job description field with Assist with camera setup, lens changes, and equipment organization on set."
+      },
+      {
+        "type": "action",
+        "description": "Submit the job posting form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a successful job creation confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new job appears in the jobs list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Anonymous visitor is redirected from the dashboard to sign in",
+    "description": "This verifies that a protected dashboard route sends an anonymous visitor to the sign in page.",
+    "category": "User Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sign in page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify protected dashboard content is not displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Anonymous visitor is redirected from jobs to sign in",
+    "description": "This verifies that a protected jobs route sends an anonymous visitor to the sign in page.",
+    "category": "User Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sign in page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify protected jobs content is not displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Signed-in user posts a job and sees it in the jobs list",
+    "description": "This verifies that an authenticated user can open the post job dialog, submit a new job posting, and immediately see it in the jobs list.",
+    "category": "User Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the jobs navigation item"
+      },
+      {
+        "type": "action",
+        "description": "Open the post job dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the job title field with a unique job title"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid job type"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid experience level"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid industry"
+      },
+      {
+        "type": "action",
+        "description": "Submit the job posting"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new job appears in the jobs list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the post job dialog is closed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Keep a newly posted job visible in the list",
+    "description": "After posting a job, the authenticated user can confirm the created job remains visible in the jobs list on the board.",
+    "category": "Job Board",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /jobs"
+      },
+      {
+        "type": "action",
+        "description": "Open the job posting dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the job title field with Production Coordinator"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the company field with Northlight Films"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the location field with New York"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid job type"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid experience level"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid industry"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the job description field with Coordinate schedules, call sheets, and crew communication."
+      },
+      {
+        "type": "action",
+        "description": "Submit the job posting form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the newly created job remains visible in the jobs list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Signed-in user reviews dashboard totals and profile completion",
+    "description": "This verifies that an authenticated user can open the dashboard and see application totals and profile completion status.",
+    "category": "User Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the dashboard navigation item"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify total jobs applied is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify profile completion status is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "View the jobs board as a signed-in user",
+    "description": "An authenticated user can open the jobs board and see existing job listings available to browse.",
+    "category": "Job Board",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /jobs"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify job listings are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Signed-in user creates a profile and sees completion improve",
+    "description": "This verifies that an authenticated user can create or update their professional profile and then confirm the dashboard reflects profile completion status.",
+    "category": "User Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the profile navigation item"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the profile details required to complete the profile"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile"
+      },
+      {
+        "type": "action",
+        "description": "Click the dashboard navigation item"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify profile completion status is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updated profile information is reflected"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Signed-in user navigates between dashboard, jobs, and profile",
+    "description": "This verifies that an authenticated user can move between the main signed-in pages without losing access.",
+    "category": "User Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the dashboard navigation item"
+      },
+      {
+        "type": "action",
+        "description": "Click the jobs navigation item"
+      },
+      {
+        "type": "action",
+        "description": "Click the profile navigation item"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the profile page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify protected navigation remains available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC013",
+    "title": "Signed-in user opens and closes the post job dialog",
+    "description": "This verifies that an authenticated user can access the post job dialog and dismiss it without creating a posting.",
+    "category": "User Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the jobs navigation item"
+      },
+      {
+        "type": "action",
+        "description": "Open the post job dialog"
+      },
+      {
+        "type": "action",
+        "description": "Close the post job dialog"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the jobs list remains visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no new job is created"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC014",
+    "title": "Require job details before posting",
+    "description": "An authenticated user cannot submit the posting form until the required job information is provided.",
+    "category": "Job Board",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /jobs"
+      },
+      {
+        "type": "action",
+        "description": "Open the job posting dialog"
+      },
+      {
+        "type": "action",
+        "description": "Submit the job posting form without entering details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify job posting validation errors are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "New user submits missing signup details and sees validation",
+    "description": "This verifies that the registration form blocks submission when required details are missing and shows validation feedback.",
+    "category": "User Registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /signup"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with a valid email address"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with a valid password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation errors are visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user remains on the registration page"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC016",
+    "title": "Move from job posting to browsing other app pages",
+    "description": "A signed-in user can post a job and then navigate back to other protected pages without losing access.",
+    "category": "Job Board",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /jobs"
+      },
+      {
+        "type": "action",
+        "description": "Open the job posting dialog"
+      },
+      {
+        "type": "action",
+        "description": "Close the job posting dialog"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify job posting dialog is closed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC017",
+    "title": "Signed-in user submits an incomplete job posting and sees validation",
+    "description": "This verifies that the post job form blocks submission when required job details are missing and shows validation feedback.",
+    "category": "User Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the jobs navigation item"
+      },
+      {
+        "type": "action",
+        "description": "Open the post job dialog"
+      },
+      {
+        "type": "action",
+        "description": "Submit the job posting without filling required fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation errors are visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job is not created"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC018",
+    "title": "Returning user enters an invalid password and sees an error",
+    "description": "This verifies that an incorrect password is rejected and an invalid credentials message is shown.",
+    "category": "User Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with an incorrect password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an invalid credentials message is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user remains on the sign in page"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC019",
+    "title": "Handle job title and description boundaries",
+    "description": "An authenticated user can enter unusually long or special-character text in the posting form and still submit when the fields are otherwise valid.",
+    "category": "Job Board",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /jobs"
+      },
+      {
+        "type": "action",
+        "description": "Open the job posting dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the job title field with Lead VFX Supervisor / Pipeline-Integration Specialist"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the company field with Studio 7"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the location field with Remote"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid job type"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid experience level"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid industry"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the job description field with Experience with high-volume production pipelines, cross-team coordination, and editorial workflows is required."
+      },
+      {
+        "type": "action",
+        "description": "Submit the job posting form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job posting is created successfully"
+      }
+    ],
+    "priority": "Low"
+  }
+]

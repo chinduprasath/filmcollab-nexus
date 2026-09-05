@@ -143,106 +143,105 @@ export default function NewCastingCall() {
 
   return (
     <AppLayout pageTitle="Post a Casting Call">
-      <div className="bg-gray-50">
-        <div className="max-w-4xl mx-auto p-4 md:p-8">
-          <Link to="/casting-calls" className="inline-flex items-center text-gray-500 hover:text-gray-900 mb-6 font-medium text-sm transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Casting Calls
-          </Link>
+      <div className="w-full max-w-4xl mx-auto py-2 md:py-6 px-1 sm:px-4">
+        <Link to="/casting-calls" className="inline-flex items-center text-muted-foreground hover:text-yellow-600 dark:hover:text-yellow-400 mb-6 font-medium text-sm transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Casting Calls
+        </Link>
 
-          <div className="bg-white rounded-2xl shadow-sm border p-6 md:p-10">
-            <div className="mb-8 border-b pb-6">
-              <h1 className="text-3xl font-black text-gray-900">Post a Casting Call</h1>
-              <p className="text-gray-500 mt-2">Create a detailed listing to attract the best talent for your project.</p>
-            </div>
+        <div className="w-full bg-card text-card-foreground rounded-2xl shadow-sm border p-4 sm:p-6 md:p-8 box-border overflow-hidden">
+          <div className="mb-8 border-b pb-6">
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground">Post a Casting Call</h1>
+            <p className="text-muted-foreground mt-2 text-sm">Create a detailed listing to attract the best talent for your project.</p>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8 w-full min-w-0">
+            
+            {/* Basic Info */}
+            <div className="space-y-6 min-w-0">
+              <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm">1</span>
+                Project Information
+              </h3>
               
-              {/* Basic Info */}
-              <div className="space-y-6">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm">1</span>
-                  Project Information
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="poster">Casting Call Poster / Cover Image</Label>
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer relative">
-                      <input 
-                        type="file" 
-                        id="poster"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        accept="image/*"
-                        onChange={(e) => setPosterFile(e.target.files?.[0] || null)}
-                      />
-                      {posterFile ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <ImageIcon className="w-8 h-8 text-blue-500" />
-                          <span className="font-medium text-gray-900">{posterFile.name}</span>
-                          <span className="text-xs text-gray-500">Click or drag to replace</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center gap-2">
-                          <UploadCloud className="w-8 h-8 text-gray-400" />
-                          <span className="font-medium text-gray-900">Upload Poster Image</span>
-                          <span className="text-xs text-gray-500">PNG, JPG or WEBP up to 5MB</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Casting Title *</Label>
-                    <Input id="title" placeholder="e.g. Lead Hero Required" required value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category *</Label>
-                    <CategoryDropdown
-                      value={form.category}
-                      onChange={(val) => setForm({...form, category: val || ""})}
-                      placeholder="Select Category"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 min-w-0">
+                <div className="space-y-2 md:col-span-2 min-w-0">
+                  <Label htmlFor="poster">Casting Call Poster / Cover Image</Label>
+                  <div className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center text-center bg-muted/30 hover:bg-muted/60 transition-colors cursor-pointer relative w-full">
+                    <input 
+                      type="file" 
+                      id="poster"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      accept="image/*"
+                      onChange={(e) => setPosterFile(e.target.files?.[0] || null)}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="projectName">Project Name *</Label>
-                    <Input id="projectName" placeholder="e.g. The Great Adventure" required value={form.projectName} onChange={e => setForm({...form, projectName: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="productionHouse">Production House</Label>
-                    <Input id="productionHouse" placeholder="e.g. Royal Studios" value={form.productionHouse} onChange={e => setForm({...form, productionHouse: e.target.value})} />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="projectDescription">Project Description</Label>
-                    <Textarea id="projectDescription" placeholder="Brief synopsis of the project..." className="h-24" value={form.projectDescription} onChange={e => setForm({...form, projectDescription: e.target.value})} />
+                    {posterFile ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <ImageIcon className="w-8 h-8 text-blue-500" />
+                        <span className="font-medium text-foreground">{posterFile.name}</span>
+                        <span className="text-xs text-muted-foreground">Click or drag to replace</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <UploadCloud className="w-8 h-8 text-muted-foreground" />
+                        <span className="font-medium text-foreground">Upload Poster Image</span>
+                        <span className="text-xs text-muted-foreground">PNG, JPG or WEBP up to 5MB</span>
+                      </div>
+                    )}
                   </div>
                 </div>
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="title">Casting Title *</Label>
+                  <Input id="title" placeholder="e.g. Lead Hero Required" required value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full" />
+                </div>
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="category">Category *</Label>
+                  <CategoryDropdown
+                    value={form.category}
+                    onChange={(val) => setForm({...form, category: val || ""})}
+                    placeholder="Select Category"
+                  />
+                </div>
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="projectName">Project Name *</Label>
+                  <Input id="projectName" placeholder="e.g. The Great Adventure" required value={form.projectName} onChange={e => setForm({...form, projectName: e.target.value})} className="w-full" />
+                </div>
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="productionHouse">Production House</Label>
+                  <Input id="productionHouse" placeholder="e.g. Royal Studios" value={form.productionHouse} onChange={e => setForm({...form, productionHouse: e.target.value})} className="w-full" />
+                </div>
+                <div className="space-y-2 md:col-span-2 min-w-0">
+                  <Label htmlFor="projectDescription">Project Description</Label>
+                  <Textarea id="projectDescription" placeholder="Brief synopsis of the project..." className="h-24 w-full" value={form.projectDescription} onChange={e => setForm({...form, projectDescription: e.target.value})} />
+                </div>
               </div>
+            </div>
 
-              {/* Role Info */}
-              <div className="space-y-6 pt-6 border-t">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm">2</span>
-                  Role Details
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="roleName">Role Name *</Label>
-                    <Input id="roleName" placeholder="e.g. Protagonist / Background Actor" required value={form.roleName} onChange={e => setForm({...form, roleName: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="vacancies">Number of Vacancies</Label>
-                    <Input id="vacancies" type="number" min="1" value={form.vacancies} onChange={e => setForm({...form, vacancies: e.target.value})} />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
+            {/* Role Info */}
+            <div className="space-y-6 pt-6 border-t min-w-0">
+              <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm">2</span>
+                Role Details
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 min-w-0">
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="roleName">Role Name *</Label>
+                  <Input id="roleName" placeholder="e.g. Protagonist / Background Actor" required value={form.roleName} onChange={e => setForm({...form, roleName: e.target.value})} className="w-full" />
+                </div>
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="vacancies">Number of Vacancies</Label>
+                  <Input id="vacancies" type="number" min="1" value={form.vacancies} onChange={e => setForm({...form, vacancies: e.target.value})} className="w-full" />
+                </div>
+                  <div className="space-y-2 md:col-span-2 min-w-0">
                     <Label htmlFor="roleDescription">Role Description</Label>
-                    <Textarea id="roleDescription" placeholder="Describe the character in detail..." className="h-24" value={form.roleDescription} onChange={e => setForm({...form, roleDescription: e.target.value})} />
+                    <Textarea id="roleDescription" placeholder="Describe the character in detail..." className="h-24 w-full" value={form.roleDescription} onChange={e => setForm({...form, roleDescription: e.target.value})} />
                   </div>
                   
                   {/* Requirements Grid */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="gender">Gender</Label>
                     <Select value={form.gender} onValueChange={v => setForm({...form, gender: v})}>
-                      <SelectTrigger><SelectValue placeholder="Gender" /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Gender" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Any">Any</SelectItem>
                         <SelectItem value="Male">Male</SelectItem>
@@ -251,36 +250,36 @@ export default function NewCastingCall() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label>Age Range</Label>
-                    <div className="flex gap-2 items-center">
-                      <Input type="number" placeholder="Min" value={form.ageMin} onChange={e => setForm({...form, ageMin: e.target.value})} />
-                      <span>to</span>
-                      <Input type="number" placeholder="Max" value={form.ageMax} onChange={e => setForm({...form, ageMax: e.target.value})} />
+                    <div className="flex gap-2 items-center min-w-0">
+                      <Input type="number" placeholder="Min" value={form.ageMin} onChange={e => setForm({...form, ageMin: e.target.value})} className="min-w-0 w-full" />
+                      <span className="text-sm text-muted-foreground shrink-0">to</span>
+                      <Input type="number" placeholder="Max" value={form.ageMax} onChange={e => setForm({...form, ageMax: e.target.value})} className="min-w-0 w-full" />
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="experience">Experience Required</Label>
                     <Select value={form.experience} onValueChange={v => setForm({...form, experience: v})}>
-                      <SelectTrigger><SelectValue placeholder="Experience" /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Experience" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Any">Any</SelectItem>
+                        <SelectItem value="all">Any Experience</SelectItem>
                         <SelectItem value="Fresher">Fresher</SelectItem>
                         <SelectItem value="Experienced">Experienced</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="languages">Languages (Comma separated)</Label>
-                    <Input id="languages" placeholder="e.g. Hindi, English" value={form.languages} onChange={e => setForm({...form, languages: e.target.value})} />
+                    <Input id="languages" placeholder="e.g. Hindi, English" value={form.languages} onChange={e => setForm({...form, languages: e.target.value})} className="w-full" />
                   </div>
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2 md:col-span-2 min-w-0">
                     <Label htmlFor="requirements">Specific Requirements (One per line)</Label>
-                    <Textarea id="requirements" placeholder="- Must know horse riding&#10;- Willing to travel" className="h-24" value={form.requirements} onChange={e => setForm({...form, requirements: e.target.value})} />
+                    <Textarea id="requirements" placeholder="- Must know horse riding&#10;- Willing to travel" className="h-24 w-full" value={form.requirements} onChange={e => setForm({...form, requirements: e.target.value})} />
                   </div>
-                  <div className="space-y-2 md:col-span-2 mt-4">
+                  <div className="space-y-2 md:col-span-2 mt-4 min-w-0">
                     <Label htmlFor="script">Script Attachment (Optional)</Label>
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer relative h-32">
+                    <div className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center justify-center text-center bg-muted/40 hover:bg-muted transition-colors cursor-pointer relative h-32 w-full">
                       <input 
                         type="file" 
                         id="script"
@@ -291,14 +290,14 @@ export default function NewCastingCall() {
                       {scriptFile ? (
                         <div className="flex flex-col items-center gap-2">
                           <FileText className="w-6 h-6 text-blue-500" />
-                          <span className="font-medium text-gray-900 text-sm">{scriptFile.name}</span>
-                          <span className="text-xs text-gray-500">Click or drag to replace</span>
+                          <span className="font-medium text-foreground text-sm">{scriptFile.name}</span>
+                          <span className="text-xs text-muted-foreground">Click or drag to replace</span>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-1">
-                          <UploadCloud className="w-6 h-6 text-gray-400" />
-                          <span className="font-medium text-gray-900 text-sm">Upload Script</span>
-                          <span className="text-xs text-gray-500">PDF, DOC, DOCX up to 10MB</span>
+                          <UploadCloud className="w-6 h-6 text-muted-foreground" />
+                          <span className="font-medium text-foreground text-sm">Upload Script</span>
+                          <span className="text-xs text-muted-foreground">PDF, DOC, DOCX up to 10MB</span>
                         </div>
                       )}
                     </div>
@@ -307,17 +306,17 @@ export default function NewCastingCall() {
               </div>
 
               {/* Logistics */}
-              <div className="space-y-6 pt-6 border-t">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <div className="space-y-6 pt-6 border-t min-w-0">
+                <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                   <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm">3</span>
                   Logistics & Contact
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 min-w-0">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="compensation">Compensation</Label>
                     <Select value={form.compensation} onValueChange={v => setForm({...form, compensation: v})}>
-                      <SelectTrigger><SelectValue placeholder="Select Compensation" /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Select Compensation" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Paid">Paid</SelectItem>
                         <SelectItem value="Unpaid">Unpaid</SelectItem>
@@ -325,49 +324,61 @@ export default function NewCastingCall() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="location">Primary Shoot Location</Label>
-                    <Input id="location" placeholder="e.g. Mumbai, Maharashtra" value={form.location} onChange={e => setForm({...form, location: e.target.value})} />
+                    <Input id="location" placeholder="e.g. Mumbai, Maharashtra" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className="w-full" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="shootDates">Expected Shoot Dates</Label>
-                    <Input id="shootDates" placeholder="e.g. Jan 10 - Jan 25, 2027" value={form.shootDates} onChange={e => setForm({...form, shootDates: e.target.value})} />
+                    <Input id="shootDates" placeholder="e.g. Jan 10 - Jan 25, 2027" value={form.shootDates} onChange={e => setForm({...form, shootDates: e.target.value})} className="w-full" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="lastDateToApply">Last Date to Apply</Label>
-                    <Input id="lastDateToApply" type="date" value={form.lastDateToApply} onChange={e => setForm({...form, lastDateToApply: e.target.value})} />
+                    <Input id="lastDateToApply" type="date" value={form.lastDateToApply} onChange={e => setForm({...form, lastDateToApply: e.target.value})} className="w-full" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="castingDirector">Casting Director Name</Label>
-                    <Input id="castingDirector" placeholder="John Doe" value={form.castingDirector} onChange={e => setForm({...form, castingDirector: e.target.value})} />
+                    <Input id="castingDirector" placeholder="John Doe" value={form.castingDirector} onChange={e => setForm({...form, castingDirector: e.target.value})} className="w-full" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="email">Contact Email *</Label>
-                    <Input id="email" type="email" placeholder="contact@example.com" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
+                    <Input id="email" type="email" placeholder="contact@example.com" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="auditionVenue">Audition Venue</Label>
-                    <Input id="auditionVenue" placeholder="Full address or Virtual Link" value={form.auditionVenue} onChange={e => setForm({...form, auditionVenue: e.target.value})} />
+                    <Input id="auditionVenue" placeholder="Full address or Virtual Link" value={form.auditionVenue} onChange={e => setForm({...form, auditionVenue: e.target.value})} className="w-full" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="googleMapsLink">Google Maps Link</Label>
-                    <Input id="googleMapsLink" placeholder="https://maps.google.com/..." value={form.googleMapsLink} onChange={e => setForm({...form, googleMapsLink: e.target.value})} />
+                    <Input id="googleMapsLink" placeholder="https://maps.google.com/..." value={form.googleMapsLink} onChange={e => setForm({...form, googleMapsLink: e.target.value})} className="w-full" />
                   </div>
                 </div>
               </div>
 
               {/* Submit */}
-              <div className="pt-8 border-t flex justify-end gap-4">
-                <Button variant="outline" type="button" onClick={() => navigate("/casting-calls")} disabled={isUploading}>Cancel</Button>
-                <Button type="submit" size="lg" className="px-8 font-bold gap-2" disabled={isUploading}>
-                  <Save className="w-4 h-4" /> {isUploading ? 'Publishing...' : 'Publish Casting Call'}
+              <div className="pt-6 sm:pt-8 border-t flex flex-wrap sm:flex-nowrap justify-end items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  type="button" 
+                  onClick={() => navigate("/casting-calls")} 
+                  disabled={isUploading}
+                  className="w-full sm:w-auto border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 transition-colors"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className="w-full sm:w-auto px-6 sm:px-8 font-bold gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-sm" 
+                  disabled={isUploading}
+                >
+                  <Save className="w-4 h-4 shrink-0" /> {isUploading ? 'Publishing...' : 'Publish Casting Call'}
                 </Button>
               </div>
 
             </form>
           </div>
         </div>
-      </div>
     </AppLayout>
   );
 }

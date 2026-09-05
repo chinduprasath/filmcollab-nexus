@@ -219,19 +219,19 @@ export function useCastingCalls() {
         shoot_dates: newCall.shootDates,
         audition_dates: newCall.auditionDates,
         audition_venue: newCall.auditionVenue,
-        vacancies: newCall.vacancies,
-        max_applications: newCall.maxApplications,
+        vacancies: newCall.vacancies || 1,
+        max_applications: newCall.maxApplications || null,
         date_posted: new Date().toISOString(),
-        last_date_to_apply: newCall.lastDateToApply,
-        project_description: newCall.projectDescription,
-        requirements: newCall.requirements,
-        what_to_bring: newCall.whatToBring,
-        notes: newCall.notes,
-        attachments: newCall.attachments,
-        status: newCall.status,
+        last_date_to_apply: newCall.lastDateToApply ? new Date(newCall.lastDateToApply).toISOString() : null,
+        project_description: newCall.projectDescription || "",
+        requirements: newCall.requirements || [],
+        what_to_bring: newCall.whatToBring || [],
+        notes: newCall.notes || "",
+        attachments: newCall.attachments || [],
+        status: newCall.status || "Open",
         verified: false,
-        google_maps_link: newCall.googleMapsLink,
-        script_attachment_url: newCall.scriptAttachmentUrl
+        google_maps_link: newCall.googleMapsLink || null,
+        script_attachment_url: newCall.scriptAttachmentUrl || null
       };
 
       const { data, error } = await supabase

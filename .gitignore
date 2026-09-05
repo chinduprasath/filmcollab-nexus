@@ -24,3 +24,11 @@ dist-ssr
 *.sw?
 testsprite_tests/tmp/
 testsprite_tests/tmp/config.json
+
+# Scratch and patch scripts
+*.cjs
+*.patch
+fix_*.py
+patch_*.py
+patch_*.js
+update.js

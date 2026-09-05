@@ -376,8 +376,8 @@ const Settings = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-            <p className="text-gray-600 text-sm mt-1">Manage your account settings and preferences</p>
+            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+            <p className="text-muted-foreground text-sm mt-1">Manage your account settings and preferences</p>
           </div>
           <Badge variant="outline" className="text-xs">
             <Shield className="w-3 h-3 mr-1" />
@@ -388,7 +388,7 @@ const Settings = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                     <div className="md:hidden w-full mb-4 mt-2 flex-shrink-0">
             <Select value={activeTab} onValueChange={setActiveTab}>
-              <SelectTrigger className="w-full h-10 bg-yellow-50 dark:bg-zinc-900 border border-yellow-200 dark:border-zinc-700 font-medium text-gray-900 dark:text-white shadow-sm">
+              <SelectTrigger className="w-full h-10 bg-card border border-border font-medium text-foreground shadow-sm">
                 <SelectValue placeholder="Select section" />
               </SelectTrigger>
               <SelectContent position="popper" side="bottom" align="start">
@@ -399,7 +399,7 @@ const Settings = () => {
               </SelectContent>
             </Select>
           </div>
-          <TabsList className="hidden md:grid w-full overflow-x-auto bg-yellow-50 border-yellow-200 justify-start grid-cols-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <TabsList className="hidden md:grid w-full overflow-x-auto bg-yellow-50/50 dark:bg-muted/40 border border-yellow-200/50 dark:border-border p-1 rounded-xl justify-start grid-cols-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <TabsTrigger 
               value="privacy" 
               className="flex items-center gap-2 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
@@ -447,7 +447,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <Label>Profile Visibility</Label>
-                      <p className="text-sm text-gray-500">Who can view your profile</p>
+                      <p className="text-sm text-muted-foreground">Who can view your profile</p>
                     </div>
                     <Select 
                       value={privacySettings.profileVisibility} 
@@ -464,10 +464,10 @@ const Settings = () => {
                   </div>
 
                   {privacySettings.profileVisibility === 'public' && (
-                    <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4 mt-4">
+                    <div className="flex items-center justify-between border-t border-border pt-4 mt-4">
                       <div className="space-y-1">
                         <Label>Who can view my profile</Label>
-                        <p className="text-sm text-gray-500">Restrict visibility to specific user categories</p>
+                        <p className="text-sm text-muted-foreground">Restrict visibility to specific user categories</p>
                       </div>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -507,7 +507,7 @@ const Settings = () => {
                                   return acc;
                                 }, {} as Record<string, string[]>)).map(([dept, cats]) => (
                                   <div key={dept} className="mb-2">
-                                    <div className="px-2 py-1 text-xs font-bold text-gray-500 uppercase tracking-wider">{dept}</div>
+                                    <div className="px-2 py-1 text-xs font-bold text-muted-foreground uppercase tracking-wider">{dept}</div>
                                     {cats.map(cat => (
                                       <label key={cat} className="flex items-center gap-2 rounded hover:bg-muted p-2 cursor-pointer text-sm ml-2">
                                         <Checkbox 
@@ -544,7 +544,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Show Email Address</Label>
-                          <p className="text-sm text-gray-500">Display email on your profile</p>
+                          <p className="text-sm text-muted-foreground">Display email on your profile</p>
                         </div>
                         <Switch
                           checked={privacySettings.showEmail}
@@ -554,7 +554,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Show Phone Number</Label>
-                          <p className="text-sm text-gray-500">Display phone on your profile</p>
+                          <p className="text-sm text-muted-foreground">Display phone on your profile</p>
                         </div>
                         <Switch
                           checked={privacySettings.showPhone}
@@ -564,7 +564,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Show Location</Label>
-                          <p className="text-sm text-gray-500">Display location on your profile</p>
+                          <p className="text-sm text-muted-foreground">Display location on your profile</p>
                         </div>
                         <Switch
                           checked={privacySettings.showLocation}
@@ -574,7 +574,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Show Birthday</Label>
-                          <p className="text-sm text-gray-500">Display birthday on your profile</p>
+                          <p className="text-sm text-muted-foreground">Display birthday on your profile</p>
                         </div>
                         <Switch
                           checked={privacySettings.showBirthday}
@@ -592,7 +592,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Allow Messages From</Label>
-                          <p className="text-sm text-gray-500">Who can send you messages</p>
+                          <p className="text-sm text-muted-foreground">Who can send you messages</p>
                         </div>
                         <Select 
                           value={privacySettings.allowMessages} 
@@ -611,7 +611,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Allow Connection Requests</Label>
-                          <p className="text-sm text-gray-500">Who can send connection requests</p>
+                          <p className="text-sm text-muted-foreground">Who can send connection requests</p>
                         </div>
                         <Select 
                           value={privacySettings.allowConnectionRequests} 
@@ -639,7 +639,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Allow Profile Views</Label>
-                          <p className="text-sm text-gray-500">Let me know when someone opens my profile</p>
+                          <p className="text-sm text-muted-foreground">Let me know when someone opens my profile</p>
                         </div>
                         <Switch
                           checked={privacySettings.allowProfileViews}
@@ -682,7 +682,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Email Notifications</Label>
-                          <p className="text-sm text-gray-500">Receive notifications via email</p>
+                          <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                         </div>
                         <Switch
                           checked={notificationSettings.emailNotifications}
@@ -692,7 +692,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Push Notifications</Label>
-                          <p className="text-sm text-gray-500">Receive push notifications in browser</p>
+                          <p className="text-sm text-muted-foreground">Receive push notifications in browser</p>
                         </div>
                         <Switch
                           checked={notificationSettings.pushNotifications}
@@ -702,7 +702,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>SMS Notifications</Label>
-                          <p className="text-sm text-gray-500">Receive notifications via SMS</p>
+                          <p className="text-sm text-muted-foreground">Receive notifications via SMS</p>
                         </div>
                         <Switch
                           checked={notificationSettings.smsNotifications}
@@ -720,7 +720,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>New Messages</Label>
-                          <p className="text-sm text-gray-500">Get notified about new messages</p>
+                          <p className="text-sm text-muted-foreground">Get notified about new messages</p>
                         </div>
                         <Switch
                           checked={notificationSettings.newMessages}
@@ -730,7 +730,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Connection Requests</Label>
-                          <p className="text-sm text-gray-500">Get notified about connection requests</p>
+                          <p className="text-sm text-muted-foreground">Get notified about connection requests</p>
                         </div>
                         <Switch
                           checked={notificationSettings.connectionRequests}
@@ -740,7 +740,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Project Invites</Label>
-                          <p className="text-sm text-gray-500">Get notified about project invitations</p>
+                          <p className="text-sm text-muted-foreground">Get notified about project invitations</p>
                         </div>
                         <Switch
                           checked={notificationSettings.projectInvites}
@@ -750,7 +750,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Job Alerts</Label>
-                          <p className="text-sm text-gray-500">Get notified about relevant job opportunities</p>
+                          <p className="text-sm text-muted-foreground">Get notified about relevant job opportunities</p>
                         </div>
                         <Switch
                           checked={notificationSettings.jobAlerts}
@@ -837,7 +837,7 @@ const Settings = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="font-medium">Change Password</h4>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           Last changed: {new Date(securitySettings.passwordLastChanged).toLocaleDateString()}
                         </p>
                       </div>

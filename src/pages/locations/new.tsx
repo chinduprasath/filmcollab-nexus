@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,21 +13,26 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { State, City } from "country-state-city";
 
-const TOTAL_STEPS = 6;
 
 export default function NewLocation() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [currentStep, setCurrentStep] = useState(1);
+    const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isCustomState, setIsCustomState] = useState(false);
+  const [isCustomCity, setIsCustomCity] = useState(false);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   const [timingList, setTimingList] = useState<{from: string, to: string, days: string[]}[]>([
     { from: "", to: "", days: [] }
   ]);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [existingMedia, setExistingMedia] = useState<string[]>([]);
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   const toggleDay = (index: number, day: string) => {
@@ -63,6 +68,7 @@ export default function NewLocation() {
     city: "",
     landmark: "",
     address: "",
+    mapUrl: "",
     priceHour: "",
     priceDay: "",
     timings: "",
@@ -85,22 +91,84 @@ export default function NewLocation() {
       }
     };
     fetchPropertyTypes();
-  }, []);
+
+    const fetchLocationData = async () => {
+      if (!editId) return;
+      try {
+        const { data, error } = await supabase.from('shooting_locations').select('*').eq('id', editId).single();
+        if (error) throw error;
+        if (data) {
+          setIsEditing(true);
+          setFormData({
+            name: data.name || "",
+            type: data.type || "",
+            description: data.description || "",
+            country: data.country || "India",
+            state: data.state || "",
+            city: data.city || "",
+            landmark: data.landmark || "",
+            address: data.address || "",
+            mapUrl: data.map_url || "",
+            priceHour: data.price_hour?.toString() || "",
+            priceDay: data.price?.toString() || "", 
+            timings: "", 
+            instructions: data.instructions || "",
+            contactName: data.owner_name || "",
+            phone: data.phone || "",
+            email: data.email || "",
+            securityDeposit: data.security_deposit?.toString() || ""
+          });
+
+          // Parse timings JSON
+          if (data.media_urls && data.media_urls.length > 0) {
+            setExistingMedia(data.media_urls);
+          } else if (data.image_url) {
+            setExistingMedia([data.image_url]);
+          }
+          if (data.timings) {
+            try {
+              const parsedTimings = typeof data.timings === 'string' ? JSON.parse(data.timings) : data.timings;
+              if (Array.isArray(parsedTimings) && parsedTimings.length > 0) {
+                setTimingList(parsedTimings);
+              }
+            } catch(e) {
+              console.error('Failed to parse timings', e);
+            }
+          }
+
+          // Check if state/city is custom
+          const stateObj = State.getStatesOfCountry('IN').find(s => s.name === data.state);
+          if (data.state && !stateObj) setIsCustomState(true);
+          if (data.city && stateObj) {
+            const cityObj = City.getCitiesOfState('IN', stateObj.isoCode).find(c => c.name === data.city);
+            if (!cityObj) setIsCustomCity(true);
+          } else if (data.city && !stateObj) {
+            setIsCustomCity(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching location to edit", err);
+      }
+    };
+    fetchLocationData();
+  }, [editId]);
+
+  const indianStates = useMemo(() => State.getStatesOfCountry('IN'), []);
+  const availableCities = useMemo(() => {
+    if (isCustomState) return [];
+    const stateObj = indianStates.find(s => s.name === formData.state);
+    return stateObj ? City.getCitiesOfState('IN', stateObj.isoCode) : [];
+  }, [formData.state, isCustomState, indianStates]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
-  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
-
+    
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentStep < TOTAL_STEPS) {
-      nextStep();
-      return;
-    }
+    
     
     if (!user) {
       toast({
@@ -132,29 +200,55 @@ export default function NewLocation() {
         }
       }
 
-      const { error } = await supabase
-        .from('shooting_locations')
-        .insert({
+      const finalMediaUrls = [...existingMedia, ...uploadedUrls];
+      
+      const locationData = {
           name: formData.name,
           type: formData.type,
           city: formData.city,
           state: formData.state,
+          country: formData.country,
+          landmark: formData.landmark,
+          address: formData.address,
+          map_url: formData.mapUrl,
           price: Number(formData.priceDay) || 0,
+          price_hour: Number(formData.priceHour) || null,
+          security_deposit: Number(formData.securityDeposit) || null,
           price_type: 'Per Day', 
           description: formData.description,
           instructions: formData.instructions,
           timings: JSON.stringify(timingList),
-          image_url: uploadedUrls.length > 0 ? uploadedUrls[0] : 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800', 
-          media_urls: uploadedUrls.length > 0 ? uploadedUrls : null,
+          image_url: finalMediaUrls.length > 0 ? finalMediaUrls[0] : (isEditing ? null : 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800'), 
+          media_urls: finalMediaUrls.length > 0 ? finalMediaUrls : null,
           owner_name: formData.contactName || user.email?.split('@')[0] || 'Unknown Owner',
+          phone: formData.phone,
+          email: formData.email,
           created_by: user.id
-        });
+        };
+        
+              
+      let error;
+      console.log("PAYLOAD TO SUPABASE:", locationData);
+      if (isEditing && editId) {
+        // Update existing
+        const { error: updateError } = await supabase
+          .from('shooting_locations')
+          .update(locationData)
+          .eq('id', editId);
+        error = updateError;
+      } else {
+        // Insert new
+        const { error: insertError } = await supabase
+          .from('shooting_locations')
+          .insert(locationData);
+        error = insertError;
+      }
 
       if (error) throw error;
 
       toast({
-        title: "Listing Created!",
-        description: "Your property has been successfully listed.",
+        title: isEditing ? "Listing Updated!" : "Listing Created!",
+        description: isEditing ? "Your property has been successfully updated." : "Your property has been successfully listed.",
       });
       navigate("/locations");
     } catch (error: any) {
@@ -180,22 +274,16 @@ export default function NewLocation() {
           </Button>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">List Your Property</h1>
-            <p className="text-gray-500 text-sm md:text-base">Step {currentStep} of {TOTAL_STEPS}</p>
+            {isEditing ? <p className="text-muted-foreground text-sm md:text-base">Update your property details below.</p> : <p className="text-muted-foreground text-sm md:text-base">Fill in the details below to list your property.</p>}
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-          <div 
-            className="bg-yellow-600 h-full transition-all duration-300 ease-in-out" 
-            style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
-          />
-        </div>
+
 
         <form onSubmit={handleSubmit} className="space-y-6 mt-6">
           
           {/* STEP 1: Basic Information */}
-          {currentStep === 1 && (
+          
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
@@ -213,7 +301,7 @@ export default function NewLocation() {
                     <SelectTrigger id="propertyType">
                       <SelectValue placeholder="Select type..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                       {propertyTypes.length > 0 ? (
                         propertyTypes.map(type => (
                           <SelectItem key={type} value={type.toLowerCase()}>{type}</SelectItem>
@@ -245,10 +333,9 @@ export default function NewLocation() {
                 </div>
               </CardContent>
             </Card>
-          )}
 
           {/* STEP 2: Location Details */}
-          {currentStep === 2 && (
+          
             <Card>
               <CardHeader>
                 <CardTitle>Location Details</CardTitle>
@@ -258,31 +345,99 @@ export default function NewLocation() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="country">Country <span className="text-red-500">*</span></Label>
-                    <Input id="country" value={formData.country} onChange={handleInputChange} defaultValue="India" required />
+                    <Select value="India" disabled>
+                      <SelectTrigger><SelectValue placeholder="India" /></SelectTrigger>
+                      <SelectContent position="popper" side="bottom" avoidCollisions={false}><SelectItem value="India">India</SelectItem></SelectContent>
+                    </Select>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex flex-col">
                     <Label htmlFor="state">State <span className="text-red-500">*</span></Label>
-                    <Input id="state" value={formData.state} onChange={handleInputChange} placeholder="e.g. Maharashtra" required />
+                    <Select 
+                      value={isCustomState ? 'other' : (formData.state || '')} 
+                      onValueChange={(val) => {
+                        if (val === 'other') {
+                          setIsCustomState(true);
+                          setFormData(prev => ({ ...prev, state: '', city: '' }));
+                        } else {
+                          setIsCustomState(false);
+                          setFormData(prev => ({ ...prev, state: val, city: '' }));
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select State" />
+                      </SelectTrigger>
+                      <SelectContent position="popper" side="bottom" avoidCollisions={false}>
+                        {indianStates.map(s => (
+                          <SelectItem key={s.isoCode} value={s.name}>{s.name}</SelectItem>
+                        ))}
+                        <SelectItem value="other">Other (Enter manually)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {isCustomState && (
+                      <Input 
+                        placeholder="Enter state manually" 
+                        value={formData.state}
+                        onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
+                        className="mt-2"
+                        required
+                      />
+                    )}
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex flex-col">
                     <Label htmlFor="city">City <span className="text-red-500">*</span></Label>
-                    <Input id="city" value={formData.city} onChange={handleInputChange} placeholder="e.g. Mumbai" required />
+                    <Select 
+                      value={isCustomCity ? 'other' : (formData.city || '')} 
+                      onValueChange={(val) => {
+                        if (val === 'other') {
+                          setIsCustomCity(true);
+                          setFormData(prev => ({ ...prev, city: '' }));
+                        } else {
+                          setIsCustomCity(false);
+                          setFormData(prev => ({ ...prev, city: val }));
+                        }
+                      }}
+                      disabled={!formData.state && !isCustomState}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select City" />
+                      </SelectTrigger>
+                      <SelectContent position="popper" side="bottom" avoidCollisions={false}>
+                        {availableCities.map(c => (
+                          <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                        ))}
+                        <SelectItem value="other">Other (Enter manually)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {isCustomCity && (
+                      <Input 
+                        placeholder="Enter city manually" 
+                        value={formData.city}
+                        onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                        className="mt-2"
+                        required
+                      />
+                    )}
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex flex-col">
                     <Label htmlFor="landmark">Landmark <span className="text-red-500">*</span></Label>
-                    <Input id="landmark" value={formData.landmark} onChange={handleInputChange} placeholder="Nearest landmark" required />
+                    <Input id="landmark" name="landmark" value={formData.landmark} onChange={handleInputChange} placeholder="Nearest landmark" required />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">Full Address <span className="text-red-500">*</span></Label>
                   <Textarea id="address" value={formData.address} onChange={handleInputChange} placeholder="Complete street address" required />
                 </div>
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="mapUrl">Google Maps Link</Label>
+                  <Input id="mapUrl" value={formData.mapUrl} onChange={handleInputChange} placeholder="https://maps.google.com/..." />
+                  <p className="text-xs text-muted-foreground">Paste the URL from Google Maps so crews can easily find your location.</p>
+                </div>
               </CardContent>
             </Card>
-          )}
 
           {/* STEP 3: Pricing */}
-          {currentStep === 3 && (
+          
             <Card>
               <CardHeader>
                 <CardTitle>Pricing</CardTitle>
@@ -309,10 +464,9 @@ export default function NewLocation() {
                 </div>
               </CardContent>
             </Card>
-          )}
 
           {/* STEP 4: Timings & Instructions */}
-          {currentStep === 4 && (
+          
             <Card>
               <CardHeader>
                 <CardTitle>Timings & Instructions</CardTitle>
@@ -322,7 +476,7 @@ export default function NewLocation() {
                 <div className="space-y-4">
                   <Label>Availability Timings <span className="text-red-500">*</span></Label>
                   {timingList.map((timing, index) => (
-                    <div key={index} className="flex flex-wrap items-end gap-3 p-3 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-50/50 dark:bg-gray-900/50">
+                    <div key={index} className="flex flex-wrap items-end gap-3 p-3 border border-border dark:border-gray-800 rounded-lg bg-muted/50/50 dark:bg-gray-900/50">
                       
                       <div className="space-y-1.5 flex-1 min-w-[120px]">
                         <Label className="text-xs">From</Label>
@@ -332,7 +486,7 @@ export default function NewLocation() {
                           setTimingList(newTimings);
                         }}>
                           <SelectTrigger className="h-9"><SelectValue placeholder="Start Time" /></SelectTrigger>
-                          <SelectContent>
+                          <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                             {Array.from({length: 24}).map((_, i) => {
                               const hour = i % 12 || 12;
                               const ampm = i < 12 ? 'AM' : 'PM';
@@ -351,7 +505,7 @@ export default function NewLocation() {
                           setTimingList(newTimings);
                         }}>
                           <SelectTrigger className="h-9"><SelectValue placeholder="End Time" /></SelectTrigger>
-                          <SelectContent>
+                          <SelectContent position="popper" side="bottom" avoidCollisions={false}>
                             {Array.from({length: 24}).map((_, i) => {
                               const hour = i % 12 || 12;
                               const ampm = i < 12 ? 'AM' : 'PM';
@@ -366,7 +520,7 @@ export default function NewLocation() {
                         <Label className="text-xs">Days</Label>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="w-full justify-between h-9 text-left font-normal border-gray-300">
+                            <Button variant="outline" className="w-full justify-between h-9 text-left font-normal border-border">
                               {timing.days.length === 0 ? <span className="text-muted-foreground">Select days...</span> : (timing.days.length === 7 ? "All Days" : `${timing.days.length} selected`)}
                               <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
                             </Button>
@@ -421,17 +575,16 @@ export default function NewLocation() {
                 </div>
               </CardContent>
             </Card>
-          )}
 
           {/* STEP 5: Media Upload */}
-          {currentStep === 5 && (
+          
             <Card>
               <CardHeader>
                 <CardTitle>Media Upload</CardTitle>
                 <CardDescription>Upload high-quality images and videos of your property.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:bg-gray-50 transition-colors relative">
+                <div className="border-2 border-dashed border-border rounded-xl p-12 text-center hover:bg-muted/50 transition-colors relative">
                   <input type="file" multiple accept="image/*,video/mp4" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => {
                     if (e.target.files) {
                       const filesArray = Array.from(e.target.files);
@@ -441,14 +594,32 @@ export default function NewLocation() {
                   <div className="mx-auto w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mb-4 pointer-events-none">
                     <Upload className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1 pointer-events-none">Click to upload or drag and drop</h3>
-                  <p className="text-gray-500 text-sm pointer-events-none">JPG, PNG, MP4 up to 50MB (Max 5 files)</p>
+                  <h3 className="text-lg font-semibold text-foreground mb-1 pointer-events-none">Click to upload or drag and drop</h3>
+                  <p className="text-muted-foreground text-sm pointer-events-none">JPG, PNG, MP4 up to 50MB (Max 5 files)</p>
                 </div>
+                {existingMedia.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm font-medium">Existing Media:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {existingMedia.map((url, i) => (
+                        <div key={i} className="relative w-24 h-24 border rounded overflow-hidden group">
+                          <img src={url} alt="Media" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Button type="button" variant="destructive" size="icon" className="h-8 w-8 rounded-full" onClick={() => setExistingMedia(prev => prev.filter((_, idx) => idx !== i))}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
                 {mediaFiles.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <p className="text-sm font-medium">Selected Files:</p>
+                    <p className="text-sm font-medium">New Files to Upload:</p>
                     {mediaFiles.map((f, i) => (
-                      <div key={i} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded border">
+                      <div key={i} className="flex justify-between items-center text-sm p-2 bg-muted/50 rounded border">
                         <span className="truncate">{f.name}</span>
                         <Button type="button" variant="ghost" size="icon" onClick={() => setMediaFiles(prev => prev.filter((_, idx) => idx !== i))} className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-100">
                            <Trash2 className="h-4 w-4" />
@@ -459,10 +630,9 @@ export default function NewLocation() {
                 )}
               </CardContent>
             </Card>
-          )}
 
           {/* STEP 6: Contact Information (Optional) */}
-          {currentStep === 6 && (
+          
             <Card>
               <CardHeader>
                 <CardTitle>Contact Information (Optional)</CardTitle>
@@ -485,28 +655,12 @@ export default function NewLocation() {
                 </div>
               </CardContent>
             </Card>
-          )}
 
           {/* Navigation Buttons */}
-          <div className="flex gap-4 justify-between border-t pt-6">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={prevStep}
-              disabled={currentStep === 1 || isSubmitting}
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" /> Back
+          <div className="flex justify-end border-t pt-6">
+            <Button type="submit" className="bg-yellow-600 dark:bg-yellow-700 hover:bg-yellow-700 dark:hover:bg-yellow-600 w-full sm:w-auto" disabled={isSubmitting}>
+               {isEditing ? "Save Changes" : "Submit Listing"}
             </Button>
-            
-            {currentStep < TOTAL_STEPS ? (
-              <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700">
-                Next <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            ) : (
-              <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={isSubmitting}>
-                {isSubmitting ? "Publishing..." : "Publish Listing"} <CheckCircle className="ml-2 h-4 w-4" />
-              </Button>
-            )}
           </div>
           
         </form>

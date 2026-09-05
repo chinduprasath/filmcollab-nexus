@@ -73,25 +73,23 @@ export default function CastingCallsPage() {
 
   return (
     <AppLayout pageTitle="Casting Calls">
-      <div className="bg-gray-50/50 min-h-full">
-        <div className="max-w-7xl mx-auto px-0 py-2 md:p-8">
-          
-          {/* Header Section */}
-          <div className="flex flex-col mb-8 gap-4">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-              <div>
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">Casting Calls</h1>
-                <p className="text-gray-500 mt-2 max-w-2xl text-sm leading-relaxed">
-                  Discover the latest auditions and casting opportunities from filmmakers, production houses, agencies, and casting directors.
-                </p>
-              </div>
+      <div className="max-w-7xl mx-auto w-full">
+        {/* Header Section */}
+        <div className="sticky -top-4 md:-top-6 z-30 bg-background border-b border-border pt-4 md:pt-6 pb-4 -mx-2.5 md:-mx-6 px-2.5 md:px-6 mb-6 flex flex-col gap-4 shadow-sm">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">Casting Calls</h1>
+              <p className="text-muted-foreground mt-1 max-w-2xl text-xs sm:text-sm leading-relaxed">
+                Discover the latest auditions and casting opportunities from filmmakers, production houses, agencies, and casting directors.
+              </p>
+            </div>
               
               <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                 <div className="relative flex-1 lg:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     placeholder="Search casting calls..." 
-                    className="pl-9 bg-white shadow-sm border-gray-200"
+                    className="pl-9 bg-card text-foreground shadow-sm border-border focus-visible:ring-yellow-500"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -99,17 +97,20 @@ export default function CastingCallsPage() {
 
                 <Sheet>
                   <SheetTrigger asChild>
-                    <Button variant="outline" className="bg-white shadow-sm gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="bg-card text-foreground border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 shadow-sm gap-2 transition-colors"
+                    >
                       <Filter className="h-4 w-4" />
                       Filters
                     </Button>
                   </SheetTrigger>
-                  <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-                    <SheetHeader className="mb-6">
+                  <SheetContent className="w-full sm:max-w-md flex flex-col p-0 max-h-screen">
+                    <SheetHeader className="p-6 border-b border-border shrink-0">
                       <SheetTitle>Filter Casting Calls</SheetTitle>
                     </SheetHeader>
                     
-                    <div className="space-y-6">
+                    <div className="space-y-6 flex-1 overflow-y-auto p-6">
                       <div className="space-y-3">
                         <Label>Category</Label>
                         <CategoryDropdown
@@ -175,17 +176,25 @@ export default function CastingCallsPage() {
                       </div>
                     </div>
 
-                    <SheetFooter className="mt-8 flex gap-3 sm:justify-between">
-                      <Button variant="outline" onClick={resetFilters} className="w-full">Reset</Button>
+                    <SheetFooter className="p-6 border-t border-border mt-auto bg-card shrink-0 flex flex-row gap-3 justify-between">
+                      <Button 
+                        variant="outline" 
+                        onClick={resetFilters} 
+                        className="w-full border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 transition-colors"
+                      >
+                        Reset
+                      </Button>
                       <SheetClose asChild>
-                        <Button className="w-full">Apply Filters</Button>
+                        <Button className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium">
+                          Apply Filters
+                        </Button>
                       </SheetClose>
                     </SheetFooter>
                   </SheetContent>
                 </Sheet>
 
                 <Link to="/casting-calls/new">
-                  <Button className="gap-2 shadow-sm whitespace-nowrap">
+                  <Button className="gap-2 shadow-sm whitespace-nowrap bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium">
                     <Plus className="h-4 w-4" />
                     Post Casting Call
                   </Button>
@@ -195,16 +204,16 @@ export default function CastingCallsPage() {
             
             {/* Tabs in Next Line */}
             {user && (
-              <div className="flex items-center bg-gray-100 rounded-lg p-1 w-fit mt-2">
+              <div className="flex items-center bg-muted rounded-lg p-1 w-fit mt-1 border border-border">
                 <button 
                   onClick={() => setShowSavedOnly(false)}
-                  className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${!showSavedOnly ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                  className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${!showSavedOnly ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   All Listings
                 </button>
                 <button 
                   onClick={() => setShowSavedOnly(true)}
-                  className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${showSavedOnly ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                  className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${showSavedOnly ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   Saved Casting Calls
                 </button>
@@ -221,11 +230,11 @@ export default function CastingCallsPage() {
               </div>
             ) : (
               <div className="text-center py-20 px-4">
-                <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <Search className="h-8 w-8 text-gray-400" />
+                <div className="bg-muted rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Search className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No casting calls found</h3>
-                <p className="text-gray-500 max-w-md mx-auto">
+                <h3 className="text-lg font-semibold text-foreground mb-2">No casting calls found</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
                   We couldn't find any casting calls matching your current filters. Try adjusting your search criteria.
                 </p>
                 <Button variant="outline" className="mt-6" onClick={resetFilters}>
@@ -247,7 +256,7 @@ export default function CastingCallsPage() {
                 >
                   Previous
                 </Button>
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-muted-foreground">
                   Page {currentPage} of {totalPages}
                 </span>
                 <Button 
@@ -264,7 +273,6 @@ export default function CastingCallsPage() {
             )}
           </div>
         </div>
-      </div>
     </AppLayout>
   );
 }

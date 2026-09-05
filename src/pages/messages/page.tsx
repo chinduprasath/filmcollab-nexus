@@ -818,7 +818,7 @@ export default function MessagesPage() {
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-64px)] grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 bg-gray-50 p-4 lg:p-6 -m-6 overflow-hidden font-sans">
+      <div className="h-[calc(100vh-64px)] grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 bg-background p-4 lg:p-6 -m-6 overflow-hidden font-sans">
         
         {/* Hidden File Input for base64 Attachment Uploads */}
         <input
@@ -835,30 +835,30 @@ export default function MessagesPage() {
         />
 
         {/* Left column: Directory Sidebar */}
-        <Card id="messages-sidebar" className={`flex flex-col overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200 ${
+        <Card id="messages-sidebar" className={`flex flex-col overflow-hidden bg-card text-card-foreground rounded-xl shadow-sm border border-border ${
           isMobileChatOpen ? "hidden lg:flex" : "flex"
         }`}>
-          <div className="p-4 border-b border-gray-100">
+          <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between mb-2">
-              <h1 className="text-xl font-bold tracking-tight text-gray-900">Messages</h1>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">Messages</h1>
             </div>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               Chat with connected film professionals
             </p>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search messages..."
                 value={convSearch}
                 onChange={(e) => setConvSearch(e.target.value)}
-                className="pl-9 h-9 border-gray-200 rounded-lg focus-visible:ring-yellow-500 text-sm"
+                className="pl-9 h-9 border-border bg-background text-foreground rounded-lg focus-visible:ring-yellow-500 text-sm"
               />
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Loader2 className="w-6 h-6 animate-spin text-yellow-500 mb-2" />
                 <span className="text-xs">Loading conversations...</span>
               </div>
@@ -874,8 +874,8 @@ export default function MessagesPage() {
                       key={c.id}
                       className={`group w-full rounded-xl p-3 flex items-start gap-3 transition-all relative ${
                         isActive 
-                          ? "bg-yellow-50/80 border-l-4 border-yellow-500" 
-                          : "hover:bg-gray-50 border-l-4 border-transparent"
+                          ? "bg-yellow-500/10 border-l-4 border-yellow-500" 
+                          : "hover:bg-muted/40 border-l-4 border-transparent"
                       }`}
                     >
                       <button
@@ -884,7 +884,7 @@ export default function MessagesPage() {
                       >
                         <div className="relative flex-shrink-0">
                           {c.avatarUrl ? (
-                            <img src={c.avatarUrl} alt={c.username} className="w-11 h-11 rounded-full object-cover border border-gray-100" />
+                            <img src={c.avatarUrl} alt={c.username} className="w-11 h-11 rounded-full object-cover border border-border" />
                           ) : (
                             <div className="w-11 h-11 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex items-center justify-center text-sm font-semibold shadow-sm">
                               {c.avatar}
@@ -893,13 +893,13 @@ export default function MessagesPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-0.5">
-                            <span className="font-semibold text-gray-900 text-sm truncate">{c.username}</span>
-                            <span className="text-[10px] text-gray-400 font-medium">
+                            <span className="font-semibold text-foreground text-sm truncate">{c.username}</span>
+                            <span className="text-[10px] text-muted-foreground font-medium">
                               {lastTs ? formatTime(lastTs) : ""}
                             </span>
                           </div>
                           <div className="flex items-center justify-between gap-2">
-                            <p className={`text-xs truncate flex-1 ${c.unread > 0 ? "text-gray-900 font-semibold" : "text-gray-500"}`}>
+                            <p className={`text-xs truncate flex-1 ${c.unread > 0 ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
                               {last}
                             </p>
                             {c.unread > 0 && (
@@ -916,8 +916,8 @@ export default function MessagesPage() {
 
                 {unifiedConversations.length === 0 && (
                   <div className="py-12 text-center">
-                    <MessageSquare className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-xs text-gray-500">No conversations found</p>
+                    <MessageSquare className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">No conversations found</p>
                   </div>
                 )}
               </>
@@ -926,17 +926,17 @@ export default function MessagesPage() {
         </Card>
 
         {/* Right column: Chat Window */}
-        <Card id="messages-chat-window" className={`flex flex-col overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200 ${
+        <Card id="messages-chat-window" className={`flex flex-col overflow-hidden bg-card text-card-foreground rounded-xl shadow-sm border border-border ${
           isMobileChatOpen ? "flex" : "hidden lg:flex"
         }`}>
           {activeConv ? (
             <>
               {/* Chat Header */}
-              <div className="border-b border-gray-100 p-4 flex items-center justify-between bg-white z-10 shadow-xs">
+              <div className="border-b border-border p-4 flex items-center justify-between bg-card z-10 shadow-xs">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setIsMobileChatOpen(false)}
-                    className="p-1 text-gray-500 hover:bg-gray-100 rounded-lg lg:hidden"
+                    className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg lg:hidden"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
@@ -955,7 +955,7 @@ export default function MessagesPage() {
                       )}
                     </div>
                     <div>
-                      <h2 className="font-bold text-gray-900 leading-tight text-sm md:text-base group-hover:text-yellow-600 transition-colors">{activeConv.username}</h2>
+                      <h2 className="font-bold text-foreground leading-tight text-sm md:text-base group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">{activeConv.username}</h2>
                     </div>
                   </div>
                 </div>
@@ -965,7 +965,7 @@ export default function MessagesPage() {
                     variant="ghost" 
                     size="icon" 
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="h-8 w-8 text-gray-400 hover:text-gray-600"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                     title="Options"
                   >
                     <MoreHorizontal className="w-4 h-4" />
@@ -974,13 +974,13 @@ export default function MessagesPage() {
                   {dropdownOpen && (
                     <>
                       <div className="fixed inset-0 z-30" onClick={() => setDropdownOpen(false)} />
-                      <div className="absolute right-0 mt-8 w-40 bg-white border border-gray-150 rounded-lg shadow-lg z-40 p-1">
+                      <div className="absolute right-0 mt-8 w-40 bg-card border border-border rounded-lg shadow-lg z-40 p-1">
                         <button
                           onClick={() => {
                             setDropdownOpen(false);
                             setReportModalOpen(true);
                           }}
-                          className="w-full text-left px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors flex items-center gap-1.5"
+                          className="w-full text-left px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors flex items-center gap-1.5"
                         >
                           ⚠️ Report User
                         </button>
@@ -991,14 +991,14 @@ export default function MessagesPage() {
               </div>
 
               {/* Chat Body messages stream */}
-              <div ref={chatBodyRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
+              <div ref={chatBodyRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
                 <div className="text-center pb-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={loadOlder}
                     disabled={loadingOlder}
-                    className="border-gray-200 text-gray-600 hover:bg-white text-xs h-7 rounded-lg"
+                    className="border-border text-foreground hover:bg-card hover:border-yellow-500 text-xs h-7 rounded-lg transition-colors"
                   >
                     {loadingOlder ? (
                       <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
@@ -1021,7 +1021,7 @@ export default function MessagesPage() {
                       <React.Fragment key={m.id}>
                         {showDateHeader && (
                           <div className="flex justify-center my-4">
-                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-white border border-gray-100 rounded-full px-2.5 py-1 shadow-2xs">
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider bg-card border border-border rounded-full px-2.5 py-1 shadow-2xs">
                               {dateStr}
                             </span>
                           </div>
@@ -1033,7 +1033,7 @@ export default function MessagesPage() {
                               className={`rounded-2xl px-4 py-2.5 text-sm shadow-2xs border ${
                                 isMe
                                   ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-transparent rounded-tr-none"
-                                  : "bg-white text-gray-800 border-gray-100 rounded-tl-none"
+                                  : "bg-card text-card-foreground border-border rounded-tl-none"
                               }`}
                             >
                               {m.type === "text" && <p className="leading-relaxed whitespace-pre-wrap">{m.content}</p>}
@@ -1043,7 +1043,7 @@ export default function MessagesPage() {
                                   <img
                                     src={m.content}
                                     alt="Uploaded file"
-                                    className="rounded-lg max-w-full max-h-60 object-cover border border-gray-100"
+                                    className="rounded-lg max-w-full max-h-60 object-cover border border-border"
                                     referrerPolicy="no-referrer"
                                   />
                                   {m.fileName && (
@@ -1093,7 +1093,7 @@ export default function MessagesPage() {
                               )}
 
                               <div className={`mt-1.5 flex items-center justify-end gap-1 text-[10px] ${
-                                isMe ? "text-yellow-100" : "text-gray-400"
+                                isMe ? "text-yellow-100" : "text-muted-foreground"
                               }`}>
                                 <span>{formatTime(m.timestamp)}</span>
                                 {isMe && (
@@ -1117,7 +1117,7 @@ export default function MessagesPage() {
                 {/* Simulated live typing notification */}
                 {isTyping && (
                   <div className="flex justify-start">
-                    <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-none px-4 py-2 text-xs text-gray-500 flex items-center gap-1.5 shadow-2xs">
+                    <div className="bg-card border border-border rounded-2xl rounded-tl-none px-4 py-2 text-xs text-muted-foreground flex items-center gap-1.5 shadow-2xs">
                       <div className="flex gap-1">
                         <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
                         <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -1132,16 +1132,16 @@ export default function MessagesPage() {
               </div>
 
               {/* Message Composer Area */}
-              <div className="border-t border-gray-100 p-4 bg-white relative">
+              <div className="border-t border-border p-4 bg-card relative">
                 
                 {/* Expandable Media / Attachment Floating Menu */}
                 {attachMenuOpen && (
-                  <div className="absolute bottom-full left-4 mb-2 bg-white border border-gray-100 rounded-xl shadow-lg p-3 grid grid-cols-2 gap-2 z-20 w-64 animate-in fade-in slide-in-from-bottom-2 duration-150">
-                    <div className="col-span-2 text-[10px] font-bold text-gray-400 uppercase mb-1">Send Local File</div>
+                  <div className="absolute bottom-full left-4 mb-2 bg-card border border-border rounded-xl shadow-lg p-3 grid grid-cols-2 gap-2 z-20 w-64 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                    <div className="col-span-2 text-[10px] font-bold text-muted-foreground uppercase mb-1">Send Local File</div>
                     
                     <button
                       onClick={() => triggerAttachmentSelection("image")}
-                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg text-xs font-medium text-gray-600 transition-all text-left"
+                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 rounded-lg text-xs font-medium text-foreground transition-all text-left"
                     >
                       <ImageIcon className="w-4 h-4 text-blue-500" />
                       Image File
@@ -1149,7 +1149,7 @@ export default function MessagesPage() {
 
                     <button
                       onClick={() => triggerAttachmentSelection("video")}
-                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg text-xs font-medium text-gray-600 transition-all text-left"
+                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 rounded-lg text-xs font-medium text-foreground transition-all text-left"
                     >
                       <VideoIcon className="w-4 h-4 text-red-500" />
                       Video File
@@ -1157,7 +1157,7 @@ export default function MessagesPage() {
 
                     <button
                       onClick={() => triggerAttachmentSelection("document")}
-                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg text-xs font-medium text-gray-600 transition-all text-left"
+                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 rounded-lg text-xs font-medium text-foreground transition-all text-left"
                     >
                       <FileText className="w-4 h-4 text-green-500" />
                       Document
@@ -1165,7 +1165,7 @@ export default function MessagesPage() {
 
                     <button
                       onClick={() => triggerAttachmentSelection("audio")}
-                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg text-xs font-medium text-gray-600 transition-all text-left"
+                      className="flex items-center gap-2 p-2 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 rounded-lg text-xs font-medium text-foreground transition-all text-left"
                     >
                       <Music className="w-4 h-4 text-purple-500" />
                       Audio File
@@ -1181,7 +1181,7 @@ export default function MessagesPage() {
                     className={`h-10 w-10 rounded-xl flex-shrink-0 transition-all ${
                       attachMenuOpen
                         ? "bg-yellow-50 border-yellow-300 text-yellow-600"
-                        : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                        : "border-border text-muted-foreground hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60"
                     }`}
                   >
                     {attachMenuOpen ? <X className="w-4 h-4" /> : <Paperclip className="w-4 h-4" />}
@@ -1196,7 +1196,7 @@ export default function MessagesPage() {
                       }
                     }}
                     placeholder={`Message ${activeConv.username}...`}
-                    className="flex-1 h-10 border-gray-200 rounded-xl focus-visible:ring-yellow-500 text-sm px-4"
+                    className="flex-1 h-10 border-border bg-background text-foreground rounded-xl focus-visible:ring-yellow-500 text-sm px-4"
                   />
 
                   <Button
@@ -1212,13 +1212,13 @@ export default function MessagesPage() {
             </>
           ) : (
             // Empty State
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-gray-50/40">
-              <div className="max-w-md p-6 bg-white border border-gray-200 rounded-2xl shadow-xs">
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-muted/20">
+              <div className="max-w-md p-6 bg-card border border-border rounded-2xl shadow-xs">
                 <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <MessageSquare className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-bold text-gray-900 mb-1">Start a Conversation</h3>
-                <p className="text-xs text-gray-500">
+                <h3 className="text-base font-bold text-foreground mb-1">Start a Conversation</h3>
+                <p className="text-xs text-muted-foreground">
                   Select a professional from the list on the left to start a professional dialogue.
                 </p>
               </div>
@@ -1230,16 +1230,16 @@ export default function MessagesPage() {
       {/* Report User Modal Popup */}
       {reportModalOpen && activeConv && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+          <Card className="w-full max-w-md bg-card text-card-foreground rounded-2xl shadow-xl overflow-hidden border border-border">
+            <div className="p-6 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2 text-red-600">
                 <span className="text-lg">⚠️</span>
-                <h3 className="font-bold text-gray-900 text-base">Report User</h3>
+                <h3 className="font-bold text-foreground text-base">Report User</h3>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-gray-600 rounded-full"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
                 onClick={() => setReportModalOpen(false)}
               >
                 <X className="w-4 h-4" />
@@ -1247,26 +1247,26 @@ export default function MessagesPage() {
             </div>
 
             <div className="p-6 space-y-4">
-              <p className="text-xs text-gray-500 leading-relaxed">
-                You are reporting <span className="font-semibold text-gray-900">{activeConv.username}</span>. Please describe the violation in detail below. Our moderation team will investigate.
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                You are reporting <span className="font-semibold text-foreground">{activeConv.username}</span>. Please describe the violation in detail below. Our moderation team will investigate.
               </p>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-700">Detailed Reason</label>
+                <label className="text-xs font-semibold text-foreground">Detailed Reason</label>
                 <textarea
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}
                   placeholder="Provide specific details about harassment, spam, or inappropriate behavior..."
-                  className="w-full min-h-[100px] p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-gray-50/50"
+                  className="w-full min-h-[100px] p-3 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-background text-foreground"
                 />
               </div>
             </div>
 
-            <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-end gap-2.5">
+            <div className="p-6 bg-card border-t border-border flex items-center justify-end gap-2.5">
               <Button
                 variant="outline"
                 onClick={() => setReportModalOpen(false)}
-                className="rounded-xl border-gray-200 text-gray-700 text-xs h-9 px-4 font-semibold"
+                className="rounded-xl border-border text-foreground hover:bg-muted text-xs h-9 px-4 font-semibold"
                 disabled={submittingReport}
               >
                 Cancel

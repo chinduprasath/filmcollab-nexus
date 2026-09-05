@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -184,56 +185,64 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 border-gray-200 dark:border-zinc-800">
+      <DialogContent className="max-w-md bg-card text-card-foreground border-border shadow-xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Add Files</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-foreground">Add Files</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className={categories.length > 0 ? "grid grid-cols-2 gap-4" : "space-y-1.5"}>
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">File Type</Label>
-              <select
+              <Label className="text-sm font-medium text-foreground">File Type</Label>
+              <Select
                 value={fileType}
-                onChange={(e) => {
-                  setFileType(e.target.value as any);
+                onValueChange={(val: any) => {
+                  setFileType(val);
                   setSelectedAddFiles([]);
                   setVideoUrl("");
                 }}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="image">Photo</option>
-                <option value="video">Video</option>
-                <option value="document">Document</option>
-                <option value="audio">Audio</option>
-              </select>
+                <SelectTrigger className="h-10 w-full bg-background border-input text-foreground focus:ring-yellow-500">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover text-popover-foreground border-border">
+                  <SelectItem value="image">Photo</SelectItem>
+                  <SelectItem value="video">Video</SelectItem>
+                  <SelectItem value="document">Document</SelectItem>
+                  <SelectItem value="audio">Audio</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {categories.length > 0 && (
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Category</Label>
-                <select
+                <Label className="text-sm font-medium text-foreground">Category</Label>
+                <Select
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  onValueChange={setSelectedCategory}
                 >
-                  {categories.map((catName, idx) => (
-                    <option key={idx} value={catName}>{catName}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-10 w-full bg-background border-input text-foreground focus:ring-yellow-500">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover text-popover-foreground border-border">
+                    {categories.map((catName, idx) => (
+                      <SelectItem key={idx} value={catName}>{catName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </div>
 
           {fileType === "video" && (
-            <div className="flex bg-gray-100 dark:bg-zinc-800 p-1 rounded-lg">
+            <div className="flex bg-muted border border-border p-1 rounded-lg">
               <button
                 type="button"
                 onClick={() => setVideoInputMode("upload")}
                 className={cn(
                   "flex-1 text-xs font-semibold py-1.5 rounded-md transition-all",
                   videoInputMode === "upload" 
-                    ? "bg-white dark:bg-zinc-700 shadow-sm text-yellow-600 dark:text-yellow-400" 
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                    ? "bg-card shadow-sm text-yellow-600 dark:text-yellow-400" 
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 Upload File
@@ -244,8 +253,8 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
                 className={cn(
                   "flex-1 text-xs font-semibold py-1.5 rounded-md transition-all",
                   videoInputMode === "link" 
-                    ? "bg-white dark:bg-zinc-700 shadow-sm text-yellow-600 dark:text-yellow-400" 
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                    ? "bg-card shadow-sm text-yellow-600 dark:text-yellow-400" 
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 Provide Link
@@ -275,8 +284,8 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
             className={cn(
               "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-2",
               isDraggingFile
-                ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20"
-                : "border-gray-300 dark:border-zinc-700 hover:border-yellow-500 dark:hover:border-yellow-500 bg-gray-50/50 dark:bg-zinc-800/50"
+                ? "border-yellow-500 bg-yellow-500/10"
+                : "border-border hover:border-yellow-500 bg-muted/20 hover:bg-muted/40"
             )}
           >
             <input
@@ -306,10 +315,10 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
             <Upload className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
             {selectedAddFiles.length > 0 ? (
               <div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                <p className="text-sm font-semibold text-foreground">
                   {selectedAddFiles.length === 1 ? selectedAddFiles[0].name : `${selectedAddFiles.length} files selected`}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-zinc-400">
+                <p className="text-xs text-muted-foreground">
                   {selectedAddFiles.length === 1 
                     ? `${(selectedAddFiles[0].size / (1024 * 1024)).toFixed(2)} MB` 
                     : `${(selectedAddFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)).toFixed(2)} MB total`}
@@ -317,7 +326,7 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
               </div>
             ) : (
               <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                <p className="text-sm font-medium text-foreground">
                   Drag and drop your {fileType} here, or <span className="text-yellow-600 dark:text-yellow-400 underline font-semibold">browse</span>
                 </p>
               </div>
@@ -327,33 +336,33 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
 
           {fileType === "video" && videoInputMode === "link" && (
             <div className="space-y-1.5">
-              <Label htmlFor="video-url" className="text-sm font-medium">Video URL (YouTube/Instagram/Facebook/Direct)</Label>
+              <Label htmlFor="video-url" className="text-sm font-medium text-foreground">Video URL (YouTube/Instagram/Facebook/Direct)</Label>
               <Input
                 id="video-url"
                 placeholder="https://..."
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
-                className="bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700"
+                className="bg-background text-foreground border-border focus-visible:ring-yellow-500"
               />
             </div>
           )}
 
           {(fileType === "document" || fileType === "audio" || fileType === "video") && (
             <div className="space-y-1.5 pt-2">
-              <Label className="text-sm font-medium">Cover Image (Thumbnail)</Label>
+              <Label className="text-sm font-medium text-foreground">Cover Image (Thumbnail)</Label>
               <div className="flex items-center gap-3">
                 <Button 
                   type="button" 
                   variant="outline" 
                   size="sm"
                   onClick={() => coverImageInputRef.current?.click()}
-                  className="border-dashed border-gray-300 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 text-xs"
+                  className="border-dashed border-border hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 text-xs text-foreground"
                 >
                   <Upload className="w-4 h-4 mr-1.5" />
                   {selectedCoverImage ? "Change Cover" : "Upload Cover Image"}
                 </Button>
                 {selectedCoverImage && (
-                  <span className="text-xs text-gray-500 max-w-[200px] truncate">
+                  <span className="text-xs text-muted-foreground max-w-[200px] truncate">
                     {selectedCoverImage.name}
                   </span>
                 )}
@@ -373,17 +382,15 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="add-file-title" className="text-sm font-medium">Title</Label>
+            <Label htmlFor="add-file-title" className="text-sm font-medium text-foreground">Title</Label>
             <Input
               id="add-file-title"
               placeholder="Enter file title"
               value={addFileTitle}
               onChange={(e) => setAddFileTitle(e.target.value)}
-              className="bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700"
+              className="bg-background text-foreground border-border focus-visible:ring-yellow-500"
             />
           </div>
-
-
 
           <div className="flex justify-end gap-2 pt-3">
             <Button
@@ -395,14 +402,14 @@ export function AddFileDialog({ open, onOpenChange, onUploadSuccess, userId }: A
                 setVideoUrl("");
                 setFileType("image");
               }}
-              className="border-gray-200 dark:border-zinc-700"
+              className="border-border text-foreground hover:bg-muted hover:border-yellow-500 transition-colors"
             >
               Cancel
             </Button>
             <Button
               onClick={handleAddFileSubmit}
               disabled={isUploadingDirectoryFile}
-              className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium"
+              className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium shadow-sm transition-all"
             >
               {isUploadingDirectoryFile ? "Uploading..." : "Upload File"}
             </Button>

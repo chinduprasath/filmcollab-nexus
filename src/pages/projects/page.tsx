@@ -880,7 +880,7 @@ export default function ProjectsPage() {
       case "ongoing": return "bg-blue-500";
       case "planning": return "bg-yellow-500";
       case "completed": return "bg-green-500";
-      default: return "bg-gray-500";
+      default: return "bg-muted-foreground";
     }
   };
 
@@ -927,12 +927,12 @@ export default function ProjectsPage() {
 
   return (
     <AppLayout pageTitle="Projects">
-      <div className="space-y-6 text-gray-900 dark:text-gray-100">
+      <div className="space-y-6 text-foreground">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div className="w-full sm:w-auto">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects</h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1 w-full">
+            <h1 className="text-3xl font-bold text-foreground">Projects</h1>
+            <p className="text-muted-foreground mt-1 w-full">
               Discover and collaborate on film and entertainment projects
             </p>
           </div>
@@ -949,15 +949,15 @@ export default function ProjectsPage() {
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex gap-2 w-full flex-1">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search projects, titles, or keywords..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-yellow-200 focus:border-yellow-500 bg-white dark:bg-background text-gray-900 dark:text-white dark:border-yellow-900/40 w-full"
+                className="pl-10 border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500 bg-background text-foreground w-full"
               />
             </div>
-            <Button variant="outline" className="shrink-0 border-yellow-200 text-gray-800 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:text-gray-300 dark:hover:bg-yellow-950/20 dark:hover:text-white" onClick={() => setShowFilters(!showFilters)}>
+            <Button variant="outline" className="shrink-0 border-yellow-200 dark:border-yellow-900/40 text-foreground hover:text-yellow-700 dark:hover:text-yellow-400 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30" onClick={() => setShowFilters(!showFilters)}>
               <Filter className="h-4 w-4 md:mr-2" />
               <span className="hidden md:inline">Filters</span>
             </Button>
@@ -965,7 +965,7 @@ export default function ProjectsPage() {
           
           <div className="hidden md:block">
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-40 bg-white dark:bg-background border-gray-200 dark:border-yellow-900/40 text-gray-900 dark:text-white">
+              <SelectTrigger className="w-40 bg-background border-border text-foreground">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -981,17 +981,17 @@ export default function ProjectsPage() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="w-full overflow-x-auto pb-2 scrollbar-none">
-            <TabsList className="inline-flex min-w-max w-full md:grid md:w-full md:grid-cols-4 bg-yellow-50/50 dark:bg-background border border-yellow-200/50 dark:border-yellow-900/30">
-              <TabsTrigger value="all" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white text-xs sm:text-sm">All Projects ({projects.length})</TabsTrigger>
-              <TabsTrigger value="joined" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white text-xs sm:text-sm">Joined ({projects.filter(p => p.is_member && p.created_by !== user?.id).length})</TabsTrigger>
-              <TabsTrigger value="created" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white text-xs sm:text-sm">Created ({projects.filter(p => p.created_by === user?.id).length})</TabsTrigger>
-              <TabsTrigger value="saved" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:text-gray-300 dark:data-[state=active]:text-white text-xs sm:text-sm">Saved ({savedProjects.length})</TabsTrigger>
+            <TabsList className="inline-flex min-w-max w-full md:grid md:w-full md:grid-cols-4 bg-yellow-50/50 dark:bg-muted/40 border border-yellow-200/50 dark:border-border">
+              <TabsTrigger value="all" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:data-[state=active]:text-white text-xs sm:text-sm">All Projects ({projects.length})</TabsTrigger>
+              <TabsTrigger value="joined" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:data-[state=active]:text-white text-xs sm:text-sm">Joined ({projects.filter(p => p.is_member && p.created_by !== user?.id).length})</TabsTrigger>
+              <TabsTrigger value="created" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:data-[state=active]:text-white text-xs sm:text-sm">Created ({projects.filter(p => p.created_by === user?.id).length})</TabsTrigger>
+              <TabsTrigger value="saved" className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-yellow-500 data-[state=active]:text-white dark:data-[state=active]:text-white text-xs sm:text-sm">Saved ({savedProjects.length})</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value={activeTab} className="space-y-4">
             <div className="flex justify-between items-center">
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-sm text-muted-foreground">
                 Showing {filteredProjects.length} of {projects.length} projects
               </p>
             </div>
@@ -1002,7 +1002,7 @@ export default function ProjectsPage() {
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
               </div>
             ) : filteredProjects.length === 0 ? (
-              <Card className="bg-white dark:bg-background border-gray-200 dark:border-gray-800">
+              <Card className="bg-card text-card-foreground border-border">
                 <CardContent className="text-center py-12">
                   <Film className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">No projects found</h3>
@@ -1018,10 +1018,10 @@ export default function ProjectsPage() {
               </Card>
             ) : (activeTab === "joined" || activeTab === "created" || activeTab === "saved") ? (
               // Table format for joined, created, and saved tabs
-              <div className="rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-background">
+              <div className="rounded-md border border-border bg-card text-card-foreground">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-b border-gray-200 dark:border-gray-800">
+                    <TableRow className="border-b border-border">
                       <TableHead>Project Title</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
@@ -1033,11 +1033,11 @@ export default function ProjectsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredProjects.map((project) => (
-                      <TableRow key={project.id} className="border-b border-gray-200 dark:border-gray-800">
+                      <TableRow key={project.id} className="border-b border-border">
                         <TableCell className="font-medium">
                           <div className="space-y-1">
                             <div 
-                              className="font-semibold cursor-pointer hover:text-primary transition-colors text-gray-900 dark:text-white"
+                              className="font-semibold cursor-pointer hover:text-primary transition-colors text-foreground"
                               onClick={() => {
                                 handleViewProjectDetails(project);
                               }}
@@ -1050,7 +1050,7 @@ export default function ProjectsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                          <div className="flex items-center gap-2 text-foreground">
                             {getTypeIcon(project.project_type)}
                             <span className="text-sm">{project.project_type}</span>
                           </div>
@@ -1058,13 +1058,13 @@ export default function ProjectsPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`}></div>
-                            <Badge variant="outline" className="text-xs capitalize border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
+                            <Badge variant="outline" className="text-xs capitalize border-border text-foreground">
                               {project.status}
                             </Badge>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                          <div className="flex items-center gap-2 text-foreground">
                             <MapPin className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">{project.location}</span>
                           </div>
@@ -1075,7 +1075,7 @@ export default function ProjectsPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                          <div className="flex items-center gap-2 text-foreground">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">{formatDate(project.created_at)}</span>
                           </div>
@@ -1136,14 +1136,14 @@ export default function ProjectsPage() {
               // Card format for "All Projects" tab
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProjects.map((project) => (
-                  <Card key={project.id} className="hover:shadow-md transition-shadow bg-white dark:bg-background border-yellow-200 dark:border-yellow-900/40">
+                  <Card key={project.id} className="hover:shadow-md transition-shadow bg-card text-card-foreground border-yellow-200 dark:border-yellow-900/40">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <CardTitle className="text-lg line-clamp-1 text-gray-900 dark:text-white">{project.title}</CardTitle>
+                          <CardTitle className="text-lg line-clamp-1 text-foreground">{project.title}</CardTitle>
                           <div className="flex items-center gap-2 mt-1">
                             {getTypeIcon(project.project_type)}
-                            <span className="text-sm text-gray-600 dark:text-gray-300">
+                            <span className="text-sm text-muted-foreground">
                               {project.project_type} • {project.category}
                             </span>
                           </div>
@@ -1197,7 +1197,7 @@ export default function ProjectsPage() {
                     </CardHeader>
                     
                     <CardContent className="space-y-4">
-                      <CardDescription className="line-clamp-2 text-gray-600 dark:text-gray-400">
+                      <CardDescription className="line-clamp-2 text-muted-foreground">
                         {project.description}
                       </CardDescription>
 
@@ -1211,7 +1211,7 @@ export default function ProjectsPage() {
                         </div>
                       )}
                       
-                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300">
+                      <div className="grid grid-cols-2 gap-4 text-sm text-foreground">
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4 text-muted-foreground" />
                           <span>{project.team_size} team members</span>
@@ -1221,7 +1221,7 @@ export default function ProjectsPage() {
                           <span>{formatDate(project.created_at)}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="font-medium text-gray-950 dark:text-white">Budget: {formatBudget(project.budget_min, project.budget_max, project.budget_currency)}</span>
+                          <span className="font-medium text-foreground">Budget: {formatBudget(project.budget_min, project.budget_max, project.budget_currency)}</span>
                         </div>
                         <div className="col-span-2">
                           <span className="text-muted-foreground">
@@ -1246,7 +1246,7 @@ export default function ProjectsPage() {
                             size="sm"
                             className={appliedProjects.includes(project.id) 
                               ? "bg-green-100 text-green-700 border border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-900/40 font-semibold opacity-100 disabled:opacity-100 cursor-default" 
-                              : "border-yellow-200 text-gray-700 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:hover:bg-yellow-950/20 dark:hover:text-white dark:text-gray-300"
+                              : "border-yellow-200 dark:border-yellow-900/40 text-foreground hover:text-yellow-700 dark:hover:text-yellow-400 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
                             }
                             onClick={() => handleJoinProject(project.id)}
                             disabled={appliedProjects.includes(project.id)}
@@ -1286,9 +1286,9 @@ export default function ProjectsPage() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Project Title</FormLabel>
+                        <FormLabel className="text-foreground">Project Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. The Silent..." className="border-yellow-200 focus:border-yellow-500" {...field} />
+                          <Input placeholder="e.g. The Silent..." className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1300,10 +1300,10 @@ export default function ProjectsPage() {
                     name="project_type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Project Type</FormLabel>
+                        <FormLabel className="text-foreground">Project Type</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
+                            <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                               <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                           </FormControl>
@@ -1326,11 +1326,11 @@ export default function ProjectsPage() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-700">Description</FormLabel>
+                      <FormLabel className="text-foreground">Description</FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="Describe your project, its vision, and what you're looking for in collaborators..."
-                          className="min-h-[100px] border-yellow-200 focus:border-yellow-500"
+                          className="min-h-[100px] border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                           {...field}
                         />
                       </FormControl>
@@ -1345,10 +1345,10 @@ export default function ProjectsPage() {
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Your Role</FormLabel>
+                        <FormLabel className="text-foreground">Your Role</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
+                            <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                               <SelectValue placeholder="Select your role" />
                             </SelectTrigger>
                           </FormControl>
@@ -1368,10 +1368,10 @@ export default function ProjectsPage() {
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Status</FormLabel>
+                        <FormLabel className="text-foreground">Status</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
+                            <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                               <SelectValue placeholder="Select status" />
                             </SelectTrigger>
                           </FormControl>
@@ -1395,9 +1395,9 @@ export default function ProjectsPage() {
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Location</FormLabel>
+                        <FormLabel className="text-foreground">Location</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Los Angeles, CA" className="border-yellow-200 focus:border-yellow-500" {...field} />
+                          <Input placeholder="e.g. Los Angeles, CA" className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1409,10 +1409,10 @@ export default function ProjectsPage() {
                     name="project_status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Project Status</FormLabel>
+                        <FormLabel className="text-foreground">Project Status</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value || "Public"}>
                           <FormControl>
-                            <SelectTrigger className="border-yellow-200 focus:border-yellow-500">
+                            <SelectTrigger className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500">
                               <SelectValue placeholder="Select project status" />
                             </SelectTrigger>
                           </FormControl>
@@ -1433,12 +1433,12 @@ export default function ProjectsPage() {
                     name="budget_min"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Budget Min (₹)</FormLabel>
+                        <FormLabel className="text-foreground">Budget Min (₹)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="e.g. 1000000"
-                            className="border-yellow-200 focus:border-yellow-500"
+                            className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                             value={field.value === 0 ? "" : field.value || ""}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -1456,12 +1456,12 @@ export default function ProjectsPage() {
                     name="budget_max"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Budget Max (₹)</FormLabel>
+                        <FormLabel className="text-foreground">Budget Max (₹)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="e.g. 5000000"
-                            className="border-yellow-200 focus:border-yellow-500"
+                            className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                             value={field.value === 0 ? "" : field.value || ""}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -1481,12 +1481,12 @@ export default function ProjectsPage() {
                     name="duration_minutes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Duration (minutes)</FormLabel>
+                        <FormLabel className="text-foreground">Duration (minutes)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="e.g. 120"
-                            className="border-yellow-200 focus:border-yellow-500"
+                            className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                             value={field.value === 0 ? "" : field.value || ""}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -1504,12 +1504,12 @@ export default function ProjectsPage() {
                     name="episodes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Episodes (for series)</FormLabel>
+                        <FormLabel className="text-foreground">Episodes (for series)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="e.g. 8"
-                            className="border-yellow-200 focus:border-yellow-500"
+                            className="border-yellow-200 dark:border-yellow-900/40 focus:border-yellow-500"
                             value={field.value === 0 ? "" : field.value || ""}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -1527,7 +1527,7 @@ export default function ProjectsPage() {
                   <Button 
                     type="button" 
                     variant="outline" 
-                    className="border-yellow-200 text-gray-700 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:text-gray-300 dark:hover:bg-yellow-950/20 dark:hover:text-white"
+                    className="border-yellow-200 dark:border-yellow-900/40 text-foreground hover:text-yellow-700 dark:hover:text-yellow-400 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
                     onClick={() => setIsCreateDialogOpen(false)}
                   >
                     Cancel
@@ -1563,9 +1563,9 @@ export default function ProjectsPage() {
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
                   {/* Mobile Sort */}
                   <div className="md:hidden space-y-2">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort By</label>
+                    <label className="text-sm font-medium text-foreground">Sort By</label>
                     <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger className="w-full bg-white dark:bg-background border-gray-200 dark:border-yellow-900/40 text-gray-900 dark:text-white">
+                      <SelectTrigger className="w-full bg-background border-border text-foreground">
                         <SelectValue placeholder="Sort by" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1655,7 +1655,7 @@ export default function ProjectsPage() {
                   <div className="pt-4 border-t">
                     <Button 
                       variant="outline" 
-                      className="w-full border-yellow-200 text-gray-700 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:text-gray-300 dark:hover:bg-yellow-950/20 dark:hover:text-white"
+                      className="w-full border-yellow-200 dark:border-yellow-900/40 text-foreground hover:text-yellow-700 dark:hover:text-yellow-400 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
                       onClick={() => setFilters({
                         projectType: "all",
                         category: "all",
@@ -1746,8 +1746,8 @@ export default function ProjectsPage() {
                         {/* Full Description */}
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Project Description</h3>
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <p className="text-gray-700 leading-relaxed">
+                          <div className="bg-muted/40 p-4 rounded-lg border border-border">
+                            <p className="text-foreground/90 leading-relaxed">
                               {selectedProject.description}
                             </p>
                           </div>
@@ -1759,7 +1759,7 @@ export default function ProjectsPage() {
                             <h3 className="font-semibold mb-3 text-lg">Project Tags</h3>
                             <div className="flex flex-wrap gap-2">
                               {selectedProject.project_tags.map((tag: string, index: number) => (
-                                <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">
+                                <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-950/50 border-yellow-200 dark:border-yellow-900/50">
                                   {tag}
                                 </Badge>
                               ))}
@@ -1782,7 +1782,7 @@ export default function ProjectsPage() {
                         {/* Requirements */}
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Requirements</h3>
-                          <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="bg-muted/40 p-4 rounded-lg border border-border">
                             <ul className="space-y-2">
                               <li className="text-sm text-muted-foreground">Contact project creator for requirements</li>
                             </ul>
@@ -1792,7 +1792,7 @@ export default function ProjectsPage() {
                         {/* Benefits */}
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Benefits & Perks</h3>
-                          <div className="bg-green-50 p-4 rounded-lg">
+                          <div className="bg-green-50/50 dark:bg-green-950/20 p-4 rounded-lg border border-green-200/50 dark:border-green-900/30">
                             <p className="text-sm text-muted-foreground">Contact project creator for benefits</p>
                           </div>
                         </div>
@@ -1801,7 +1801,7 @@ export default function ProjectsPage() {
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Project Timeline</h3>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="bg-muted/40 p-4 rounded-lg border border-border">
                               <p className="text-sm text-muted-foreground">Timeline information not available</p>
                             </div>
                           </div>
@@ -1811,13 +1811,13 @@ export default function ProjectsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                             <h3 className="font-semibold mb-3 text-lg">Target Audience</h3>
-                            <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="bg-muted/40 p-4 rounded-lg border border-border">
                               <p className="text-sm text-muted-foreground">Target audience not specified</p>
                             </div>
                           </div>
                           <div>
                             <h3 className="font-semibold mb-3 text-lg">Distribution Plan</h3>
-                            <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="bg-muted/40 p-4 rounded-lg border border-border">
                               <p className="text-sm text-muted-foreground">Distribution plan not specified</p>
                             </div>
                           </div>
@@ -1826,7 +1826,7 @@ export default function ProjectsPage() {
                         {/* Production Notes */}
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Production Notes</h3>
-                          <div className="bg-yellow-50 p-4 rounded-lg">
+                          <div className="bg-yellow-50/50 dark:bg-yellow-950/20 p-4 rounded-lg border border-yellow-200/50 dark:border-yellow-900/30">
                             <p className="text-sm text-muted-foreground">No production notes available</p>
                           </div>
                         </div>
@@ -1834,7 +1834,7 @@ export default function ProjectsPage() {
                         {/* Contact Information */}
                         <div>
                           <h3 className="font-semibold mb-3 text-lg">Contact Information</h3>
-                          <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="bg-muted/40 p-4 rounded-lg border border-border">
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Email:</span>
@@ -1900,8 +1900,8 @@ export default function ProjectsPage() {
                     {/* Full Description */}
                     <div>
                       <h3 className="font-semibold mb-3 text-lg">Project Description</h3>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="text-gray-700 leading-relaxed">
+                      <div className="bg-muted/40 p-4 rounded-lg border border-border">
+                        <p className="text-foreground/90 leading-relaxed">
                           {selectedProject.description}
                         </p>
                       </div>
@@ -1913,7 +1913,7 @@ export default function ProjectsPage() {
                         <h3 className="font-semibold mb-3 text-lg">Project Tags</h3>
                         <div className="flex flex-wrap gap-2">
                           {selectedProject.project_tags.map((tag: string, index: number) => (
-                            <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">
+                            <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-950/50 border-yellow-200 dark:border-yellow-900/50">
                               {tag}
                             </Badge>
                           ))}
@@ -1936,7 +1936,7 @@ export default function ProjectsPage() {
                     {/* Additional Details */}
                     <div>
                       <h3 className="font-semibold mb-3 text-lg">Additional Information</h3>
-                      <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="bg-muted/40 p-4 rounded-lg border border-border">
                         <p className="text-sm text-muted-foreground">Contact the project creator for more details.</p>
                       </div>
                     </div>
@@ -1959,7 +1959,7 @@ export default function ProjectsPage() {
                           Join Project
                         </Button>
                       )}
-                      <Button variant="outline" className="border-yellow-200 text-gray-700 hover:text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50 dark:border-yellow-900/40 dark:text-gray-300 dark:hover:bg-yellow-950/20 dark:hover:text-white" onClick={() => handleShareProject(selectedProject)}>
+                      <Button variant="outline" className="border-yellow-200 dark:border-yellow-900/40 text-foreground hover:text-yellow-700 dark:hover:text-yellow-400 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30" onClick={() => handleShareProject(selectedProject)}>
                         <Share2 className="w-4 h-4 mr-2" />
                         Share Project
                       </Button>

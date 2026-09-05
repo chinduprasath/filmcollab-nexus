@@ -23,9 +23,9 @@ export default function CastingCallDetails() {
 
   if (!call) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
         <h2 className="text-2xl font-bold mb-2">Casting Call Not Found</h2>
-        <p className="text-gray-500 mb-6">The casting call you're looking for doesn't exist or has been removed.</p>
+        <p className="text-muted-foreground mb-6">The casting call you're looking for doesn't exist or has been removed.</p>
         <Button onClick={() => navigate("/casting-calls")}>Back to Casting Calls</Button>
       </div>
     );
@@ -49,10 +49,10 @@ export default function CastingCallDetails() {
   const renderActionSection = () => {
     if (isOwner) {
       return (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between mt-4">
+        <div className="bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4 flex items-center justify-between mt-4">
           <div>
-            <h3 className="font-bold text-blue-900">You are the creator</h3>
-            <p className="text-xs text-blue-700">Manage your applicants below.</p>
+            <h3 className="font-bold text-blue-900 dark:text-blue-200">You are the creator</h3>
+            <p className="text-xs text-blue-700 dark:text-blue-300">Manage your applicants below.</p>
           </div>
           <Button variant="outline" size="sm">Edit Call</Button>
         </div>
@@ -65,11 +65,11 @@ export default function CastingCallDetails() {
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-blue-600" />
             <div>
-              <h3 className="font-bold text-gray-900 text-sm">Interest Submitted</h3>
-              <p className="text-xs text-gray-500">Under review.</p>
+              <h3 className="font-bold text-foreground text-sm">Interest Submitted</h3>
+              <p className="text-xs text-muted-foreground">Under review.</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={handleWithdraw}>
+          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 dark:text-red-300" onClick={handleWithdraw}>
             Withdraw
           </Button>
         </div>
@@ -78,11 +78,11 @@ export default function CastingCallDetails() {
 
     if (appStatus === "Confirmed") {
       return (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3 mt-4">
+        <div className="bg-green-50/80 dark:bg-green-950/30 border border-green-200 dark:border-green-900/40 rounded-lg p-4 flex items-center gap-3 mt-4">
           <CheckCircle2 className="w-5 h-5 text-green-600" />
           <div>
-            <h3 className="font-bold text-green-900 text-sm">Application Confirmed!</h3>
-            <p className="text-xs text-green-700">You have been selected.</p>
+            <h3 className="font-bold text-green-900 dark:text-green-200 text-sm">Application Confirmed!</h3>
+            <p className="text-xs text-green-700 dark:text-green-300">You have been selected.</p>
           </div>
         </div>
       );
@@ -90,8 +90,8 @@ export default function CastingCallDetails() {
 
     if (appStatus === "Rejected") {
       return (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
-          <h3 className="font-bold text-red-900 text-sm">Not Selected</h3>
+        <div className="bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-lg p-4 mt-4">
+          <h3 className="font-bold text-red-900 dark:text-red-200 text-sm">Not Selected</h3>
           <p className="text-xs text-red-700">Your profile wasn't a match this time.</p>
         </div>
       );
@@ -99,16 +99,16 @@ export default function CastingCallDetails() {
 
     if (call.status === "Closed" || call.status === "Applications Full") {
       return (
-        <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 mt-4">
-          <h3 className="font-bold text-gray-900 text-sm">Applications Closed</h3>
-          <p className="text-xs text-gray-500">Not accepting new applicants.</p>
+        <div className="bg-muted border border-border rounded-lg p-4 mt-4">
+          <h3 className="font-bold text-foreground text-sm">Applications Closed</h3>
+          <p className="text-xs text-muted-foreground">Not accepting new applicants.</p>
         </div>
       );
     }
 
     return (
       <div className="mt-6 border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-xs text-gray-500">Ensure your profile is up to date before expressing interest.</p>
+        <p className="text-xs text-muted-foreground">Ensure your profile is up to date before expressing interest.</p>
         <Button size="lg" className="w-full sm:w-auto text-base font-bold px-8 h-12 ml-auto" onClick={handleInterested}>
           I'm Interested
         </Button>
@@ -118,14 +118,14 @@ export default function CastingCallDetails() {
 
   return (
     <AppLayout pageTitle={call.title}>
-      <div className="bg-gray-50">
+      <div className="bg-background">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 pb-20">
-          <Link to="/casting-calls" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6 font-medium text-sm transition-colors">
+          <Link to="/casting-calls" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6 font-medium text-sm transition-colors">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Casting Calls
           </Link>
 
           {/* Top Section (Basic Info & Image) */}
-          <div className="bg-white rounded-xl shadow-sm border p-6 md:p-8 flex flex-col md:flex-row gap-8 mb-8">
+          <div className="bg-card text-card-foreground rounded-xl shadow-sm border p-6 md:p-8 flex flex-col md:flex-row gap-8 mb-8">
             {/* Left Column (Poster) */}
             <div className="w-full md:w-1/3 xl:w-1/4 shrink-0">
               <Dialog>
@@ -147,33 +147,33 @@ export default function CastingCallDetails() {
                 {call.status !== "Open" && <Badge variant="outline">{call.status}</Badge>}
               </div>
               
-              <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight mb-2">
+              <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight mb-2">
                 {call.title}
               </h1>
-              <p className="text-base md:text-lg text-gray-600 font-medium mb-1">
-                {call.projectName} <span className="mx-2 text-gray-300">•</span> {call.productionHouse}
+              <p className="text-base md:text-lg text-muted-foreground font-medium mb-1">
+                {call.projectName} <span className="mx-2 text-muted-foreground/60">•</span> {call.productionHouse}
               </p>
-              <p className="text-sm text-gray-500 mb-8">
-                Posted by <span className="font-medium text-gray-700">{call.contactPerson || call.castingDirector}</span>
+              <p className="text-sm text-muted-foreground mb-8">
+                Posted by <span className="font-medium text-muted-foreground">{call.contactPerson || call.castingDirector}</span>
               </p>
 
               {/* Quick Details Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-2">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Role</p>
-                  <p className="font-bold text-gray-900">{call.roleName}</p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Role</p>
+                  <p className="font-bold text-foreground">{call.roleName}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Location</p>
-                  <p className="font-bold text-gray-900">{call.location}</p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Location</p>
+                  <p className="font-bold text-foreground">{call.location}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Compensation</p>
-                  <p className="font-bold text-gray-900">{call.compensation}</p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Compensation</p>
+                  <p className="font-bold text-foreground">{call.compensation}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Vacancies</p>
-                  <p className="font-bold text-gray-900">{call.vacancies}</p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Vacancies</p>
+                  <p className="font-bold text-foreground">{call.vacancies}</p>
                 </div>
               </div>
 
@@ -185,24 +185,24 @@ export default function CastingCallDetails() {
           </div>
 
           {/* Bottom Section (Main Content) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-white rounded-xl shadow-sm border p-6 md:p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-card text-card-foreground rounded-xl shadow-sm border p-6 md:p-8">
                 {/* About & Requirements */}
                 <div className="space-y-8">
                   <section>
-                    <h2 className="text-xl font-bold text-gray-900 mb-3">About the Project</h2>
-                    <p className="text-gray-700 leading-relaxed">{call.projectDescription}</p>
+                    <h2 className="text-xl font-bold text-foreground mb-3">About the Project</h2>
+                    <p className="text-muted-foreground leading-relaxed">{call.projectDescription}</p>
                   </section>
                   
                   <section>
-                    <h2 className="text-xl font-bold text-gray-900 mb-3">Role Description</h2>
-                    <p className="text-gray-700 leading-relaxed">{call.roleDescription}</p>
+                    <h2 className="text-xl font-bold text-foreground mb-3">Role Description</h2>
+                    <p className="text-muted-foreground leading-relaxed">{call.roleDescription}</p>
                   </section>
 
                   <section>
-                    <h2 className="text-xl font-bold text-gray-900 mb-3">Requirements</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-3">Requirements</h2>
                     <ul className="space-y-2">
                       {call.requirements.map((req, i) => (
-                        <li key={i} className="flex gap-3 text-gray-700">
+                        <li key={i} className="flex gap-3 text-muted-foreground">
                           <span className="text-primary mt-1">•</span>
                           <span className="leading-relaxed">{req}</span>
                         </li>
@@ -212,10 +212,10 @@ export default function CastingCallDetails() {
 
                   {call.whatToBring && call.whatToBring.length > 0 && (
                     <section>
-                      <h2 className="text-xl font-bold text-gray-900 mb-3">What to Bring</h2>
+                      <h2 className="text-xl font-bold text-foreground mb-3">What to Bring</h2>
                       <ul className="space-y-2">
                         {call.whatToBring.map((item, i) => (
-                          <li key={i} className="flex gap-3 text-gray-700">
+                          <li key={i} className="flex gap-3 text-muted-foreground">
                             <span className="text-primary mt-1">•</span>
                             <span className="leading-relaxed">{item}</span>
                           </li>
@@ -227,52 +227,52 @@ export default function CastingCallDetails() {
 
                 {/* Specs & Info */}
                 <div className="space-y-8">
-                  <section className="bg-gray-50 rounded-xl p-6 border">
-                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <Users className="w-5 h-5 text-gray-500" /> Casting Profile
+                  <section className="bg-card rounded-xl p-6 border border-border">
+                    <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-muted-foreground" /> Casting Profile
                     </h3>
                     <div className="space-y-3">
-                      <div className="flex justify-between pb-2 border-b border-gray-200">
-                        <span className="text-gray-500">Gender</span>
-                        <span className="font-medium text-gray-900">{call.gender}</span>
+                      <div className="flex justify-between pb-2 border-b border-border">
+                        <span className="text-muted-foreground">Gender</span>
+                        <span className="font-medium text-foreground">{call.gender}</span>
                       </div>
-                      <div className="flex justify-between pb-2 border-b border-gray-200">
-                        <span className="text-gray-500">Age Range</span>
-                        <span className="font-medium text-gray-900">{call.ageRange[0]} - {call.ageRange[1]} years</span>
+                      <div className="flex justify-between pb-2 border-b border-border">
+                        <span className="text-muted-foreground">Age Range</span>
+                        <span className="font-medium text-foreground">{call.ageRange[0]} - {call.ageRange[1]} years</span>
                       </div>
-                      <div className="flex justify-between pb-2 border-b border-gray-200">
-                        <span className="text-gray-500">Experience</span>
-                        <span className="font-medium text-gray-900">{call.experience}</span>
+                      <div className="flex justify-between pb-2 border-b border-border">
+                        <span className="text-muted-foreground">Experience</span>
+                        <span className="font-medium text-foreground">{call.experience}</span>
                       </div>
-                      <div className="flex justify-between pb-2 border-b border-gray-200">
-                        <span className="text-gray-500">Languages</span>
-                        <span className="font-medium text-gray-900 text-right">{call.languages.join(", ")}</span>
+                      <div className="flex justify-between pb-2 border-b border-border">
+                        <span className="text-muted-foreground">Languages</span>
+                        <span className="font-medium text-foreground text-right">{call.languages.join(", ")}</span>
                       </div>
                       {call.height && (
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Height</span>
-                          <span className="font-medium text-gray-900">{call.height}</span>
+                          <span className="text-muted-foreground">Height</span>
+                          <span className="font-medium text-foreground">{call.height}</span>
                         </div>
                       )}
                     </div>
                   </section>
 
-                  <section className="bg-gray-50 rounded-xl p-6 border">
-                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-gray-500" /> Schedule
+                  <section className="bg-card rounded-xl p-6 border border-border">
+                    <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-muted-foreground" /> Schedule
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Audition Dates</p>
-                        <p className="font-medium text-gray-900">{call.auditionDates}</p>
+                        <p className="text-sm text-muted-foreground mb-1">Audition Dates</p>
+                        <p className="font-medium text-foreground">{call.auditionDates}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Shoot Dates</p>
-                        <p className="font-medium text-gray-900">{call.shootDates}</p>
+                        <p className="text-sm text-muted-foreground mb-1">Shoot Dates</p>
+                        <p className="font-medium text-foreground">{call.shootDates}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Audition Venue</p>
-                        <p className="font-medium text-gray-900">{call.auditionVenue}</p>
+                        <p className="text-sm text-muted-foreground mb-1">Audition Venue</p>
+                        <p className="font-medium text-foreground">{call.auditionVenue}</p>
                         {call.googleMapsLink && (
                           <a href={call.googleMapsLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mt-1">
                             <MapPin className="w-3 h-3" /> View on Maps <ExternalLink className="w-3 h-3" />
@@ -282,34 +282,34 @@ export default function CastingCallDetails() {
                     </div>
                   </section>
 
-                  <section className="bg-gray-50 rounded-xl p-6 border">
-                    <h3 className="font-bold text-gray-900 mb-4">Contact Info</h3>
+                  <section className="bg-card rounded-xl p-6 border border-border">
+                    <h3 className="font-bold text-foreground mb-4">Contact Info</h3>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 text-gray-700">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-                          <Users className="w-4 h-4 text-gray-600" />
+                      <div className="flex items-center gap-3 text-muted-foreground">
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
+                          <Users className="w-4 h-4 text-muted-foreground" />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Casting Director</p>
+                          <p className="text-xs text-muted-foreground">Casting Director</p>
                           <p className="font-medium">{call.castingDirector}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 text-gray-700">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-                          <Mail className="w-4 h-4 text-gray-600" />
+                      <div className="flex items-center gap-3 text-muted-foreground">
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
+                          <Mail className="w-4 h-4 text-muted-foreground" />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Email</p>
+                          <p className="text-xs text-muted-foreground">Email</p>
                           <p className="font-medium">{call.email}</p>
                         </div>
                       </div>
                       {call.phone && (
-                        <div className="flex items-center gap-3 text-gray-700">
-                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-                            <Phone className="w-4 h-4 text-gray-600" />
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
+                            <Phone className="w-4 h-4 text-muted-foreground" />
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">Phone</p>
+                            <p className="text-xs text-muted-foreground">Phone</p>
                             <p className="font-medium">{call.phone}</p>
                           </div>
                         </div>
@@ -319,15 +319,15 @@ export default function CastingCallDetails() {
 
                   {call.attachments && call.attachments.length > 0 && (
                     <section>
-                      <h3 className="font-bold text-gray-900 mb-3">Attachments</h3>
+                      <h3 className="font-bold text-foreground mb-3">Attachments</h3>
                       <div className="space-y-2">
                         {call.attachments.map((file, idx) => (
-                          <a key={idx} href={file.url} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <a key={idx} href={file.url} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors">
                             <div className="flex items-center gap-3">
-                              <FileText className="w-5 h-5 text-gray-400" />
-                              <span className="text-sm font-medium text-gray-700">{file.name}</span>
+                              <FileText className="w-5 h-5 text-muted-foreground" />
+                              <span className="text-sm font-medium text-muted-foreground">{file.name}</span>
                             </div>
-                            <span className="text-xs text-gray-400">{file.size}</span>
+                            <span className="text-xs text-muted-foreground">{file.size}</span>
                           </a>
                         ))}
                       </div>

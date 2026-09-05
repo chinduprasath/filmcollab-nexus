@@ -298,22 +298,22 @@ export default function NewIndustryHubPost() {
 
   return (
     <AppLayout>
-      <div className="bg-yellow-50/30 dark:bg-background min-h-screen p-4 md:p-8 -m-4">
+      <div className="bg-background min-h-screen p-4 md:p-8 -m-4">
         <div className="max-w-3xl mx-auto space-y-6">
           <Button 
             variant="ghost" 
             onClick={() => navigate("/industry-hub")}
-            className="mb-4 hover:bg-yellow-100 dark:hover:bg-yellow-900/20"
+            className="mb-4 text-foreground hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-950/30 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Industry Hub
           </Button>
 
-          <Card className="border-yellow-200 dark:border-yellow-900/40 shadow-sm">
-            <CardHeader className="bg-white dark:bg-background border-b border-yellow-100 dark:border-yellow-900/40 rounded-t-xl">
+          <Card className="border-yellow-200 dark:border-yellow-900/40 shadow-sm bg-card text-card-foreground">
+            <CardHeader className="bg-card border-b border-border rounded-t-xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
                 <div className="w-full sm:w-auto">
-                  <CardTitle className="text-xl sm:text-2xl text-gray-900 dark:text-white">Create New Post</CardTitle>
+                  <CardTitle className="text-xl sm:text-2xl text-foreground">Create New Post</CardTitle>
                   <CardDescription className="w-full break-words">Share news, events, or educational courses with the community.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full border border-border shrink-0 max-w-full">
@@ -325,7 +325,7 @@ export default function NewIndustryHubPost() {
             <CardContent className="pt-6 space-y-6">
               
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Post Type</label>
+                <label className="text-sm font-medium text-foreground">Post Type</label>
                 <Select value={selectedPostType} onValueChange={setSelectedPostType}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select post type" />
@@ -343,7 +343,7 @@ export default function NewIndustryHubPost() {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Title <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Title <span className="text-red-500">*</span></label>
                         <Input 
                           placeholder="Enter news title" 
                           value={formFields.newsTitle}
@@ -351,7 +351,7 @@ export default function NewIndustryHubPost() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Category <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Category <span className="text-red-500">*</span></label>
                         <Select 
                           value={formFields.newsCategory}
                           onValueChange={(val) => setFormFields(prev => ({ ...prev, newsCategory: val }))}
@@ -369,7 +369,7 @@ export default function NewIndustryHubPost() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Short Description <span className="text-red-500">*</span></label>
+                      <label className="text-sm font-medium text-foreground">Short Description <span className="text-red-500">*</span></label>
                       <Textarea 
                         placeholder="Enter a short summary for the news card..." 
                         className="min-h-[80px]"
@@ -378,8 +378,8 @@ export default function NewIndustryHubPost() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Article Content <span className="text-red-500">*</span></label>
-                      <div className="bg-white dark:bg-zinc-900 rounded-md border overflow-hidden">
+                      <label className="text-sm font-medium text-foreground">Article Content <span className="text-red-500">*</span></label>
+                      <div className="bg-background rounded-md border border-border overflow-hidden">
                         <ReactQuill 
                           theme="snow" 
                           value={formFields.newsContent} 
@@ -396,7 +396,7 @@ export default function NewIndustryHubPost() {
                 {selectedPostType === "events" && (
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Title <span className="text-red-500">*</span></label>
+                      <label className="text-sm font-medium text-foreground">Event Title <span className="text-red-500">*</span></label>
                       <Input 
                         placeholder="Enter event title" 
                         value={formFields.eventTitle}
@@ -405,7 +405,7 @@ export default function NewIndustryHubPost() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Date <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Date <span className="text-red-500">*</span></label>
                         <Input 
                           type="date" 
                           value={formFields.eventDate}
@@ -413,7 +413,7 @@ export default function NewIndustryHubPost() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Price <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Price <span className="text-red-500">*</span></label>
                         <div className="flex gap-2">
                           <Select 
                             value={formFields.eventPriceType}
@@ -440,7 +440,7 @@ export default function NewIndustryHubPost() {
                     </div>
                     
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Type</label>
+                      <label className="text-sm font-medium text-foreground">Event Type</label>
                       <Select 
                         value={formFields.eventType}
                         onValueChange={(val) => {
@@ -462,7 +462,7 @@ export default function NewIndustryHubPost() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label className="text-sm font-medium text-foreground">
                         {formFields.eventType === "Online" ? "Platform / Location" : "Location / Address"} <span className="text-red-500">*</span>
                       </label>
                       <Input 
@@ -474,7 +474,7 @@ export default function NewIndustryHubPost() {
 
                     {formFields.eventType === "In-Person" && (
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Google Maps Link (Optional)</label>
+                        <label className="text-sm font-medium text-foreground">Google Maps Link (Optional)</label>
                         <Input 
                           placeholder="https://maps.google.com/..." 
                           value={formFields.eventGoogleMapsLink}
@@ -485,7 +485,7 @@ export default function NewIndustryHubPost() {
 
                     {formFields.eventType === "Online" && (
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Meeting Link <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Meeting Link <span className="text-red-500">*</span></label>
                         <Input 
                           placeholder="https://zoom.us/j/..." 
                           value={formFields.eventMeetingLink}
@@ -495,7 +495,7 @@ export default function NewIndustryHubPost() {
                     )}
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Registration Link (Optional)</label>
+                      <label className="text-sm font-medium text-foreground">Registration Link (Optional)</label>
                       <Input 
                         placeholder="https://example.com/register" 
                         value={formFields.eventRegistrationLink}
@@ -504,7 +504,7 @@ export default function NewIndustryHubPost() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description <span className="text-red-500">*</span></label>
+                      <label className="text-sm font-medium text-foreground">Description <span className="text-red-500">*</span></label>
                       <Textarea 
                         placeholder="Enter event details and agenda..." 
                         className="min-h-[150px]"
@@ -518,7 +518,7 @@ export default function NewIndustryHubPost() {
                 {selectedPostType === "courses" && (
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Course Title <span className="text-red-500">*</span></label>
+                      <label className="text-sm font-medium text-foreground">Course Title <span className="text-red-500">*</span></label>
                       <Input 
                         placeholder="Enter course title" 
                         value={formFields.courseTitle}
@@ -527,7 +527,7 @@ export default function NewIndustryHubPost() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Duration <span className="text-red-500">*</span></label>
                         <Input 
                           placeholder="e.g., 8 weeks" 
                           value={formFields.courseDuration}
@@ -535,7 +535,7 @@ export default function NewIndustryHubPost() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Price <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Price <span className="text-red-500">*</span></label>
                         <div className="flex gap-2">
                           <Select 
                             value={formFields.coursePriceType}
@@ -562,7 +562,7 @@ export default function NewIndustryHubPost() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Level <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Level <span className="text-red-500">*</span></label>
                         <Select 
                           value={formFields.courseLevel}
                           onValueChange={(val) => setFormFields(prev => ({ ...prev, courseLevel: val }))}
@@ -578,7 +578,7 @@ export default function NewIndustryHubPost() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Category <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Category <span className="text-red-500">*</span></label>
                         <Select 
                           value={formFields.courseCategory}
                           onValueChange={(val) => setFormFields(prev => ({ ...prev, courseCategory: val }))}
@@ -598,7 +598,7 @@ export default function NewIndustryHubPost() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Instructor <span className="text-red-500">*</span></label>
+                      <label className="text-sm font-medium text-foreground">Instructor <span className="text-red-500">*</span></label>
                       <Input 
                         placeholder="Enter instructor's name" 
                         value={formFields.courseInstructor}
@@ -606,7 +606,7 @@ export default function NewIndustryHubPost() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Website Link (Optional)</label>
+                      <label className="text-sm font-medium text-foreground">Website Link (Optional)</label>
                       <Input 
                         placeholder="https://example.com/course" 
                         value={formFields.courseWebsiteLink}
@@ -614,7 +614,7 @@ export default function NewIndustryHubPost() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description <span className="text-red-500">*</span></label>
+                      <label className="text-sm font-medium text-foreground">Description <span className="text-red-500">*</span></label>
                       <Textarea 
                         placeholder="Enter course curriculum and details..." 
                         className="min-h-[150px]"
@@ -627,11 +627,11 @@ export default function NewIndustryHubPost() {
               </div>
 
             </CardContent>
-            <CardFooter className="bg-gray-50 dark:bg-zinc-900/50 rounded-b-xl border-t border-yellow-100 dark:border-yellow-900/40 p-6 flex justify-end gap-3">
+            <CardFooter className="bg-muted/30 rounded-b-xl border-t border-border p-6 flex justify-end gap-3">
               <Button 
                 variant="outline" 
                 onClick={() => navigate("/industry-hub")}
-                className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50"
+                className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
               >
                 Cancel
               </Button>

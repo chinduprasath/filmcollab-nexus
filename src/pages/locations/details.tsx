@@ -1,4 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +28,8 @@ import {
   X,
   Clock,
   AlertCircle,
-  Loader2
+  Loader2,
+  Edit
 } from "lucide-react";
 
 export default function LocationDetails() {
@@ -28,12 +38,107 @@ export default function LocationDetails() {
   const { user } = useAuth();
   
   const [location, setLocation] = useState<any>(null);
+  const [creatorName, setCreatorName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
 
   // Lightbox State
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+
+  // Modals state
+  const [isEnquireOpen, setIsEnquireOpen] = useState(false);
+  const [enquiryMessage, setEnquiryMessage] = useState('');
+  
+  const [isBookVisitOpen, setIsBookVisitOpen] = useState(false);
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [visitStartTime, setVisitStartTime] = useState('');
+  const [visitEndTime, setVisitEndTime] = useState('');
+  const [visitMessage, setVisitMessage] = useState('');
+  
+  const [isViewVisitsOpen, setIsViewVisitsOpen] = useState(false);
+  const [siteVisits, setSiteVisits] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchSiteVisits = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('property_site_visits')
+        .select('*, user:user_id(full_name, first_name, last_name, avatar_url, email, phone)')
+        .eq('location_id', id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setSiteVisits(data || []);
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Failed to load site visits');
+    }
+  };
+
+  const handleEnquire = async () => {
+    if (!user) return toast.error("Please login to send an enquiry");
+    if (!enquiryMessage.trim()) return toast.error("Message is required");
+    setIsSubmitting(true);
+    try {
+      // 1. Insert message
+      await supabase.from('messages').insert({
+        sender_id: user.id,
+        receiver_id: location.created_by,
+        content: enquiryMessage,
+        type: 'property_enquiry'
+      });
+      // 2. Insert notification
+      await supabase.from('notifications').insert({
+        user_id: location.created_by,
+        title: 'New Property Enquiry',
+        description: `Someone sent an enquiry for ${location.name}`,
+        type: 'message'
+      });
+      toast.success("Enquiry sent successfully!");
+      setIsEnquireOpen(false);
+      setEnquiryMessage('');
+    } catch (e: any) {
+      toast.error(e.message || "Failed to send enquiry");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBookVisit = async () => {
+    if (!user) return toast.error("Please login to book a visit");
+    if (selectedDays.length === 0 || !visitStartTime || !visitEndTime) {
+      return toast.error("Please select at least one preferred day, and provide start and end time");
+    }
+    setIsSubmitting(true);
+    try {
+      await supabase.from('property_site_visits').insert({
+        location_id: id,
+        user_id: user.id,
+        owner_id: location.created_by,
+        selected_day: selectedDays.join(', '),
+        selected_time: `${visitStartTime} to ${visitEndTime}`,
+        message: visitMessage,
+        status: 'pending'
+      });
+      await supabase.from('notifications').insert({
+        user_id: location.created_by,
+        title: 'New Site Visit Request',
+        description: `Someone requested a site visit for ${location.name}`,
+        type: 'booking'
+      });
+      toast.success("Site visit requested successfully!");
+      setIsBookVisitOpen(false);
+      setSelectedDays([]);
+      setVisitStartTime('');
+      setVisitEndTime('');
+      setVisitMessage('');
+    } catch (e: any) {
+      toast.error(e.message || "Failed to book site visit");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   useEffect(() => {
     fetchLocationDetails();
@@ -53,6 +158,15 @@ export default function LocationDetails() {
         
       if (locError) throw locError;
       setLocation(locData);
+
+      if (locData && locData.created_by) {
+        const { data: profile } = await supabase.from('profiles').select('full_name, first_name, last_name').or(`id.eq.${locData.created_by},user_id.eq.${locData.created_by}`).limit(1).maybeSingle();
+        if (profile) {
+          setCreatorName(profile.full_name || [profile.first_name, profile.last_name].filter(Boolean).join(' ') || locData.owner_name);
+        } else {
+          setCreatorName(locData.owner_name);
+        }
+      }
 
       // Fetch likes
       const { data: likesData, error: likesError } = await supabase
@@ -167,11 +281,16 @@ export default function LocationDetails() {
             <Button variant="outline" size="sm">
               <Share2 className="mr-2 h-4 w-4" /> Share
             </Button>
+            {(user?.id === location.created_by || user?.id === location.profile_id || user?.id === location.user_id) && (
+              <Button variant="outline" size="sm" onClick={() => navigate(`/locations/new?edit=${location.id}`)}>
+                <Edit className="mr-2 h-4 w-4" /> Edit
+              </Button>
+            )}
             {/* Functional Like Button replacing Save */}
             <Button 
               variant={isWishlisted ? "default" : "outline"}
               size="sm"
-              className={isWishlisted ? "bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border-red-200" : ""}
+              className={isWishlisted ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-700 dark:hover:text-red-300 border-red-200 dark:border-red-900/30" : ""}
               onClick={toggleLike}
             >
               <Heart className={`mr-2 h-4 w-4 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`} /> 
@@ -185,12 +304,14 @@ export default function LocationDetails() {
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-none">{location.type}</Badge>
             {location.tags && location.tags.map((tag: string, idx: number) => (
-              <Badge key={idx} variant="secondary" className="bg-gray-100 text-gray-700 font-normal border-gray-200">{tag}</Badge>
+              <Badge key={idx} variant="secondary" className="bg-muted text-muted-foreground font-normal border-border">{tag}</Badge>
             ))}
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{location.name}</h1>
-          <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
-            <span className="flex items-center"><MapPin className="h-4 w-4 mr-1 text-gray-400" /> {location.city}, {location.state}</span>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">{location.name}</h1>
+          <p className="text-muted-foreground text-sm mt-1">Listed by <span className="font-medium text-muted-foreground">{creatorName || location.owner_name || 'Verified Owner'}</span></p>
+          <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-muted-foreground">
+            <span className="flex items-center"><MapPin className="h-4 w-4 mr-1 text-muted-foreground" /> {location.city}, {location.state}</span>
+            {location.address && <span className="flex items-center text-muted-foreground">• {location.address} {location.landmark ? ` (Near ${location.landmark})` : ''}</span>}
             <a 
               href={mapUrl} 
               target="_blank" 
@@ -228,8 +349,78 @@ export default function LocationDetails() {
             {/* Description */}
             <section>
               <h2 className="text-2xl font-bold mb-3">About this location</h2>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{location.description}</p>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{location.description}</p>
             </section>
+            
+            <hr />
+            
+            <section>
+              <h2 className="text-2xl font-bold mb-3 flex items-center">
+                <MapPin className="mr-2 h-6 w-6 text-yellow-600" />
+                Location Details
+              </h2>
+              <div className="bg-muted/50 rounded-xl p-5 border border-border space-y-3">
+                {location.address && (
+                  <div>
+                    <span className="text-muted-foreground block text-xs uppercase tracking-wider">Full Address</span>
+                    <span className="font-medium text-foreground">{location.address}</span>
+                  </div>
+                )}
+                {location.landmark && (
+                  <div>
+                    <span className="text-muted-foreground block text-xs uppercase tracking-wider">Nearest Landmark</span>
+                    <span className="font-medium text-foreground">{location.landmark}</span>
+                  </div>
+                )}
+                {location.address && (
+                  <div className="pt-2">
+                    <a href={location.map_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address + ' ' + location.city)}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center">
+                      <ExternalLink className="h-4 w-4 mr-1" /> Open in Google Maps
+                    </a>
+                  </div>
+                )}
+              </div>
+            </section>
+            
+            <hr />
+
+            {/* Availability Timings */}
+            {location.timings && (
+              <section>
+                <h2 className="text-2xl font-bold mb-3 flex items-center">
+                  <Clock className="mr-2 h-6 w-6 text-yellow-600" />
+                  Availability Timings
+                </h2>
+                <div className="flex items-start gap-3 bg-muted/50 p-6 rounded-xl border text-base">
+                  <div className="w-full">
+                    <div className="text-muted-foreground space-y-4">
+                      {(() => {
+                        try {
+                          const timings = typeof location.timings === 'string' ? JSON.parse(location.timings) : location.timings;
+                          if (Array.isArray(timings)) {
+                            return timings.map((timing: any, i: number) => (
+                              <div key={i} className="flex flex-col gap-2 border-l-4 border-yellow-300 pl-4 py-1">
+                                <span className="font-semibold text-foreground text-lg">{timing.from} to {timing.to}</span>
+                                <div className="flex flex-wrap gap-2">
+                                  {timing.days.map((day: string, idx: number) => (
+                                    <span key={idx} className="text-sm bg-card text-card-foreground border border-border px-3 py-1 rounded-full text-muted-foreground shadow-sm">
+                                      {day}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ));
+                          }
+                          return <span>{location.timings}</span>;
+                        } catch (e) {
+                          return <span>{location.timings}</span>;
+                        }
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
 
             <hr />
 
@@ -240,8 +431,8 @@ export default function LocationDetails() {
                   <AlertCircle className="mr-2 h-6 w-6 text-yellow-600" /> 
                   Property Instructions & Rules
                 </h2>
-                <div className="bg-yellow-50 rounded-xl p-5 border border-yellow-100">
-                  <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{location.instructions}</p>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-5 border border-yellow-100 dark:border-yellow-900/30">
+                  <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{location.instructions}</p>
                 </div>
               </section>
             )}
@@ -253,36 +444,45 @@ export default function LocationDetails() {
             <div className="sticky top-6 space-y-6">
               
               {/* Pricing Card */}
-              <Card className="border-yellow-200 shadow-lg">
+              <Card className="border-yellow-200 dark:border-yellow-900/40 shadow-lg">
                 <CardContent className="p-6 space-y-6">
                   <div>
                     <div className="flex items-end gap-1 mb-1">
                       <span className="text-3xl font-bold">₹{Number(location.price).toLocaleString()}</span>
-                      <span className="text-gray-500 pb-1">/ {location.price_type.replace('Per ', '')}</span>
+                      <span className="text-muted-foreground pb-1">/ {location.price_type.replace('Per ', '')}</span>
                     </div>
+                    {location.price_hour && (
+                      <div className="text-sm text-muted-foreground mt-1">
+                        ₹{Number(location.price_hour).toLocaleString()} / Hour
+                      </div>
+                    )}
+                    {location.security_deposit && (
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Security Deposit: ₹{Number(location.security_deposit).toLocaleString()}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Availability Timings */}
-                  {location.timings && (
-                    <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg border text-sm">
-                      <Clock className="h-5 w-5 text-gray-500 shrink-0" />
-                      <div>
-                        <span className="block font-semibold text-gray-900">Availability</span>
-                        <span className="text-gray-600">{location.timings}</span>
-                      </div>
-                    </div>
-                  )}
+
                   
                   <div className="space-y-3">
-                    <Button className="w-full bg-yellow-600 hover:bg-yellow-700 h-12 text-lg">
+                    <Button className="w-full bg-yellow-600 hover:bg-yellow-700 text-white dark:bg-yellow-500 dark:hover:bg-yellow-600 dark:text-zinc-950 font-medium h-12 text-lg transition-colors shadow-sm" onClick={() => setIsEnquireOpen(true)}>
                       Enquire Now
                     </Button>
-                    <Button variant="outline" className="w-full h-12 text-lg border-yellow-600 text-yellow-700 hover:bg-yellow-50">
+                    <Button variant="outline" className="w-full h-12 text-lg border-yellow-600 text-yellow-700 dark:text-yellow-400 bg-transparent hover:bg-yellow-50 dark:hover:bg-yellow-950/40 hover:text-yellow-800 dark:hover:text-yellow-300 font-medium transition-colors" onClick={() => setIsBookVisitOpen(true)}>
                       Book Site Visit
                     </Button>
+                    {user?.id === location.created_by && (
+                      <Button variant="ghost" className="w-full text-blue-600" onClick={() => {
+                        setIsViewVisitsOpen(true);
+                        fetchSiteVisits();
+                      }}>
+                        View site visitings
+                      </Button>
+                    )}
                   </div>
                   
-                  <div className="flex items-center gap-2 text-sm text-gray-500 justify-center">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center">
                     <Shield className="h-4 w-4 text-green-500" /> Secure enquiry via FilmCollab
                   </div>
                 </CardContent>
@@ -292,15 +492,25 @@ export default function LocationDetails() {
               <Card>
                 <CardContent className="px-0 py-2 md:p-6">
                   <h3 className="font-bold text-lg mb-4 border-b pb-2">Contact Information</h3>
-                  <div className="space-y-3 text-sm text-gray-700">
+                  <div className="space-y-3 text-sm text-muted-foreground">
                     <div>
-                      <span className="text-gray-500 block text-xs uppercase tracking-wider">Name</span>
-                      <span className="font-medium">{location.owner_name}</span>
+                      <span className="text-muted-foreground block text-xs uppercase tracking-wider">Name</span>
+                      <span className="font-medium">{creatorName || location.owner_name}</span>
                     </div>
+                    {location.phone && (
+                      <div className="pt-2">
+                        <span className="text-muted-foreground block text-xs uppercase tracking-wider">Mobile Number</span>
+                        <span className="font-medium">📞 {location.phone}</span>
+                      </div>
+                    )}
+                    {location.email && (
+                      <div className="pt-2">
+                        <span className="text-muted-foreground block text-xs uppercase tracking-wider">Email</span>
+                        <span className="font-medium">✉️ {location.email}</span>
+                      </div>
+                    )}
                   </div>
-                  <Button variant="outline" className="w-full mt-6">
-                    <MessageSquare className="mr-2 h-4 w-4" /> Message Directly
-                  </Button>
+                  
                 </CardContent>
               </Card>
 
@@ -310,6 +520,221 @@ export default function LocationDetails() {
         </div>
       </div>
 
+      
+      {/* Enquire Modal */}
+      <Dialog open={isEnquireOpen} onOpenChange={setIsEnquireOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Enquiry</DialogTitle>
+            <DialogDescription>Send a message directly to the owner of this property.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Message</Label>
+              <Textarea 
+                placeholder="Hi, I am interested in booking this property for..." 
+                value={enquiryMessage} 
+                onChange={e => setEnquiryMessage(e.target.value)}
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEnquireOpen(false)}>Cancel</Button>
+            <Button onClick={handleEnquire} disabled={isSubmitting}>{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Book Visit Modal */}
+      <Dialog open={isBookVisitOpen} onOpenChange={setIsBookVisitOpen}>
+        <DialogContent className="sm:max-w-lg w-full">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Book Site Visit</DialogTitle>
+            <DialogDescription>Select your preferred day(s) and time window for visiting the property.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-5 pt-2">
+            {/* Multiselect Days */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">Preferred Day(s)</Label>
+                <span className="text-xs text-muted-foreground">
+                  {selectedDays.length === 0 ? "Select 1 or more days" : `${selectedDays.length} day(s) selected`}
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                  const isSelected = selectedDays.includes(day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDays(prev => 
+                          prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+                        );
+                      }}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer select-none",
+                        isSelected
+                          ? "bg-yellow-600 text-white border-yellow-600 dark:bg-yellow-500 dark:text-zinc-950 dark:border-yellow-500 shadow-sm"
+                          : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border-border"
+                      )}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-2 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => setSelectedDays(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])}
+                  className="text-[11px] text-yellow-600 dark:text-yellow-400 hover:underline cursor-pointer"
+                >
+                  + All Weekdays
+                </button>
+                <span className="text-muted-foreground text-[11px]">•</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDays(['Saturday', 'Sunday'])}
+                  className="text-[11px] text-yellow-600 dark:text-yellow-400 hover:underline cursor-pointer"
+                >
+                  + Weekends
+                </button>
+                <span className="text-muted-foreground text-[11px]">•</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDays(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])}
+                  className="text-[11px] text-yellow-600 dark:text-yellow-400 hover:underline cursor-pointer"
+                >
+                  + All Days
+                </button>
+              </div>
+            </div>
+
+            {/* Redesigned Time Window */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  Time Window
+                </Label>
+                <span className="text-xs text-muted-foreground">Operating hours</span>
+              </div>
+
+              <div className="bg-muted/30 border border-border/80 rounded-xl p-3.5 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground font-medium block">
+                      From (Start)
+                    </span>
+                    <Input
+                      type="time"
+                      value={visitStartTime}
+                      onChange={e => setVisitStartTime(e.target.value)}
+                      className="bg-card border-border h-10 px-3 text-sm rounded-lg font-medium focus-visible:ring-yellow-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground font-medium block">
+                      To (End)
+                    </span>
+                    <Input
+                      type="time"
+                      value={visitEndTime}
+                      onChange={e => setVisitEndTime(e.target.value)}
+                      className="bg-card border-border h-10 px-3 text-sm rounded-lg font-medium focus-visible:ring-yellow-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="pt-2 border-t border-border/50">
+                  <span className="text-[11px] text-muted-foreground block mb-1.5 font-medium">Quick Slots:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { label: 'Morning (9 AM - 12 PM)', start: '09:00', end: '12:00' },
+                      { label: 'Afternoon (1 PM - 4 PM)', start: '13:00', end: '16:00' },
+                      { label: 'Evening (4 PM - 7 PM)', start: '16:00', end: '19:00' },
+                    ].map(slot => (
+                      <button
+                        key={slot.label}
+                        type="button"
+                        onClick={() => {
+                          setVisitStartTime(slot.start);
+                          setVisitEndTime(slot.end);
+                        }}
+                        className={cn(
+                          "text-[11px] px-2.5 py-1 rounded-md border transition-colors cursor-pointer",
+                          visitStartTime === slot.start && visitEndTime === slot.end
+                            ? "bg-yellow-600/15 text-yellow-700 border-yellow-500/50 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/50 font-medium"
+                            : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border/70"
+                        )}
+                      >
+                        {slot.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Message (Optional)</Label>
+              <Textarea 
+                placeholder="Any specific requirements..." 
+                value={visitMessage} 
+                onChange={e => setVisitMessage(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBookVisitOpen(false)}>Cancel</Button>
+            <Button onClick={handleBookVisit} disabled={isSubmitting}>{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Request Visit'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Visits Modal */}
+      <Dialog open={isViewVisitsOpen} onOpenChange={setIsViewVisitsOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Site Visit Requests</DialogTitle>
+            <DialogDescription>List of users who requested a site visit for this property.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            {siteVisits.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No site visit requests yet.</p>
+            ) : (
+              siteVisits.map(visit => (
+                <div key={visit.id} className="border rounded-lg p-4 space-y-2 bg-muted/50">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-semibold text-lg">{visit.user?.full_name || visit.user?.first_name || 'Anonymous User'}</h4>
+                      <p className="text-sm text-muted-foreground">{visit.user?.email} {visit.user?.phone ? ` • ${visit.user.phone}` : ''}</p>
+                    </div>
+                    <Badge variant={visit.status === 'pending' ? 'outline' : 'default'}>{visit.status}</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm mt-2">
+                    <div><span className="text-muted-foreground">Requested Day:</span> <span className="font-medium">{visit.selected_day}</span></div>
+                    <div><span className="text-muted-foreground">Requested Time:</span> <span className="font-medium">{visit.selected_time}</span></div>
+                  </div>
+                  {visit.message && (
+                    <div className="mt-2 text-sm bg-card text-card-foreground p-3 rounded border">
+                      <span className="text-muted-foreground block mb-1">Message:</span>
+                      {visit.message}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Lightbox Overlay */}
       {selectedImageIndex !== null && (
         <div 
@@ -318,7 +743,7 @@ export default function LocationDetails() {
         >
           <Button 
             variant="ghost" 
-            className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full h-12 w-12 p-0"
+            className="absolute top-4 right-4 text-white hover:bg-card text-card-foreground/20 rounded-full h-12 w-12 p-0"
             onClick={closeLightbox}
           >
             <X className="h-6 w-6" />
@@ -326,7 +751,7 @@ export default function LocationDetails() {
 
           <Button 
             variant="ghost" 
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full h-14 w-14 p-0 hidden md:flex"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-card text-card-foreground/20 rounded-full h-14 w-14 p-0 hidden md:flex"
             onClick={prevImage}
           >
             <ChevronLeft className="h-8 w-8" />
@@ -341,7 +766,7 @@ export default function LocationDetails() {
 
           <Button 
             variant="ghost" 
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full h-14 w-14 p-0 hidden md:flex"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-card text-card-foreground/20 rounded-full h-14 w-14 p-0 hidden md:flex"
             onClick={nextImage}
           >
             <ChevronRight className="h-8 w-8" />

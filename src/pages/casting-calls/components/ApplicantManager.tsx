@@ -71,34 +71,34 @@ export function ApplicantManager({ castingCallId }: ApplicantManagerProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Applicant Management</h2>
+    <div className="bg-card text-card-foreground rounded-xl shadow-sm border overflow-hidden">
+      <div className="p-6 border-b border-border/60">
+        <h2 className="text-2xl font-bold text-foreground mb-6">Applicant Management</h2>
         
         {/* Stats Row */}
         <div className="flex flex-wrap gap-4 mb-6">
-          <div className="bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">
+          <div className="bg-blue-50 dark:bg-blue-950/30 px-4 py-2 rounded-lg border border-blue-100 dark:border-blue-900/40">
             <span className="text-blue-600 font-bold mr-2">{interestedCount}</span>
-            <span className="text-sm text-blue-800">Pending</span>
+            <span className="text-sm text-blue-800 dark:text-blue-300">Pending</span>
           </div>
-          <div className="bg-green-50 px-4 py-2 rounded-lg border border-green-100">
+          <div className="bg-green-50 dark:bg-green-950/30 px-4 py-2 rounded-lg border border-green-100 dark:border-green-900/40">
             <span className="text-green-600 font-bold mr-2">{confirmedCount}</span>
-            <span className="text-sm text-green-800">Confirmed</span>
+            <span className="text-sm text-green-800 dark:text-green-300">Confirmed</span>
           </div>
-          <div className="bg-red-50 px-4 py-2 rounded-lg border border-red-100">
+          <div className="bg-red-50 dark:bg-red-950/30 px-4 py-2 rounded-lg border border-red-100 dark:border-red-900/40">
             <span className="text-red-600 font-bold mr-2">{rejectedCount}</span>
-            <span className="text-sm text-red-800">Rejected</span>
+            <span className="text-sm text-red-800 dark:text-red-300">Rejected</span>
           </div>
-          <div className="bg-gray-50 px-4 py-2 rounded-lg border border-gray-200 ml-auto">
-            <span className="text-gray-900 font-bold mr-2">{applicants.length}</span>
-            <span className="text-sm text-gray-600">Total Applications</span>
+          <div className="bg-muted/40 px-4 py-2 rounded-lg border border-border ml-auto">
+            <span className="text-foreground font-bold mr-2">{applicants.length}</span>
+            <span className="text-sm text-muted-foreground">Total Applications</span>
           </div>
         </div>
 
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
               placeholder="Search applicants..." 
               className="pl-9"
@@ -110,7 +110,7 @@ export function ApplicantManager({ castingCallId }: ApplicantManagerProps) {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button 
               variant="outline" 
-              className="text-green-600 border-green-200 hover:bg-green-50"
+              className="text-green-600 border-green-300 dark:border-green-900/50 hover:bg-green-50 dark:hover:bg-green-950/30"
               disabled={selectedIds.length === 0}
               onClick={() => handleBulkAction("Confirmed")}
             >
@@ -118,7 +118,7 @@ export function ApplicantManager({ castingCallId }: ApplicantManagerProps) {
             </Button>
             <Button 
               variant="outline" 
-              className="text-red-600 border-red-200 hover:bg-red-50"
+              className="text-red-600 border-red-300 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/30"
               disabled={selectedIds.length === 0}
               onClick={() => handleBulkAction("Rejected")}
             >
@@ -130,7 +130,7 @@ export function ApplicantManager({ castingCallId }: ApplicantManagerProps) {
 
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader className="bg-gray-50">
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead className="w-12 text-center">
                 <Checkbox 
@@ -149,13 +149,13 @@ export function ApplicantManager({ castingCallId }: ApplicantManagerProps) {
           <TableBody>
             {filteredApplicants.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                   No applicants found.
                 </TableCell>
               </TableRow>
             ) : (
               filteredApplicants.map(app => (
-                <TableRow key={app.id} className="hover:bg-gray-50/50">
+                <TableRow key={app.id} className="hover:bg-muted/40">
                   <TableCell className="text-center">
                     <Checkbox 
                       checked={selectedIds.includes(app.id)}
@@ -166,24 +166,24 @@ export function ApplicantManager({ castingCallId }: ApplicantManagerProps) {
                     <div className="flex items-center gap-3">
                       <img src={app.profilePhoto} alt={app.name} className="w-10 h-10 rounded-full object-cover" />
                       <div>
-                        <p className="font-medium text-gray-900">{app.name}</p>
-                        <p className="text-xs text-gray-500">{app.profession} • {app.experience}</p>
+                        <p className="font-medium text-foreground">{app.name}</p>
+                        <p className="text-xs text-muted-foreground">{app.profession} • {app.experience}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                         <div 
                           className={`h-full ${app.matchScore >= 80 ? 'bg-green-500' : app.matchScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} 
                           style={{ width: `${app.matchScore}%` }}
                         />
                       </div>
-                      <span className="text-xs font-medium text-gray-700">{app.matchScore}%</span>
+                      <span className="text-xs font-medium text-muted-foreground">{app.matchScore}%</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-gray-600">{app.location}</TableCell>
-                  <TableCell className="text-sm text-gray-600">
+                  <TableCell className="text-sm text-muted-foreground">{app.location}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
                     {new Date(app.appliedDate).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
@@ -192,10 +192,10 @@ export function ApplicantManager({ castingCallId }: ApplicantManagerProps) {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Button variant="ghost" size="icon" title="View Portfolio" className="h-8 w-8">
-                        <ExternalLink className="w-4 h-4 text-gray-500" />
+                        <ExternalLink className="w-4 h-4 text-muted-foreground" />
                       </Button>
                       <Button variant="ghost" size="icon" title="Message" className="h-8 w-8">
-                        <MessageCircle className="w-4 h-4 text-gray-500" />
+                        <MessageCircle className="w-4 h-4 text-muted-foreground" />
                       </Button>
                       {app.status === "Interested" && (
                         <>

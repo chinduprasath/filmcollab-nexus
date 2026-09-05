@@ -249,8 +249,8 @@ const Notifications = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h1>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+            <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
+            <p className="text-muted-foreground text-sm mt-1">
               {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
             </p>
           </div>
@@ -279,7 +279,7 @@ const Notifications = () => {
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     placeholder="Search notifications..."
                     value={searchQuery}
@@ -330,7 +330,7 @@ const Notifications = () => {
               <Card 
                 key={notification.id} 
                 className={`hover:shadow-md transition-shadow sm:cursor-default cursor-pointer ${
-                  notification.status === 'unread' ? 'border-l-4 border-l-yellow-500 bg-yellow-50/30' : ''
+                  notification.status === 'unread' ? 'border-l-4 border-l-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20' : ''
                 }`}
                 onClick={() => {
                   if (window.innerWidth < 640) {
@@ -348,8 +348,8 @@ const Notifications = () => {
                   <div className="flex items-start gap-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                       notification.status === 'unread' 
-                        ? 'bg-yellow-100 text-yellow-600' 
-                        : 'bg-gray-100 text-gray-600'
+                        ? 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-600 dark:text-yellow-400' 
+                        : 'bg-muted text-muted-foreground'
                     }`}>
                       <IconComponent className="w-5 h-5" />
                     </div>
@@ -358,14 +358,14 @@ const Notifications = () => {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <h3 className={`font-semibold text-lg ${
-                            notification.status === 'unread' ? 'text-gray-900' : 'text-gray-700'
+                            notification.status === 'unread' ? 'text-foreground' : 'text-muted-foreground'
                           }`}>
                             {notification.title}
                           </h3>
-                          <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                          <p className="text-muted-foreground text-sm mb-2 line-clamp-2">
                             {notification.description || notification.message}
                           </p>
-                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {notification.created_at ? formatRelativeTime(notification.created_at) : (notification.time || "Recently")}
@@ -394,7 +394,7 @@ const Notifications = () => {
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleDeleteNotification(notification.id)}
-                            className="text-gray-400 hover:text-red-600"
+                            className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
                           >
                             <XCircle className="w-4 h-4" />
                           </Button>
@@ -428,9 +428,9 @@ const Notifications = () => {
         {filteredNotifications.length === 0 && (
           <Card>
             <CardContent className="p-8 text-center">
-              <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications found</h3>
-              <p className="text-gray-600 mb-4">
+              <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No notifications found</h3>
+              <p className="text-muted-foreground mb-4">
                 {searchQuery || filterType !== 'all' || filterStatus !== 'all'
                   ? 'Try adjusting your search or filter criteria.'
                   : 'You\'re all caught up! No new notifications.'

@@ -1851,14 +1851,14 @@ export default function ProfilePage() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 bg-yellow-50 dark:bg-background min-h-screen p-4 -m-4">
+      <div className="space-y-4 bg-background min-h-screen p-4 -m-4">
         {/* Profile Header */}
-        <Card className="relative overflow-hidden border-yellow-200 dark:border-zinc-800 bg-white dark:bg-background">
+        <Card className="relative overflow-hidden border-yellow-200/60 dark:border-border bg-card text-card-foreground shadow-sm">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <div className="flex flex-row items-center md:items-center gap-4 flex-1 text-left w-full">
                 <div className="relative group mx-0 flex-shrink-0">
-                  <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-white dark:border-zinc-800 shadow-lg flex-shrink-0">
+                  <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-card dark:border-card shadow-lg flex-shrink-0">
                     <AvatarImage src={profile.avatar} alt={profile.name} />
                     <AvatarFallback className="text-xl font-semibold bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
                       {profile.name.split(' ').map(n => n[0]).join('')}
@@ -1887,7 +1887,7 @@ export default function ProfilePage() {
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-start gap-2 mb-1">
-                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-zinc-50 flex flex-nowrap items-center justify-start gap-1.5 sm:gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden w-full max-w-full sm:max-w-none whitespace-nowrap">
+                    <h1 className="text-xl sm:text-2xl font-bold text-foreground flex flex-nowrap items-center justify-start gap-1.5 sm:gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden w-full max-w-full sm:max-w-none whitespace-nowrap">
                       {profile.name}
                       {profile.verified && (
                         <UserCheck className="w-5 h-5 text-blue-500 flex-shrink-0" />
@@ -1913,11 +1913,11 @@ export default function ProfilePage() {
                     </h1>
                   </div>
                   <div className="flex items-center justify-start gap-2 text-sm mb-2 flex-wrap">
-                    {profile.username && <span className="text-gray-600 dark:text-zinc-400">@{profile.username}</span>}
-                    {profile.username && profile.role && <span className="text-gray-300 dark:text-zinc-600">•</span>}
-                    {profile.role && <span className="text-gray-700 dark:text-zinc-300 font-medium">{profile.role}</span>}
+                    {profile.username && <span className="text-muted-foreground">@{profile.username}</span>}
+                    {profile.username && profile.role && <span className="text-muted-foreground/40">•</span>}
+                    {profile.role && <span className="text-foreground font-medium">{profile.role}</span>}
                   </div>
-                  <div className="flex flex-row items-center justify-start gap-4 text-xs text-gray-500 dark:text-zinc-400 w-full mt-1">
+                  <div className="flex flex-row items-center justify-start gap-4 text-xs text-muted-foreground w-full mt-1">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-3 h-3 flex-shrink-0" />
                       {profile.location}
@@ -1947,16 +1947,16 @@ export default function ProfilePage() {
                         >
                           <Instagram className="w-5 h-5" />
                         </a>
-                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                        <span className="text-[11px] font-semibold text-muted-foreground">
                           {followersCounts.instagram || "..."}
                         </span>
                       </>
                     ) : (
                       <>
-                        <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No Instagram profile">
+                        <div className="p-2 rounded-full text-muted-foreground/50 bg-muted/30 cursor-not-allowed" title="No Instagram profile">
                           <Instagram className="w-5 h-5" />
                         </div>
-                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">NA</span>
+                        <span className="text-[11px] font-semibold text-muted-foreground">NA</span>
                       </>
                     )}
                   </div>
@@ -1975,16 +1975,16 @@ export default function ProfilePage() {
                         >
                           <Youtube className="w-5 h-5" />
                         </a>
-                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                        <span className="text-[11px] font-semibold text-muted-foreground">
                           {followersCounts.youtube || "..."}
                         </span>
                       </>
                     ) : (
                       <>
-                        <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No YouTube profile">
+                        <div className="p-2 rounded-full text-muted-foreground/50 bg-muted/30 cursor-not-allowed" title="No YouTube profile">
                           <Youtube className="w-5 h-5" />
                         </div>
-                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">NA</span>
+                        <span className="text-[11px] font-semibold text-muted-foreground">NA</span>
                       </>
                     )}
                   </div>
@@ -2003,16 +2003,16 @@ export default function ProfilePage() {
                         >
                           <Facebook className="w-5 h-5" />
                         </a>
-                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                        <span className="text-[11px] font-semibold text-muted-foreground">
                           {followersCounts.facebook || "..."}
                         </span>
                       </>
                     ) : (
                       <>
-                        <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No Facebook profile">
+                        <div className="p-2 rounded-full text-muted-foreground/50 bg-muted/30 cursor-not-allowed" title="No Facebook profile">
                           <Facebook className="w-5 h-5" />
                         </div>
-                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">NA</span>
+                        <span className="text-[11px] font-semibold text-muted-foreground">NA</span>
                       </>
                     )}
                   </div>
@@ -2031,16 +2031,16 @@ export default function ProfilePage() {
                         >
                           <Twitter className="w-5 h-5" />
                         </a>
-                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                        <span className="text-[11px] font-semibold text-muted-foreground">
                           {followersCounts.twitter || "..."}
                         </span>
                       </>
                     ) : (
                       <>
-                        <div className="p-2 rounded-full text-gray-400 bg-gray-50 dark:bg-background/50 cursor-not-allowed" title="No Twitter profile">
+                        <div className="p-2 rounded-full text-muted-foreground/50 bg-muted/30 cursor-not-allowed" title="No Twitter profile">
                           <Twitter className="w-5 h-5" />
                         </div>
-                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">NA</span>
+                        <span className="text-[11px] font-semibold text-muted-foreground">NA</span>
                       </>
                     )}
                   </div>
@@ -2050,23 +2050,23 @@ export default function ProfilePage() {
             </div>
             
             {/* Statistics Row */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-zinc-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 pt-4 border-t border-border">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 sm:gap-x-6 gap-y-3 w-full sm:w-auto">
-                <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-zinc-400" title="Connections">
-                  <Users className="w-4 h-4 text-gray-500 dark:text-zinc-500" />
-                  <span className="font-semibold text-gray-900 dark:text-zinc-100">{connectionsCount.toLocaleString()}</span>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground" title="Connections">
+                  <Users className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-semibold text-foreground">{connectionsCount.toLocaleString()}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-zinc-400" title="Projects created & joined">
-                  <Briefcase className="w-4 h-4 text-gray-500 dark:text-zinc-500" />
-                  <span className="font-semibold text-gray-900 dark:text-zinc-100">{projectsCount.toLocaleString()}</span>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground" title="Projects created & joined">
+                  <Briefcase className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-semibold text-foreground">{projectsCount.toLocaleString()}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-zinc-400" title="Jobs joined">
-                  <Building2 className="w-4 h-4 text-gray-500 dark:text-zinc-500" />
-                  <span className="font-semibold text-gray-900 dark:text-zinc-100">{jobsCount.toLocaleString()}</span>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground" title="Jobs joined">
+                  <Building2 className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-semibold text-foreground">{jobsCount.toLocaleString()}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-zinc-400" title="Total profile likes">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground" title="Total profile likes">
                   <Heart className="w-4 h-4 text-red-500 dark:text-red-400" />
-                  <span className="font-semibold text-gray-900 dark:text-zinc-100">{likesCount.toLocaleString()}</span>
+                  <span className="font-semibold text-foreground">{likesCount.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -2075,7 +2075,7 @@ export default function ProfilePage() {
                   <Button 
                     size="sm" 
                     variant="secondary" 
-                    className="flex-1 sm:flex-none bg-white hover:bg-gray-50 border-gray-300 dark:bg-background dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 shadow-sm flex items-center justify-center gap-1"
+                    className="flex-1 sm:flex-none bg-card text-foreground border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 shadow-sm flex items-center justify-center gap-1 transition-colors"
                     onClick={handleEditProfile}
                   >
                     <Edit className="w-4 h-4" />
@@ -2084,7 +2084,7 @@ export default function ProfilePage() {
                   <Button 
                     size="sm" 
                     variant="secondary" 
-                    className="flex-1 sm:flex-none bg-white hover:bg-gray-50 border-gray-300 dark:bg-background dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 shadow-sm flex items-center justify-center gap-1"
+                    className="flex-1 sm:flex-none bg-card text-foreground border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 shadow-sm flex items-center justify-center gap-1 transition-colors"
                     onClick={() => setShowShareModal(true)}
                   >
                     <Share2 className="w-4 h-4" />
@@ -2096,7 +2096,7 @@ export default function ProfilePage() {
                   <Button 
                     size="sm" 
                     variant="ghost" 
-                    className="flex-1 sm:flex-none hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 justify-center"
+                    className="flex-1 sm:flex-none border border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground justify-center transition-colors"
                     onClick={() => navigate(`/messages?u=${encodeURIComponent(profile.username)}`)}
                     disabled={!canMessage}
                   >
@@ -2126,7 +2126,7 @@ export default function ProfilePage() {
               {/* Mobile Dropdown */}
               <div className="md:hidden w-full mb-4">
                 <Select value={activeTab} onValueChange={setActiveTab}>
-                  <SelectTrigger className="w-full h-10 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-600 font-medium text-gray-900 dark:text-white shadow-sm">
+                  <SelectTrigger className="w-full h-10 bg-card border border-border font-medium text-foreground shadow-sm">
                     <SelectValue placeholder="Select tab" />
                   </SelectTrigger>
                   <SelectContent position="popper" side="bottom" align="start">
@@ -2141,40 +2141,40 @@ export default function ProfilePage() {
               </div>
 
               {/* Desktop Tabs */}
-              <TabsList className="hidden md:grid w-full overflow-x-auto bg-yellow-50 dark:bg-zinc-800 border border-yellow-200 dark:border-zinc-700 p-1 rounded-lg justify-start grid-cols-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <TabsList className="hidden md:grid w-full overflow-x-auto bg-yellow-50/50 dark:bg-muted/40 border border-yellow-200/50 dark:border-border p-1 rounded-xl justify-start grid-cols-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <TabsTrigger 
                   value="overview" 
-                  className="text-xs text-gray-700 dark:text-zinc-300 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:dark:text-white"
+                  className="text-xs text-muted-foreground data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 data-[state=active]:shadow-sm transition-colors"
                 >
                   Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="experience" 
-                  className="text-xs text-gray-700 dark:text-zinc-300 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:dark:text-white"
+                  className="text-xs text-muted-foreground data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 data-[state=active]:shadow-sm transition-colors"
                 >
                   Experience
                 </TabsTrigger>
                 <TabsTrigger 
                   value="projects" 
-                  className="text-xs text-gray-700 dark:text-zinc-300 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:dark:text-white"
+                  className="text-xs text-muted-foreground data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 data-[state=active]:shadow-sm transition-colors"
                 >
                   Projects
                 </TabsTrigger>
                 <TabsTrigger 
                   value="achievements" 
-                  className="text-xs text-gray-700 dark:text-zinc-300 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:dark:text-white"
+                  className="text-xs text-muted-foreground data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 data-[state=active]:shadow-sm transition-colors"
                 >
                   Achievements
                 </TabsTrigger>
                 <TabsTrigger 
                   value="education" 
-                  className="text-xs text-gray-700 dark:text-zinc-300 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:dark:text-white"
+                  className="text-xs text-muted-foreground data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 data-[state=active]:shadow-sm transition-colors"
                 >
                   Education
                 </TabsTrigger>
                 <TabsTrigger 
                   value="directory" 
-                  className="text-xs text-gray-700 dark:text-zinc-300 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:dark:text-white"
+                  className="text-xs text-muted-foreground data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:dark:bg-yellow-600 data-[state=active]:shadow-sm transition-colors"
                 >
                   Directory
                 </TabsTrigger>
@@ -2182,46 +2182,46 @@ export default function ProfilePage() {
 
               <TabsContent value="overview" className="space-y-4">
                 {/* Bio */}
-                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">About</CardTitle>
+                    <CardTitle className="text-lg text-foreground">About</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">{profile.bio}</p>
+                    <p className="text-sm text-foreground leading-relaxed">{profile.bio}</p>
                   </CardContent>
                 </Card>
 
                 {/* Contact Information */}
-                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Contact Information</CardTitle>
+                    <CardTitle className="text-lg text-foreground">Contact Information</CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-start gap-2 text-sm">
-                      <Mail className="w-4 h-4 text-gray-500 mt-0.5" />
+                      <Mail className="w-4 h-4 text-muted-foreground mt-0.5" />
                       <div className="flex flex-row items-start gap-3 w-full">
-                        <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Email Address</span>
-                        <span className="text-gray-700 dark:text-zinc-300 font-medium break-all">
+                        <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Email Address</span>
+                        <span className="text-foreground font-medium break-all">
                           {isOwnProfile || profile.privacyShowEmail ? profile.email : "XXXXXX@XXXX.XXX"}
                         </span>
                       </div>
                     </div>
                     {profile.phone && (
                       <div className="flex items-start gap-2 text-sm">
-                        <Phone className="w-4 h-4 text-gray-500 mt-0.5" />
+                        <Phone className="w-4 h-4 text-muted-foreground mt-0.5" />
                         <div className="flex flex-row items-start gap-3 w-full">
-                          <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Phone Number</span>
-                          <span className="text-gray-700 dark:text-zinc-300 font-medium">
+                          <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Phone Number</span>
+                          <span className="text-foreground font-medium">
                             {isOwnProfile || profile.privacyShowPhone ? profile.phone : "XXXXXX"}
                           </span>
                         </div>
                       </div>
                     )}
                     <div className="flex items-start gap-2 text-sm">
-                      <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
+                      <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
                       <div className="flex flex-row items-start gap-3 w-full">
-                        <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Current Location</span>
-                        <span className="text-gray-700 dark:text-zinc-300 font-medium">
+                        <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Current Location</span>
+                        <span className="text-foreground font-medium">
                           {isOwnProfile || profile.privacyShowLocation !== false ? (
                             [profile.currentCity, profile.currentState, profile.currentCountry].filter(Boolean).length > 0
                               ? [profile.currentCity, profile.currentState, profile.currentCountry].filter(Boolean).join(", ")
@@ -2232,9 +2232,9 @@ export default function ProfilePage() {
                     </div>
                     {profile.website && (
                       <div className="flex items-start gap-2 text-sm">
-                        <Globe className="w-4 h-4 text-gray-500 mt-0.5" />
+                        <Globe className="w-4 h-4 text-muted-foreground mt-0.5" />
                         <div className="flex flex-row items-start gap-3 w-full">
-                          <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Website</span>
+                          <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5 whitespace-nowrap w-[130px]">Website</span>
                           <a href={profile.website} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-yellow-500 hover:underline text-sm font-medium break-all">
                             {profile.website}
                           </a>
@@ -2245,14 +2245,14 @@ export default function ProfilePage() {
                 </Card>
 
                 {/* Personal Information */}
-                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Personal Information</CardTitle>
+                    <CardTitle className="text-lg text-foreground">Personal Information</CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
                     <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Date of Birth & Age</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Date of Birth & Age</span>
+                      <span className="text-foreground font-medium">
                         {isOwnProfile || profile.privacyShowDob !== false ? (
                           profile.dateOfBirth ? (
                             <>
@@ -2268,22 +2268,22 @@ export default function ProfilePage() {
                       </span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Gender</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.gender || "-"}</span>
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Gender</span>
+                      <span className="text-foreground font-medium">{profile.gender || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Nationality</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.nationality || "-"}</span>
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Nationality</span>
+                      <span className="text-foreground font-medium">{profile.nationality || "-"}</span>
                     </div>
                     <div className="md:col-span-2 grid grid-cols-[140px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Languages Known</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Languages Known</span>
+                      <span className="text-foreground font-medium">
                         {profile.languages && profile.languages.length > 0 ? profile.languages.join(", ") : "-"}
                       </span>
                     </div>
                     <div className="md:col-span-2 grid grid-cols-[140px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Native Location</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Native Location</span>
+                      <span className="text-foreground font-medium">
                         {isOwnProfile || profile.privacyShowLocation !== false ? (
                           [profile.birthCity, profile.birthState, profile.birthCountry].filter(Boolean).length > 0
                             ? [profile.birthCity, profile.birthState, profile.birthCountry].filter(Boolean).join(", ")
@@ -2292,44 +2292,44 @@ export default function ProfilePage() {
                       </span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Total Experience</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.totalExperience || "-"}</span>
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Total Experience</span>
+                      <span className="text-foreground font-medium">{profile.totalExperience || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Available for Travel</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Available for Travel</span>
+                      <span className="text-foreground font-medium">
                         {profile.availableForTravel !== undefined ? (profile.availableForTravel ? "Yes" : "No") : "-"}
                       </span>
                     </div>
                     <div className="md:col-span-2 grid grid-cols-[140px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Availability</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.availability || "-"}</span>
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Availability</span>
+                      <span className="text-foreground font-medium">{profile.availability || "-"}</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Pricing Details */}
                 {(profile.pricePerDay || profile.pricePerHour) && (
-                  <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                  <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Pricing Details</CardTitle>
+                      <CardTitle className="text-lg text-foreground">Pricing Details</CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-8 text-sm">
                       {profile.pricePerDay && (
                         <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                          <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Price Per Day</span>
-                          <span className="text-gray-900 dark:text-zinc-100 font-medium">₹{profile.pricePerDay}</span>
+                          <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Price Per Day</span>
+                          <span className="text-foreground font-medium">₹{profile.pricePerDay}</span>
                         </div>
                       )}
                       {profile.pricePerHour && (
                         <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                          <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Price Per Hour</span>
-                          <span className="text-gray-900 dark:text-zinc-100 font-medium">₹{profile.pricePerHour}</span>
+                          <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Price Per Hour</span>
+                          <span className="text-foreground font-medium">₹{profile.pricePerHour}</span>
                         </div>
                       )}
                       <div className="grid grid-cols-[140px_1fr] gap-2 items-start md:col-span-1">
-                        <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Negotiable</span>
-                        <span className="text-gray-900 dark:text-zinc-100 font-medium">
+                        <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Negotiable</span>
+                        <span className="text-foreground font-medium">
                           {profile.priceNegotiable ? "Yes" : "No"}
                         </span>
                       </div>
@@ -2338,43 +2338,43 @@ export default function ProfilePage() {
                 )}
 
                 {/* Physical Details */}
-                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Physical Details</CardTitle>
+                    <CardTitle className="text-lg text-foreground">Physical Details</CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-8 text-sm">
                     <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Height</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.height || "-"}</span>
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Height</span>
+                      <span className="text-foreground font-medium">{profile.height || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Weight</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.weight || "-"}</span>
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Weight</span>
+                      <span className="text-foreground font-medium">{profile.weight || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Eye Colour</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.eyeColor || "-"}</span>
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Eye Colour</span>
+                      <span className="text-foreground font-medium">{profile.eyeColor || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Hair Colour</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.hairColor || "-"}</span>
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Hair Colour</span>
+                      <span className="text-foreground font-medium">{profile.hairColor || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
-                      <span className="text-gray-500 text-xs uppercase tracking-wider pt-0.5">Skin Tone</span>
-                      <span className="text-gray-900 dark:text-zinc-100 font-medium">{profile.skinTone || "-"}</span>
+                      <span className="text-muted-foreground text-xs uppercase tracking-wider pt-0.5">Skin Tone</span>
+                      <span className="text-foreground font-medium">{profile.skinTone || "-"}</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Skills */}
-                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Skills</CardTitle>
+                    <CardTitle className="text-lg text-foreground">Skills</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
                       {profile.skills.map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs bg-gray-100 text-gray-700 border-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700">
+                        <Badge key={index} variant="secondary" className="text-xs bg-muted text-muted-foreground border-border">
                           {skill}
                         </Badge>
                       ))}
@@ -2386,25 +2386,25 @@ export default function ProfilePage() {
 
               <TabsContent value="experience" className="space-y-4">
                 {/* Experience */}
-                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Experience</CardTitle>
+                    <CardTitle className="text-lg text-foreground">Experience</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {profile.experience.map((exp) => (
-                        <div key={exp.id} className="flex gap-3 border-b border-gray-100 dark:border-zinc-800 pb-3 last:border-0 last:pb-0">
+                        <div key={exp.id} className="flex gap-3 border-b border-border pb-3 last:border-0 last:pb-0">
                           <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
                             <Briefcase className="w-5 h-5 text-white" />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-semibold text-sm text-gray-900 dark:text-zinc-100">{exp.title}</h4>
-                            <p className="text-sm text-gray-600 dark:text-zinc-400">{exp.company}</p>
-                            <p className="text-xs text-gray-500 dark:text-zinc-500">{exp.location}</p>
-                            <p className="text-xs text-gray-500 dark:text-zinc-500">
+                            <h4 className="font-semibold text-sm text-foreground">{exp.title}</h4>
+                            <p className="text-sm text-muted-foreground">{exp.company}</p>
+                            <p className="text-xs text-muted-foreground">{exp.location}</p>
+                            <p className="text-xs text-muted-foreground">
                               {formatDateShort(exp.startDate)} - {exp.current ? "Present" : formatDateShort(exp.endDate!)}
                             </p>
-                            <p className="text-xs text-gray-600 dark:text-zinc-400 mt-2">{exp.description}</p>
+                            <p className="text-xs text-muted-foreground mt-2">{exp.description}</p>
                           </div>
                         </div>
                       ))}
@@ -2415,9 +2415,9 @@ export default function ProfilePage() {
               </TabsContent>
 
               <TabsContent value="projects" className="space-y-4">
-                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                   <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Projects</CardTitle>
+                    <CardTitle className="text-lg text-foreground">Projects</CardTitle>
                     {isOwnProfile && (
                       <Button 
                         size="sm" 
@@ -2431,12 +2431,12 @@ export default function ProfilePage() {
                   <CardContent>
                     {userProjects.length === 0 ? (
                       <div className="text-center py-8">
-                        <p className="text-sm text-gray-500 dark:text-zinc-400 mb-4">No projects created yet.</p>
+                        <p className="text-sm text-muted-foreground mb-4">No projects created yet.</p>
                         {isOwnProfile && (
                           <Button 
                             variant="outline"
                             onClick={() => navigate("/projects")}
-                            className="border-yellow-200 dark:border-zinc-800 text-gray-700 dark:text-zinc-300 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
+                            className="border-yellow-200 dark:border-yellow-900/40 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-400 dark:hover:border-yellow-500/60 text-foreground transition-colors"
                           >
                             Go to Projects Page
                           </Button>
@@ -2445,12 +2445,12 @@ export default function ProfilePage() {
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {userProjects.map((project) => (
-                          <Card key={project.id} className="hover:shadow-md transition-shadow bg-white dark:bg-background border border-yellow-100 dark:border-zinc-800">
+                          <Card key={project.id} className="hover:shadow-md transition-shadow bg-card text-card-foreground border border-yellow-100/60 dark:border-border">
                             <CardHeader className="pb-3">
                               <div className="flex justify-between items-start">
                                 <div className="flex-1">
-                                  <h4 className="font-semibold text-base text-gray-900 dark:text-white line-clamp-1">{project.title}</h4>
-                                  <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                                  <h4 className="font-semibold text-base text-foreground line-clamp-1">{project.title}</h4>
+                                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                                     <span className="capitalize">{project.project_type}</span>
                                     <span>•</span>
                                     <span>{project.category}</span>
@@ -2464,7 +2464,7 @@ export default function ProfilePage() {
                                   )}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-zinc-400">
+                              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                                 <div className={`w-1.5 h-1.5 rounded-full ${
                                   project.status === 'completed' ? 'bg-green-500' :
                                   project.status === 'production' ? 'bg-blue-500' : 'bg-yellow-500'
@@ -2482,18 +2482,18 @@ export default function ProfilePage() {
                               </div>
                             </CardHeader>
                             <CardContent className="space-y-3 pb-4">
-                              <p className="text-xs text-gray-600 dark:text-zinc-300 line-clamp-2">
+                              <p className="text-xs text-muted-foreground line-clamp-2">
                                 {project.description}
                               </p>
                               <div className="flex flex-wrap gap-1 pt-1">
                                 {Array.isArray(project.skills_required) && project.skills_required.map((skill: string, i: number) => (
-                                  <Badge key={i} variant="secondary" className="text-[10px] py-0 px-1.5 bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700">
+                                  <Badge key={i} variant="secondary" className="text-[10px] py-0 px-1.5 bg-muted text-muted-foreground border-border">
                                     {skill}
                                   </Badge>
                                 ))}
                               </div>
-                              <div className="flex justify-between items-center pt-2 text-xs border-t border-gray-100 dark:border-zinc-800">
-                                <span className="font-medium text-gray-700 dark:text-zinc-300">
+                              <div className="flex justify-between items-center pt-2 text-xs border-t border-border">
+                                <span className="font-medium text-foreground">
                                   Budget: {project.budget_min ? `${project.budget_currency || "₹"}${project.budget_min.toLocaleString()}` : ""}
                                   {project.budget_min && project.budget_max ? " - " : ""}
                                   {project.budget_max ? `${project.budget_currency || "₹"}${project.budget_max.toLocaleString()}` : ""}
@@ -2518,14 +2518,14 @@ export default function ProfilePage() {
               </TabsContent>
 
               <TabsContent value="achievements" className="space-y-4">
-                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Achievements & Awards</CardTitle>
+                    <CardTitle className="text-lg text-foreground">Achievements & Awards</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {profile.achievements.map((achievement) => (
-                        <div key={achievement.id} className="border border-gray-200 dark:border-zinc-800 rounded-lg p-4 bg-gray-50/40 dark:bg-background/20">
+                        <div key={achievement.id} className="border border-border rounded-lg p-4 bg-muted/20">
                           <div className="flex items-start gap-3">
                             <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-950/30 rounded-full flex items-center justify-center flex-shrink-0">
                               {achievement.type === 'award' && <Award className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />}
@@ -2535,13 +2535,13 @@ export default function ProfilePage() {
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-medium text-sm text-gray-900 dark:text-zinc-100">{achievement.title}</h4>
+                                <h4 className="font-medium text-sm text-foreground">{achievement.title}</h4>
                                 <Badge variant="secondary" className="text-xs dark:bg-zinc-800 dark:text-zinc-300">
                                   {achievement.type.charAt(0).toUpperCase() + achievement.type.slice(1)}
                                 </Badge>
                               </div>
-                              <p className="text-xs text-gray-600 dark:text-zinc-400 mb-1">{achievement.description}</p>
-                              <p className="text-xs text-gray-500 dark:text-zinc-500">{achievement.date}</p>
+                              <p className="text-xs text-muted-foreground mb-1">{achievement.description}</p>
+                              <p className="text-xs text-muted-foreground">{achievement.date}</p>
                             </div>
                           </div>
                         </div>
@@ -2552,26 +2552,26 @@ export default function ProfilePage() {
               </TabsContent>
 
               <TabsContent value="education" className="space-y-4">
-                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50">Education</CardTitle>
+                    <CardTitle className="text-lg text-foreground">Education</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {profile.education.map((edu) => (
-                        <div key={edu.id} className="flex gap-3 border-b border-gray-100 dark:border-zinc-800 pb-3 last:border-0 last:pb-0">
+                        <div key={edu.id} className="flex gap-3 border-b border-border pb-3 last:border-0 last:pb-0">
                           <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
                             <GraduationCap className="w-5 h-5 text-white" />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-semibold text-sm text-gray-900 dark:text-zinc-100">{edu.degree}</h4>
-                            <p className="text-sm text-gray-600 dark:text-zinc-400">{edu.school}</p>
-                            <p className="text-xs text-gray-500 dark:text-zinc-500">{edu.location}</p>
-                            <p className="text-xs text-gray-500 dark:text-zinc-500">
+                            <h4 className="font-semibold text-sm text-foreground">{edu.degree}</h4>
+                            <p className="text-sm text-muted-foreground">{edu.school}</p>
+                            <p className="text-xs text-muted-foreground">{edu.location}</p>
+                            <p className="text-xs text-muted-foreground">
                               {formatDateShort(edu.startDate)} - {edu.current ? "Present" : formatDateShort(edu.endDate!)}
                             </p>
                             {edu.description && (
-                              <p className="text-xs text-gray-600 dark:text-zinc-400 mt-2">{edu.description}</p>
+                              <p className="text-xs text-muted-foreground mt-2">{edu.description}</p>
                             )}
                           </div>
                         </div>
@@ -2582,16 +2582,16 @@ export default function ProfilePage() {
               </TabsContent>
 
               <TabsContent value="directory" className="space-y-4">
-                <Card className="border-yellow-100 dark:border-zinc-800 bg-white dark:bg-background">
+                <Card className="border-yellow-100/60 dark:border-border bg-card text-card-foreground">
                   <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 gap-4 sm:gap-2">
-                    <CardTitle className="text-lg text-gray-900 dark:text-zinc-50 w-full sm:w-auto">Directory</CardTitle>
+                    <CardTitle className="text-lg text-foreground w-full sm:w-auto">Directory</CardTitle>
                     <div className="flex gap-2 items-center w-full sm:w-auto">
                       <Button size="sm" onClick={() => setShowAddFileDialog(true)} className="flex-1 sm:flex-none h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                         <Plus className="w-4 h-4 mr-1" />
                         Add Files
                       </Button>
                       <div className="flex-1 sm:flex-none w-full"><Select value={directoryFilter} onValueChange={(v: any) => { setDirectoryFilter(v); setDirectoryPage(1); }}>
-                        <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700">
+                        <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs bg-card border border-border text-foreground">
                           <SelectValue placeholder="Filter by type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2607,10 +2607,10 @@ export default function ProfilePage() {
                   </CardHeader>
                   <CardContent>
                     {!isOwnProfile && !profile.privacyShowDirectory ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-center bg-gray-50 dark:bg-zinc-800/50 rounded-lg border border-gray-100 dark:border-zinc-800">
-                        <Lock className="w-12 h-12 text-gray-300 dark:text-zinc-600 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-zinc-100">Directory Locked</h3>
-                        <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">This user has chosen to keep their directory private.</p>
+                      <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 rounded-lg border border-border">
+                        <Lock className="w-12 h-12 text-muted-foreground/40 mb-4" />
+                        <h3 className="text-lg font-medium text-foreground">Directory Locked</h3>
+                        <p className="text-sm text-muted-foreground mt-1">This user has chosen to keep their directory private.</p>
                       </div>
                     ) : (
                       <>
@@ -2618,9 +2618,9 @@ export default function ProfilePage() {
                           {(() => {
                         const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter).sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
                         const paginated = filtered.slice((directoryPage - 1) * 10, directoryPage * 10);
-                        if (filtered.length === 0) return <p className="text-sm text-gray-500 dark:text-zinc-400 col-span-full">No files found.</p>;
+                        if (filtered.length === 0) return <p className="text-sm text-muted-foreground col-span-full">No files found.</p>;
                         return paginated.map(file => (
-                          <div key={file.id} className="relative group overflow-hidden rounded-md cursor-pointer border border-gray-200 dark:border-zinc-800" onClick={() => setPreviewFile(file)}>
+                          <div key={file.id} className="relative group overflow-hidden rounded-md cursor-pointer border border-border" onClick={() => setPreviewFile(file)}>
                               {file.type === 'image' ? (
                                 <div className="relative h-40 w-full">
                                   <img src={file.url} alt={file.name} className="w-full h-full object-cover hover:scale-105 transition-transform" />
@@ -2634,7 +2634,7 @@ export default function ProfilePage() {
                               ) :
                                file.type === 'video' ? <video src={file.url} className="w-full h-40 object-cover" /> :
                                file.type === 'audio' ? <audio src={file.url} className="w-full h-40" controls /> :
-                               <div className="w-full h-40 bg-gray-100 dark:bg-zinc-800 flex items-center justify-center"><FileText className="w-8 h-8 text-gray-400 dark:text-zinc-500" /></div>}
+                               <div className="w-full h-40 bg-muted flex items-center justify-center"><FileText className="w-8 h-8 text-muted-foreground" /></div>}
                                <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={async (e) => { 
                                  e.stopPropagation(); 
                                  setDeleteConfirm({
@@ -2665,9 +2665,9 @@ export default function ProfilePage() {
                       if (totalPages <= 1) return null;
                       return (
                         <div className="flex justify-center items-center gap-2 mt-4">
-                          <Button variant="outline" size="sm" onClick={() => setDirectoryPage(p => Math.max(1, p - 1))} disabled={directoryPage === 1} className="border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-300">Prev</Button>
-                          <span className="text-sm text-gray-500 dark:text-zinc-400">Page {directoryPage} of {totalPages}</span>
-                          <Button variant="outline" size="sm" onClick={() => setDirectoryPage(p => Math.min(totalPages, p + 1))} disabled={directoryPage === totalPages} className="border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-300">Next</Button>
+                          <Button variant="outline" size="sm" onClick={() => setDirectoryPage(p => Math.max(1, p - 1))} disabled={directoryPage === 1} className="border-border text-foreground">Prev</Button>
+                          <span className="text-sm text-muted-foreground">Page {directoryPage} of {totalPages}</span>
+                          <Button variant="outline" size="sm" onClick={() => setDirectoryPage(p => Math.min(totalPages, p + 1))} disabled={directoryPage === totalPages} className="border-border text-foreground">Next</Button>
                         </div>
                       );
                     })()}
@@ -2689,8 +2689,8 @@ export default function ProfilePage() {
           </DialogHeader>
           <div className="space-y-6">
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-gray-900">Privacy Settings</h4>
-              <p className="text-sm text-gray-500">Toggle what information is visible when others view your profile.</p>
+              <h4 className="text-sm font-semibold text-foreground">Privacy Settings</h4>
+              <p className="text-sm text-muted-foreground">Toggle what information is visible when others view your profile.</p>
               
               <div className="flex items-center justify-between">
                 <Label htmlFor="privacy-phone" className="text-sm font-medium">Show Phone Number</Label>
@@ -2757,7 +2757,7 @@ export default function ProfilePage() {
           <Tabs value={editProfileTab} onValueChange={setEditProfileTab} className="w-full flex-1 flex flex-col min-h-0">
                           <div className="md:hidden w-full mb-4 mt-2 px-1 flex-shrink-0">
                 <Select value={editProfileTab} onValueChange={setEditProfileTab}>
-                  <SelectTrigger className="w-full h-10 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-600 font-medium text-gray-900 dark:text-white shadow-sm">
+                  <SelectTrigger className="w-full h-10 bg-card border border-border font-medium text-foreground shadow-sm">
                     <SelectValue placeholder="Select section" />
                   </SelectTrigger>
                   <SelectContent position="popper" side="bottom" align="start">
@@ -2769,7 +2769,7 @@ export default function ProfilePage() {
                   </SelectContent>
                 </Select>
               </div>
-              <TabsList className="hidden md:grid w-full overflow-x-auto bg-gray-100 flex-shrink-0 justify-start grid-cols-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <TabsList className="hidden md:grid w-full overflow-x-auto bg-yellow-50/50 dark:bg-muted/40 border border-yellow-200/50 dark:border-border p-1 rounded-xl flex-shrink-0 justify-start grid-cols-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <TabsTrigger 
                 value="profile" 
                 className="text-sm data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
@@ -2806,7 +2806,7 @@ export default function ProfilePage() {
             <TabsContent value="profile" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               {/* Basic Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+                <h3 className="text-lg font-semibold text-foreground">Basic Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Full Name</Label>
@@ -2882,7 +2882,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 
-                <h3 className="text-lg font-semibold text-gray-900 mt-6 pt-4 border-t">Personal Information</h3>
+                <h3 className="text-lg font-semibold text-foreground mt-6 pt-4 border-t border-border">Personal Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="dateOfBirth">Date of Birth</Label>
@@ -2992,7 +2992,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <h3 className="text-lg font-semibold text-gray-900 mt-6 pt-4 border-t">Pricing Details</h3>
+                <h3 className="text-lg font-semibold text-foreground mt-6 pt-4 border-t border-border">Pricing Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="pricePerDay">Price Per Day (₹)</Label>
@@ -3030,7 +3030,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <h3 className="text-lg font-semibold text-gray-900 mt-6 pt-4 border-t">Physical Details</h3>
+                <h3 className="text-lg font-semibold text-foreground mt-6 pt-4 border-t border-border">Physical Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="height">Height</Label>
@@ -3103,7 +3103,7 @@ export default function ProfilePage() {
 
               {/* Bio */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">About You</h3>
+                <h3 className="text-lg font-semibold text-foreground">About You</h3>
                 <div>
                   <Label htmlFor="bio">Bio</Label>
                   <Textarea
@@ -3118,7 +3118,7 @@ export default function ProfilePage() {
 
               {/* Skills */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Skills</h3>
+                <h3 className="text-lg font-semibold text-foreground">Skills</h3>
                 <div>
                   <Label>Skills (comma-separated)</Label>
                   <Input
@@ -3132,7 +3132,7 @@ export default function ProfilePage() {
 
               {/* Social Links */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Social Links</h3>
+                <h3 className="text-lg font-semibold text-foreground">Social Links</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="linkedin">LinkedIn</Label>
@@ -3155,9 +3155,9 @@ export default function ProfilePage() {
                       placeholder="Enter your Twitter profile URL"
                     />
                     {editForm.twitter && isPublicUrl(editForm.twitter, "twitter") && (
-                      <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 bg-gray-50 dark:bg-background/40 px-2 py-1 rounded border border-gray-100 dark:border-gray-800">
-                        <span className="text-gray-500">Extracted followers count:</span>
-                        <span className="font-semibold text-gray-800 dark:text-gray-200">
+                      <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 bg-muted/30 px-2 py-1 rounded border border-border">
+                        <span className="text-muted-foreground">Extracted followers count:</span>
+                        <span className="font-semibold text-foreground">
                           {editFollowersCounts.twitter || "..."}
                         </span>
                       </div>
@@ -3175,9 +3175,9 @@ export default function ProfilePage() {
                       placeholder="Enter your Instagram profile URL"
                     />
                     {editForm.instagram && isPublicUrl(editForm.instagram, "instagram") && (
-                      <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 bg-gray-50 dark:bg-background/40 px-2 py-1 rounded border border-gray-100 dark:border-gray-800">
-                        <span className="text-gray-500">Extracted followers count:</span>
-                        <span className="font-semibold text-gray-800 dark:text-gray-200">
+                      <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 bg-muted/30 px-2 py-1 rounded border border-border">
+                        <span className="text-muted-foreground">Extracted followers count:</span>
+                        <span className="font-semibold text-foreground">
                           {editFollowersCounts.instagram || "..."}
                         </span>
                       </div>
@@ -3195,9 +3195,9 @@ export default function ProfilePage() {
                       placeholder="Enter your YouTube channel URL"
                     />
                     {editForm.youtube && isPublicUrl(editForm.youtube, "youtube") && (
-                      <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 bg-gray-50 dark:bg-background/40 px-2 py-1 rounded border border-gray-100 dark:border-gray-800">
-                        <span className="text-gray-500">Extracted followers count:</span>
-                        <span className="font-semibold text-gray-800 dark:text-gray-200">
+                      <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 bg-muted/30 px-2 py-1 rounded border border-border">
+                        <span className="text-muted-foreground">Extracted followers count:</span>
+                        <span className="font-semibold text-foreground">
                           {editFollowersCounts.youtube || "..."}
                         </span>
                       </div>
@@ -3215,9 +3215,9 @@ export default function ProfilePage() {
                       placeholder="Enter your Facebook profile URL"
                     />
                     {editForm.facebook && isPublicUrl(editForm.facebook, "facebook") && (
-                      <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 bg-gray-50 dark:bg-background/40 px-2 py-1 rounded border border-gray-100 dark:border-gray-800">
-                        <span className="text-gray-500">Extracted followers count:</span>
-                        <span className="font-semibold text-gray-800 dark:text-gray-200">
+                      <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 bg-muted/30 px-2 py-1 rounded border border-border">
+                        <span className="text-muted-foreground">Extracted followers count:</span>
+                        <span className="font-semibold text-foreground">
                           {editFollowersCounts.facebook || "..."}
                         </span>
                       </div>
@@ -3231,7 +3231,7 @@ export default function ProfilePage() {
             <TabsContent value="experience" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">Work Experience</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Work Experience</h3>
                   <Button size="sm" onClick={addExperience} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Experience
@@ -3241,7 +3241,7 @@ export default function ProfilePage() {
                   {editForm.experience.map((exp, index) => {
                     const isExpanded = expandedEditExperience.has(exp.id);
                     return (
-                      <Card key={exp.id} className="border border-gray-200">
+                      <Card key={exp.id} className="border border-border">
                         <CardContent className="p-4">
                           <div 
                             className="flex items-center justify-between cursor-pointer"
@@ -3252,10 +3252,10 @@ export default function ProfilePage() {
                                 <Briefcase className="w-5 h-5 text-white" />
                               </div>
                               <div className="flex-1">
-                                <h4 className="font-semibold text-sm text-gray-900">{exp.title}</h4>
-                                <p className="text-sm text-gray-600">{exp.company}</p>
-                                <p className="text-xs text-gray-500">{exp.location}</p>
-                                <p className="text-xs text-gray-500">
+                                <h4 className="font-semibold text-sm text-foreground">{exp.title}</h4>
+                                <p className="text-sm text-muted-foreground">{exp.company}</p>
+                                <p className="text-xs text-muted-foreground">{exp.location}</p>
+                                <p className="text-xs text-muted-foreground">
                                   {exp.startDate} - {exp.current ? "Present" : exp.endDate}
                                 </p>
                               </div>
@@ -3265,7 +3265,7 @@ export default function ProfilePage() {
                             </Button>
                           </div>
                           {isExpanded && (
-                            <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                            <div className="mt-4 pt-4 border-t border-border" onClick={(e) => e.stopPropagation()}>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <Label>Job Title</Label>
@@ -3313,7 +3313,7 @@ export default function ProfilePage() {
             <TabsContent value="achievements" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">Achievements & Awards</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Achievements & Awards</h3>
                   <Button size="sm" onClick={addAchievement} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Achievement
@@ -3323,7 +3323,7 @@ export default function ProfilePage() {
                   {editForm.achievements.map((achievement, index) => {
                     const isExpanded = expandedEditAchievements.has(achievement.id);
                     return (
-                      <Card key={achievement.id} className="border border-gray-200">
+                      <Card key={achievement.id} className="border border-border">
                         <CardContent className="p-4">
                           <div 
                             className="flex items-center justify-between cursor-pointer"
@@ -3338,12 +3338,12 @@ export default function ProfilePage() {
                               </div>
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-medium text-sm text-gray-900">{achievement.title}</h4>
+                                  <h4 className="font-medium text-sm text-foreground">{achievement.title}</h4>
                                   <Badge variant="secondary" className="text-xs">
                                     {achievement.type.charAt(0).toUpperCase() + achievement.type.slice(1)}
                                   </Badge>
                                 </div>
-                                <p className="text-xs text-gray-500">{achievement.date}</p>
+                                <p className="text-xs text-muted-foreground">{achievement.date}</p>
                               </div>
                             </div>
                             <Button variant="ghost" size="sm" className="p-1">
@@ -3351,7 +3351,7 @@ export default function ProfilePage() {
                             </Button>
                           </div>
                           {isExpanded && (
-                            <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                            <div className="mt-4 pt-4 border-t border-border" onClick={(e) => e.stopPropagation()}>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <Label>Achievement Title</Label>
@@ -3399,7 +3399,7 @@ export default function ProfilePage() {
             <TabsContent value="education" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">Education</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Education</h3>
                   <Button size="sm" onClick={addEducation} className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Education
@@ -3409,7 +3409,7 @@ export default function ProfilePage() {
                   {editForm.education.map((edu, index) => {
                     const isExpanded = expandedEditEducation.has(edu.id);
                     return (
-                      <Card key={edu.id} className="border border-gray-200">
+                      <Card key={edu.id} className="border border-border">
                         <CardContent className="p-4">
                           <div 
                             className="flex items-center justify-between cursor-pointer"
@@ -3420,10 +3420,10 @@ export default function ProfilePage() {
                                 <GraduationCap className="w-5 h-5 text-white" />
                               </div>
                               <div className="flex-1">
-                                <h4 className="font-semibold text-sm text-gray-900">{edu.degree}</h4>
-                                <p className="text-sm text-gray-600">{edu.school}</p>
-                                <p className="text-xs text-gray-500">{edu.location}</p>
-                                <p className="text-xs text-gray-500">
+                                <h4 className="font-semibold text-sm text-foreground">{edu.degree}</h4>
+                                <p className="text-sm text-muted-foreground">{edu.school}</p>
+                                <p className="text-xs text-muted-foreground">{edu.location}</p>
+                                <p className="text-xs text-muted-foreground">
                                   {edu.startDate} - {edu.current ? "Present" : edu.endDate}
                                 </p>
                               </div>
@@ -3433,7 +3433,7 @@ export default function ProfilePage() {
                             </Button>
                           </div>
                           {isExpanded && (
-                            <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                            <div className="mt-4 pt-4 border-t border-border" onClick={(e) => e.stopPropagation()}>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <Label>Degree</Label>
@@ -3480,7 +3480,7 @@ export default function ProfilePage() {
             {/* Directory Tab */}
             <TabsContent value="directory" className="flex-1 overflow-y-auto space-y-6 mt-6 pr-2">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Directory</h3>
+                <h3 className="text-lg font-semibold text-foreground">Directory</h3>
                 <div className="flex gap-2 items-center w-full sm:w-auto">
                   <div className="flex-1 sm:flex-none w-full"><Select value={directoryFilter} onValueChange={(v: any) => { setDirectoryFilter(v); setDirectoryPage(1); }}>
                     <SelectTrigger className="w-[130px] h-8 text-xs">
@@ -3506,9 +3506,9 @@ export default function ProfilePage() {
                 {(() => {
                   const filtered = directoryFiles.filter(f => directoryFilter === "all" || f.type === directoryFilter).sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
                   const paginated = filtered.slice((directoryPage - 1) * 10, directoryPage * 10);
-                  if (filtered.length === 0) return <p className="text-sm text-gray-500 col-span-full">No files found.</p>;
+                  if (filtered.length === 0) return <p className="text-sm text-muted-foreground col-span-full">No files found.</p>;
                   return paginated.map(file => (
-                    <div key={file.id} className="relative group overflow-hidden rounded-md cursor-pointer border border-gray-200 dark:border-zinc-800" onClick={() => setPreviewFile(file)}>
+                    <div key={file.id} className="relative group overflow-hidden rounded-md cursor-pointer border border-border" onClick={() => setPreviewFile(file)}>
                        {file.type === 'image' ? (
                          <div className="relative h-40 w-full">
                            <img src={file.url} alt={file.name} className="w-full h-full object-cover hover:scale-105 transition-transform" />
@@ -3522,7 +3522,7 @@ export default function ProfilePage() {
                        ) :
                         file.type === 'video' ? <video src={file.url} className="w-full h-40 object-cover" /> :
                         file.type === 'audio' ? <audio src={file.url} className="w-full h-40" controls /> :
-                        <div className="w-full h-40 bg-gray-100 dark:bg-zinc-800 flex items-center justify-center"><FileText className="w-8 h-8 text-gray-400 dark:text-zinc-500" /></div>}
+                        <div className="w-full h-40 bg-muted flex items-center justify-center"><FileText className="w-8 h-8 text-muted-foreground" /></div>}
                        <p className="text-sm font-medium truncate p-2" title={file.title || file.name}>{file.title || file.name}</p>
                        <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={async (e) => { 
                          e.stopPropagation(); 
@@ -3550,7 +3550,7 @@ export default function ProfilePage() {
                  return (
                    <div className="flex justify-center items-center gap-2 mt-4">
                      <Button variant="outline" size="sm" onClick={() => setDirectoryPage(p => Math.max(1, p - 1))} disabled={directoryPage === 1}>Prev</Button>
-                     <span className="text-sm text-gray-500">Page {directoryPage} of {totalPages}</span>
+                     <span className="text-sm text-muted-foreground">Page {directoryPage} of {totalPages}</span>
                      <Button variant="outline" size="sm" onClick={() => setDirectoryPage(p => Math.min(totalPages, p + 1))} disabled={directoryPage === totalPages}>Next</Button>
                    </div>
                  );
@@ -3558,7 +3558,7 @@ export default function ProfilePage() {
             </TabsContent>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
+            <div className="flex justify-end gap-3 pt-6 border-t border-border mt-6">
               <Button variant="outline" onClick={handleCancelEdit} className="border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50">
                 Cancel
               </Button>
@@ -3572,7 +3572,7 @@ export default function ProfilePage() {
 
       {/* Add Files Dialog */}
       <Dialog open={showAddFileDialog} onOpenChange={setShowAddFileDialog}>
-        <DialogContent className="max-w-md bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 border-gray-200 dark:border-zinc-800">
+        <DialogContent className="max-w-md bg-card text-card-foreground border-border">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Add Files</DialogTitle>
           </DialogHeader>
@@ -3613,10 +3613,10 @@ export default function ProfilePage() {
               <Upload className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
               {selectedAddFiles.length > 0 ? (
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                  <p className="text-sm font-semibold text-foreground">
                     {selectedAddFiles.length === 1 ? selectedAddFiles[0].name : `${selectedAddFiles.length} files selected`}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400">
+                  <p className="text-xs text-muted-foreground">
                     {selectedAddFiles.length === 1 
                       ? `${(selectedAddFiles[0].size / (1024 * 1024)).toFixed(2)} MB` 
                       : `${(selectedAddFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)).toFixed(2)} MB total`}
@@ -3624,14 +3624,14 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                  <p className="text-sm font-medium text-foreground">
                     Drag and drop your file here, or <span className="text-yellow-600 dark:text-yellow-400 underline font-semibold">browse</span>
                   </p>
                 </div>
               )}
             </div>
 
-            <p className="text-xs text-gray-500 dark:text-zinc-400 text-center italic">
+            <p className="text-xs text-muted-foreground text-center italic">
               Upload any type of document images/videos,documents,audios
             </p>
 
@@ -3642,7 +3642,7 @@ export default function ProfilePage() {
                 placeholder="Enter file title"
                 value={addFileTitle}
                 onChange={(e) => setAddFileTitle(e.target.value)}
-                className="bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700"
+                className="bg-card border-border"
               />
             </div>
 
@@ -3653,7 +3653,7 @@ export default function ProfilePage() {
                 placeholder="Enter tags (comma separated e.g. bts, studio, production)"
                 value={addFileTags}
                 onChange={(e) => setAddFileTags(e.target.value)}
-                className="bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700"
+                className="bg-card border-border"
               />
             </div>
 
@@ -3666,7 +3666,7 @@ export default function ProfilePage() {
                   setAddFileTitle("");
                   setAddFileTags("");
                 }}
-                className="border-gray-200 dark:border-zinc-700"
+                className="border-border"
               >
                 Cancel
               </Button>
@@ -3711,7 +3711,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="w-full flex items-center gap-4 px-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Zoom</span>
+                <span className="text-sm font-medium text-foreground">Zoom</span>
                 <Slider
                   value={[zoom]}
                   min={1}
@@ -3883,17 +3883,17 @@ export default function ProfilePage() {
             
             {previewFile?.type === 'document' && (
               <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 rounded-lg overflow-hidden">
-                <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewFile.url || "")}&embedded=true`} className="w-full h-full bg-white" title="Document Preview" />
+                <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewFile.url || "")}&embedded=true`} className="w-full h-full bg-background" title="Document Preview" />
               </div>
             )}
           </div>
         </DialogContent>
       </Dialog>
       <Dialog open={deleteConfirm.isOpen} onOpenChange={(isOpen) => setDeleteConfirm(prev => ({ ...prev, isOpen }))}>
-        <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+        <DialogContent className="sm:max-w-md bg-card text-card-foreground border-border">
           <DialogHeader>
             <DialogTitle>{deleteConfirm.title || "Confirm Delete"}</DialogTitle>
-            <DialogDescription className="text-gray-500 dark:text-gray-400">
+            <DialogDescription className="text-muted-foreground">
               {deleteConfirm.desc || "Are you sure you want to delete this? This action cannot be undone."}
             </DialogDescription>
           </DialogHeader>

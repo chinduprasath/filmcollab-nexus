@@ -64,7 +64,7 @@ export function CastingCallCard({ call }: CastingCallCardProps) {
              <Button
                 variant="secondary"
                 size="icon"
-                className="rounded-full h-8 w-8 bg-white/90 hover:bg-white text-gray-700 hover:text-black shadow-sm"
+                className="rounded-full h-8 w-8 bg-background/90 dark:bg-card/90 hover:bg-background text-foreground shadow-sm backdrop-blur-sm border border-border/50"
                 onClick={(e) => {
                   e.preventDefault();
                   toggleSave(call.id);
@@ -80,40 +80,40 @@ export function CastingCallCard({ call }: CastingCallCardProps) {
           <div>
             <div className="flex justify-between items-start mb-1">
               <div>
-                <h3 className="text-lg font-bold text-gray-900 leading-tight mb-0.5 group-hover:text-primary transition-colors line-clamp-1">
+                <h3 className="text-lg font-bold text-foreground leading-tight mb-0.5 group-hover:text-primary transition-colors line-clamp-1">
                   {call.title}
                 </h3>
-                <p className="text-xs font-medium text-gray-600">
+                <p className="text-xs font-medium text-muted-foreground">
                   {call.projectName} • {call.productionHouse} 
                   {call.verified && <ShieldCheck className="inline-block w-3 h-3 ml-1 text-blue-500" />}
                 </p>
-                <p className="text-[10px] text-gray-400 mt-0.5">Posted by {call.castingDirector}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Posted by {call.castingDirector}</p>
               </div>
               {getStatusBadge()}
             </div>
 
             {/* Quick Info Grid */}
-            <div className="grid grid-cols-2 gap-y-1.5 gap-x-3 my-2 text-[11px] text-gray-600">
+            <div className="grid grid-cols-2 gap-y-1.5 gap-x-3 my-2 text-[11px] text-muted-foreground">
               <div className="flex items-center gap-1.5 truncate col-span-2">
-                <Calendar className="w-3 h-3 text-gray-400 shrink-0" />
+                <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
                 <span className="truncate">Shoot: {call.shootDates}</span>
               </div>
               <div className="flex items-center gap-1.5 truncate">
-                <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
+                <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
                 <span className="truncate">{call.location}</span>
               </div>
               <div className="flex items-center gap-1.5 truncate">
-                <Briefcase className="w-3 h-3 text-gray-400 shrink-0" />
+                <Briefcase className="w-3 h-3 text-muted-foreground shrink-0" />
                 <span className="truncate">{call.experience}</span>
               </div>
               <div className="flex items-center gap-1.5 truncate">
-                <IndianRupee className="w-3 h-3 text-gray-400 shrink-0" />
+                <IndianRupee className="w-3 h-3 text-muted-foreground shrink-0" />
                 <span className="truncate">{call.compensation}</span>
               </div>
             </div>
 
             <div className="mb-2">
-              <p className="text-xs text-gray-700 line-clamp-2 leading-relaxed">
+              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                 {call.roleDescription}
               </p>
             </div>
@@ -121,13 +121,13 @@ export function CastingCallCard({ call }: CastingCallCardProps) {
 
           <div className="mt-auto">
             <div className="flex flex-wrap gap-1.5 mb-3">
-              <Badge variant="outline" className="bg-gray-50 font-normal text-[10px] px-1.5 py-0">{call.category}</Badge>
-              <Badge variant="outline" className="bg-gray-50 font-normal text-[10px] px-1.5 py-0">{call.gender}</Badge>
-              <Badge variant="outline" className="bg-gray-50 font-normal text-[10px] px-1.5 py-0">{call.ageRange[0]}-{call.ageRange[1]} yrs</Badge>
+              <Badge variant="outline" className="bg-muted text-foreground/90 border-border font-normal text-[10px] px-1.5 py-0">{call.category}</Badge>
+              <Badge variant="outline" className="bg-muted text-foreground/90 border-border font-normal text-[10px] px-1.5 py-0">{call.gender}</Badge>
+              <Badge variant="outline" className="bg-muted text-foreground/90 border-border font-normal text-[10px] px-1.5 py-0">{call.ageRange[0]}-{call.ageRange[1]} yrs</Badge>
             </div>
 
             <div className="flex items-center justify-between border-t pt-3">
-              <div className="text-[10px] text-gray-500 leading-tight">
+              <div className="text-[10px] text-muted-foreground leading-tight">
                 <p>Posted: {new Date(call.datePosted).toLocaleDateString()}</p>
                 <p className="font-medium text-red-500 mt-0.5">Deadline: {new Date(call.lastDateToApply).toLocaleDateString()}</p>
               </div>

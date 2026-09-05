@@ -186,13 +186,13 @@ export default function ShootingLocations() {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Shooting Locations</h1>
-            <p className="text-gray-500 mt-1">Discover and book unique properties for your next shoot.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Shooting Locations</h1>
+            <p className="text-muted-foreground mt-1">Discover and book unique properties for your next shoot.</p>
           </div>
           <div className="flex gap-3">
             <Button 
               variant="outline"
-              className={cn("shadow-sm", showWishlist ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700" : "text-gray-700")}
+              className={cn("shadow-sm", showWishlist ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-700 dark:hover:text-red-300" : "text-muted-foreground")}
               onClick={() => {
                 setShowWishlist(!showWishlist);
                 setCurrentPage(1);
@@ -202,7 +202,7 @@ export default function ShootingLocations() {
               {showWishlist ? "View All" : "View Wishlist"}
             </Button>
             <Button 
-              className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-md"
+              className="bg-yellow-600 dark:bg-yellow-700 hover:bg-yellow-700 dark:hover:bg-yellow-600 text-white shadow-md"
               onClick={() => navigate("/locations/new")}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -213,9 +213,9 @@ export default function ShootingLocations() {
 
         {/* Search & Filters */}
         {!showWishlist && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border flex flex-col md:flex-row gap-4">
+          <div className="bg-card text-card-foreground rounded-xl p-4 shadow-sm border flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
               <Input 
                 placeholder="Search by location name, city, state..." 
                 className="pl-10 h-10"
@@ -253,15 +253,15 @@ export default function ShootingLocations() {
 
         {/* Loading State */}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="h-8 w-8 animate-spin mb-4" />
             <p>Loading properties...</p>
           </div>
         ) : displayedLocations.length === 0 ? (
           <div className="text-center py-12">
             <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No properties found</h3>
-            <p className="text-gray-500">
+            <h3 className="text-lg font-medium text-foreground">No properties found</h3>
+            <p className="text-muted-foreground">
               {showWishlist ? "You haven't wishlisted any properties yet." : "Try adjusting your filters or search term."}
             </p>
           </div>
@@ -276,7 +276,7 @@ export default function ShootingLocations() {
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute top-3 left-3">
-                    <Badge className="bg-white/90 text-gray-900 hover:bg-white backdrop-blur-sm shadow-sm font-medium">
+                    <Badge className="bg-card text-card-foreground/90 text-foreground hover:bg-card text-card-foreground backdrop-blur-sm shadow-sm font-medium">
                       {location.type}
                     </Badge>
                   </div>
@@ -284,21 +284,21 @@ export default function ShootingLocations() {
                   <div className="absolute top-3 right-3">
                     <button 
                       onClick={(e) => toggleWishlist(e, location.id, location.isWishlisted)}
-                      className="bg-white/90 backdrop-blur-sm rounded-full p-2.5 shadow-sm hover:bg-white transition-colors"
+                      className="bg-card text-card-foreground/90 backdrop-blur-sm rounded-full p-2.5 shadow-sm hover:bg-card text-card-foreground transition-colors"
                     >
-                      <Heart className={cn("h-4 w-4 transition-colors", location.isWishlisted ? "fill-red-500 text-red-500" : "text-gray-500")} />
+                      <Heart className={cn("h-4 w-4 transition-colors", location.isWishlisted ? "fill-red-500 text-red-500" : "text-muted-foreground")} />
                     </button>
                   </div>
                 </div>
                 <CardHeader className="p-4 pb-2">
                   <CardTitle className="text-lg line-clamp-1" title={location.name}>{location.name}</CardTitle>
                   <div className="flex flex-col gap-1 mt-1">
-                    <div className="flex items-center text-gray-500 text-xs">
+                    <div className="flex items-center text-muted-foreground text-xs">
                       <MapPin className="h-3 w-3 mr-1 shrink-0" /> 
                       <span className="truncate">{location.city}, {location.state}</span>
                     </div>
                     {location.owner_name && (
-                      <div className="flex items-center text-gray-500 text-xs">
+                      <div className="flex items-center text-muted-foreground text-xs">
                         <User className="h-3 w-3 mr-1 shrink-0" /> 
                         <span className="truncate">Listed by {location.owner_name}</span>
                       </div>
@@ -306,12 +306,12 @@ export default function ShootingLocations() {
                     {location.tags && location.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {location.tags.slice(0, 3).map((tag, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-gray-100 text-gray-600 font-normal">
+                          <Badge key={idx} variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-muted text-muted-foreground font-normal">
                             {tag}
                           </Badge>
                         ))}
                         {location.tags.length > 3 && (
-                          <span className="text-[10px] text-gray-400">+{location.tags.length - 3}</span>
+                          <span className="text-[10px] text-muted-foreground">+{location.tags.length - 3}</span>
                         )}
                       </div>
                     )}
@@ -319,10 +319,10 @@ export default function ShootingLocations() {
                 </CardHeader>
                 <CardContent className="p-4 pt-1 flex-1">
                   <div className="flex justify-between items-end">
-                    <div className="font-bold text-gray-900 text-lg">
-                      ₹{location.price.toLocaleString()} <span className="text-xs text-gray-500 font-normal">/ {location.price_type.replace('Per ', '')}</span>
+                    <div className="font-bold text-foreground text-lg">
+                      ₹{location.price.toLocaleString()} <span className="text-xs text-muted-foreground font-normal">/ {location.price_type.replace('Per ', '')}</span>
                     </div>
-                    <div className="text-xs text-gray-400 font-medium flex items-center">
+                    <div className="text-xs text-muted-foreground font-medium flex items-center">
                       <Heart className="h-3 w-3 mr-1 fill-gray-300 text-gray-300" /> {location.likesCount}
                     </div>
                   </div>
@@ -330,7 +330,7 @@ export default function ShootingLocations() {
                 <CardFooter className="p-4 pt-0 mt-auto">
                   <Button 
                     variant="outline" 
-                    className="w-full border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white h-9" 
+                    className="w-full border-yellow-600 dark:border-yellow-500 text-yellow-600 dark:text-yellow-400 bg-transparent hover:bg-yellow-600 dark:hover:bg-yellow-500 hover:text-white dark:hover:text-zinc-950 h-9 font-medium transition-colors" 
                     onClick={(e) => { e.stopPropagation(); navigate(`/locations/${location.id}`); }}
                   >
                     View Details
@@ -357,7 +357,7 @@ export default function ShootingLocations() {
                 key={i + 1}
                 variant={currentPage === i + 1 ? "default" : "outline"}
                 size="sm"
-                className={currentPage === i + 1 ? "bg-yellow-600 hover:bg-yellow-700 text-white border-transparent" : ""}
+                className={currentPage === i + 1 ? "bg-yellow-600 dark:bg-yellow-700 hover:bg-yellow-700 dark:hover:bg-yellow-600 text-white border-transparent" : ""}
                 onClick={() => setCurrentPage(i + 1)}
               >
                 {i + 1}

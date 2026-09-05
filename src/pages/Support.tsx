@@ -99,7 +99,7 @@ const Support = () => {
     { value: 'open', label: 'Open', color: 'bg-blue-100 text-blue-800' },
     { value: 'in-progress', label: 'In Progress', color: 'bg-yellow-100 text-yellow-800' },
     { value: 'resolved', label: 'Resolved', color: 'bg-green-100 text-green-800' },
-    { value: 'closed', label: 'Closed', color: 'bg-gray-100 text-gray-800' }
+    { value: 'closed', label: 'Closed', color: 'bg-muted text-muted-foreground' }
   ];
 
   const handleFormChange = (field: string, value: string) => {
@@ -171,7 +171,7 @@ const Support = () => {
   const getPriorityBadge = (priority: string) => {
     const priorityConfig = priorities.find(p => p.value === priority);
     return (
-      <Badge className={priorityConfig?.color || 'bg-gray-100 text-gray-800'}>
+      <Badge className={priorityConfig?.color || 'bg-muted text-muted-foreground'}>
         {priorityConfig?.label || priority}
       </Badge>
     );
@@ -180,7 +180,7 @@ const Support = () => {
   const getStatusBadge = (status: string) => {
     const statusConfig = statuses.find(s => s.value === status);
     return (
-      <Badge className={statusConfig?.color || 'bg-gray-100 text-gray-800'}>
+      <Badge className={statusConfig?.color || 'bg-muted text-muted-foreground'}>
         {statusConfig?.label || status}
       </Badge>
     );
@@ -199,8 +199,8 @@ const Support = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Support Center</h1>
-            <p className="text-gray-600 text-sm mt-1">Get help and submit support tickets</p>
+            <h1 className="text-2xl font-bold text-foreground">Support Center</h1>
+            <p className="text-muted-foreground text-sm mt-1">Get help and submit support tickets</p>
           </div>
           <Badge variant="outline" className="text-xs">
             <HelpCircle className="w-3 h-3 mr-1" />
@@ -213,13 +213,11 @@ const Support = () => {
         {/* Tabs */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Tabs */}
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+          <div className="flex space-x-1 bg-muted border border-border p-1 rounded-lg w-fit">
             <button
               onClick={() => setActiveTab('create')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'create'
-                  ? 'bg-white text-yellow-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === 'create' ? 'bg-card text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Create Ticket
@@ -227,9 +225,7 @@ const Support = () => {
             <button
               onClick={() => setActiveTab('tickets')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'tickets'
-                  ? 'bg-white text-yellow-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === 'tickets' ? 'bg-card text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               My Tickets ({tickets.length})
@@ -240,7 +236,7 @@ const Support = () => {
           {activeTab === 'tickets' && (
             <div className="flex flex-row gap-2 w-full">
               <div className="relative w-full sm:w-64 flex-shrink-0">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Search tickets..."
                   value={searchQuery}
@@ -342,10 +338,10 @@ const Support = () => {
 
               <div className="space-y-2">
                 <Label>Attachments (Optional)</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">Drag and drop files here, or click to browse</p>
-                  <p className="text-xs text-gray-500 mt-1">Max file size: 10MB</p>
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-muted/20">
+                  <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Drag and drop files here, or click to browse</p>
+                  <p className="text-xs text-muted-foreground mt-1">Max file size: 10MB</p>
                 </div>
               </div>
 
@@ -382,10 +378,10 @@ const Support = () => {
                             {ticket.ticket_number}
                           </Badge>
                         </div>
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                        <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
                           {ticket.description}
                         </p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Tag className="w-3 h-3" />
                             {ticket.category}
@@ -413,9 +409,9 @@ const Support = () => {
             {filteredTickets.length === 0 && (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No tickets found</h3>
-                  <p className="text-gray-600 mb-4">
+                  <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">No tickets found</h3>
+                  <p className="text-muted-foreground mb-4">
                     {searchQuery || filterStatus !== 'all' 
                       ? 'Try adjusting your search or filter criteria.'
                       : 'You haven\'t created any support tickets yet.'
